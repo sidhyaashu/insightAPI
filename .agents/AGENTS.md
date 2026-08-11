@@ -1,0 +1,64 @@
+# InsightAPI AI — Workspace Rules & Agent Guidelines
+
+> This file (`.agents/AGENTS.md`) defines workspace-scoped guidelines and architectural constraints for AI coding agents working on **InsightAPI AI**. All agents working on this codebase MUST follow these instructions.
+
+---
+
+## 1. Project Context & Stack
+
+* **Project Goal**: InsightAPI AI is an Agentic Web API Intelligence Platform and Open-Source Python SDK that autonomously explores web applications, observes network traffic, analyzes API behavior, infers endpoint relationships, and generates structured OpenAPI/Postman documentation.
+* **Distribution Model**: **Python SDK + CLI Engine + Standalone REST API**. Open-source, embeddable in CI/CD pipelines or Python scripts.
+* **Technology Stack**:
+  * **Core Engine, SDK & CLI**: Python (Typer + Rich + Asyncio)
+  * **Backend & REST API**: FastAPI (Python)
+  * **Agent Framework**: LangGraph + LangChain
+  * **Browser Automation**: Playwright (Async Python)
+  * **AI Models**: OpenAI GPT-4o / GPT-4o-mini (or Ollama/Local OpenAI-compatible endpoints)
+  * **Storage**: PostgreSQL + pgvector + Redis (or optional in-memory storage for lightweight SDK runs)
+  * **Frontend (Phase 5 Deferred)**: Next.js 14 + TypeScript + shadcn/ui + React Flow + Tailwind CSS
+
+---
+
+## 2. Core Architectural Guidelines & Constraints
+
+### A. Python SDK Architecture
+* Keep the core engine decoupled from web-server specifics so users can import `insightapi` directly as a Python library:
+  ```python
+  from insightapi import AgentEngine
+  
+  engine = AgentEngine()
+  results = await engine.crawl("https://example.com")
+  ```
+* Support zero-dependency lightweight mode (in-memory session state when running in CI/CD without Postgres).
+
+### B. Autonomous UI Exploration
+* **DO NOT** pass raw, un-distilled HTML (100k+ tokens) or full page screenshots to LLMs for routine navigation.
+* **ALWAYS** extract an **Interactive DOM Snapshot (Accessibility Tree)** containing only interactive and semantic controls (`a`, `button`, `input`, `select`, `textarea`, `[role]`, `[onclick]`).
+* **LLM Vision Fallback**: Use Vision LLMs with Set-of-Mark screenshots ONLY when interactive DOM extraction fails or when interacting with Canvas/complex UIs.
+
+### C. Action Safety & Two-Tier Risk Classification
+* **DO NOT** click or submit elements blindly on arbitrary URLs.
+* **ALWAYS** evaluate element target context through the **Two-Tier Risk Classifier** before execution:
+  * **Tier 1 (Fast Guardrails)**: Sub-millisecond regex pre-filtering for obvious `SAFE` navigation/view/filter targets vs `UNSAFE` destructive actions (`delete`, `pay`, `purchase`, `update password`, `cancel subscription`).
+  * **Tier 2 (Context Enrichment)**: Ambiguous elements (`Submit`, `Save`) evaluate parent form labels, surrounding text, and page titles.
+* Skip **UNSAFE** actions automatically, log them in the crawl report, and proceed to the next item without stopping execution.
+
+### D. Dynamic Runtime Execution & Reliability
+* **Structured Action Interpreter**: Execute browser UI actions via `DynamicRuntimeExecutor` using Playwright action handlers.
+* **Overlay Interstitial Auto-Dismissal**: Automatically detect and clear blocking cookie banners, dialog backdrops, and modals (`Accept`, `Close`).
+* **Form Dummy Value Injection**: Contextually populate search fields, emails, dates, quantities, and input text prior to interaction.
+
+### E. Network Observer, State Hashing & Compliance
+* Ignore static web assets (`.js`, `.css`, `.png`, `.jpg`, `.svg`, `.woff2`) and telemetry domains (`*.google-analytics.com`, `*.sentry.io`).
+* Deduplicate endpoint parameters: Normalize dynamic URL paths (`/users/101`, `/users/102`) into template routes (`/users/{id}`).
+* Parse GraphQL payloads: Treat distinct `operationName` values (single, batch, query params) as separate logical endpoints.
+* **DOM State Graph Hashing**: Hash `(normalized_URL, AXTree_structural_fingerprint)` to distinguish SPA modal/tab states at the same URL and prune saturated template route clusters.
+* **Shadow DOM & Virtualized Scrolling**: Recursively pierce `shadowRoot` trees and perform incremental scroll passes over virtualized list containers (`react-window`, `TanStack Virtual`).
+* **Legal & Compliance Guardrails**: Parse and respect target site `robots.txt` disallow rules and enforce per-domain minimum request delay spacing (default: 500ms).
+* **Stealth & Anti-Detection**: Spoof WebGL vendor/renderer signatures (`Intel Inc.`), patch Permissions API, and override hardware concurrency metrics.
+
+---
+
+## 3. Maintenance of Guidelines
+
+* Update this `.agents/AGENTS.md` file whenever new edge cases, anti-patterns, or architectural guidelines are established during development.

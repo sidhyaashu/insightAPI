@@ -1,0 +1,25 @@
+# Dependencies & Build Outputs
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Git & IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Environment & Credentials
+.env
+.env.local
+.env.*.local
+*.env
+
+# Testing & Logs
+coverage/
+*.log
+
+# Documentation & Guidelines
+*.md

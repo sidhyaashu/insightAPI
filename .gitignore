@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables & Credentials
+.env
+.env.local
+.env.*.local
+*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+id_rsa
+id_ed25519
+
+# Gitleaks & Security Reports
+.gitleaks-report.json
+gitleaks-report.json
+
+# Playwright & Browsers
+.playwright/
+test-results/
+playwright-report/
+
+# Databases & Cache
+*.sqlite3
+*.db
+.redis/
+.postgres/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing & Reports
+.pytest_cache/
+.coverage
+htmlcov/
+reports/*
+!reports/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# Node / Next.js (for future phase)
+node_modules/
+.next/
+out/

@@ -1,0 +1,41 @@
+# Git & IDE
+.git/
+.gitignore
+.agents/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment & Credentials
+.env
+.env.local
+.env.*.local
+
+# Python Build & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+
+# Playwright & Testing Outputs
+.playwright/
+test-results/
+playwright-report/
+*.log
+
+# Documentation & Markdown
+docs/
+*.md
+
+# Node / Next.js
+node_modules/
+.next/
+out/

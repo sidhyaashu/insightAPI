@@ -1,0 +1,32 @@
+# Git & IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Environment & Credentials
+.env
+.env.*
+
+# Python Build & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+
+# Playwright & Testing Outputs
+.playwright/
+test-results/
+playwright-report/
+tests/
+scratch_*.py
+generate_examples.py
+*.log
+*.md

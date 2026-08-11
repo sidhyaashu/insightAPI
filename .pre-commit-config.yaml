@@ -1,0 +1,36 @@
+# Pre-Commit Hooks Configuration for InsightAPI AI
+# See https://pre-commit.com for details
+
+repos:
+  # Gitleaks Secret Detection Hook
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+        name: Gitleaks Secret Scanner
+        description: Detect hardcoded secrets, API keys, and credentials before committing.
+        entry: gitleaks detect --verbose --redact --config=.gitleaks.toml
+        language: golang
+        stages: [commit]
+
+  # Standard Pre-Commit Security & Formatting Hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: detect-private-key
+        name: Detect Private Keys
+        description: Check for accidentally committed private keys.
+      - id: check-added-large-files
+        name: Check Large Files
+        args: ['--maxkb=1000']
+      - id: check-yaml
+        name: Check YAML Syntax
+      - id: check-json
+        name: Check JSON Syntax
+      - id: check-toml
+        name: Check TOML Syntax
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+        name: Fix End of Files

@@ -1,0 +1,88 @@
+# Gitleaks Configuration for InsightAPI AI
+title = "InsightAPI Gitleaks Security Scan"
+
+[config]
+useDefault = true
+
+# Allowlists to suppress false positives from documentation, examples, and mock test tokens
+[allowlist]
+description = "Global Allowlist for Placeholders, Documentation, and Mock Test Tokens"
+regexes = [
+  '''your_[a-zA-Z0-9_]+_here''',
+  '''POSTGRES_PASSWORD=postgres''',
+  '''sk-test-[a-zA-Z0-9_-]+''',
+  '''mock-[a-zA-Z0-9_-]+''',
+  '''example-secret-[a-zA-Z0-9_-]+''',
+  '''dummy-[a-zA-Z0-9_-]+''',
+]
+paths = [
+  '''\.env\.example$''',
+  '''\.gitleaks\.toml$''',
+  '''SECURITY\.md$''',
+  '''README\.md$''',
+  '''OVERVIEW\.md$''',
+  '''CHANGELOG\.md$''',
+  '''backend/tests/fixtures/.*''',
+]
+
+# Customized Detection Rules for InsightAPI AI Ecosystem
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key (Standard & Project-scoped)"
+regex = '''(?i)(openai[_-]?api[_-]?key|openai[_-]?key|sk-proj-[a-zA-Z0-9_-]{20,}|sk-[a-zA-Z0-9]{32,})'''
+secretGroup = 1
+keywords = [
+  "sk-proj-",
+  "sk-",
+  "openai",
+]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key or Secret Token Assignment"
+regex = '''(?i)(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*["']?([a-zA-Z0-9_\-]{20,})["']?'''
+secretGroup = 2
+keywords = [
+  "api_key",
+  "apikey",
+  "secret_key",
+  "access_token",
+  "auth_token",
+]
+
+[[rules]]
+id = "private-key"
+description = "Unencrypted Private Key (RSA, DSA, EC, OPENSSH, PGP)"
+regex = '''-----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----'''
+keywords = [
+  "BEGIN RSA PRIVATE KEY",
+  "BEGIN DSA PRIVATE KEY",
+  "BEGIN EC PRIVATE KEY",
+  "BEGIN OPENSSH PRIVATE KEY",
+  "BEGIN PGP PRIVATE KEY",
+  "BEGIN PRIVATE KEY",
+]
+
+[[rules]]
+id = "jwt-secret-key"
+description = "Hardcoded JWT Secret Key"
+regex = '''(?i)(jwt[_-]?secret|jwt[_-]?key)\s*[:=]\s*["']?([a-zA-Z0-9_\-!@#$%^&*]{16,})["']?'''
+secretGroup = 2
+keywords = [
+  "jwt_secret",
+  "jwt_key",
+  "jwt-secret",
+]
+
+[[rules]]
+id = "db-connection-string-credential"
+description = "Database URI with Hardcoded Password"
+regex = '''(?i)(postgresql|postgres|mysql|mongodb|redis):\/\/([^:]+):([^@\s]{6,})@'''
+secretGroup = 3
+keywords = [
+  "postgresql://",
+  "postgres://",
+  "redis://",
+  "mongodb://",
+]
