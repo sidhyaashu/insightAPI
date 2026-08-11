@@ -1,11 +1,6 @@
 "use client";
 
-import React, {
-  useState,
-  useRef,
-  ComponentProps,
-  FormEvent,
-} from "react";
+import React, { useState, useRef, ComponentProps, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,26 +12,28 @@ import {
 import { cn } from "@/lib/utils";
 import {
   PlusIcon,
-  SendIcon,
+  ArrowUpIcon,
   GlobeIcon,
   SlidersIcon,
   PaperclipIcon,
+  MicIcon,
+  AudioWaveformIcon,
 } from "lucide-react";
+import { ClaudeModelSelector, ModelSelection } from "@/components/chat/ClaudeModelSelector";
 
 export interface PromptInputMessage {
   text: string;
   targetUrl?: string;
 }
 
-export type PromptInputProps = Omit<
-  ComponentProps<"form">,
-  "onSubmit"
-> & {
+export type PromptInputProps = Omit<ComponentProps<"form">, "onSubmit"> & {
   onSubmit: (message: PromptInputMessage, e: FormEvent) => void;
   onOpenSettings?: () => void;
   onOpenPasteUrl?: () => void;
   disabled?: boolean;
   placeholder?: string;
+  modelSelection: ModelSelection;
+  onModelSelectionChange: (val: ModelSelection) => void;
 };
 
 export const PromptInput = ({
@@ -45,7 +42,9 @@ export const PromptInput = ({
   onOpenSettings,
   onOpenPasteUrl,
   disabled = false,
-  placeholder = "Ask InsightBot to explore endpoints, generate OpenAPI specs, or paste an app URL...",
+  placeholder = "How can I help you today?",
+  modelSelection,
+  onModelSelectionChange,
   ...props
 }: PromptInputProps) => {
   const [text, setText] = useState("");
@@ -72,7 +71,7 @@ export const PromptInput = ({
     setText(e.target.value);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
     }
   };
 
@@ -80,68 +79,97 @@ export const PromptInput = ({
     <form
       onSubmit={handleSubmit}
       className={cn(
-        "relative flex flex-col w-full rounded-2xl border border-border/80 bg-card p-2 shadow-lg transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20",
+        "relative flex flex-col w-full rounded-2xl border border-border/80 bg-card p-3 shadow-xl transition-all focus-within:border-border focus-within:ring-1 focus-within:ring-border/40",
         className
       )}
       {...props}
     >
-      <div className="flex items-end gap-2 px-1">
-        {/* + Menu Dropdown */}
+      {/* Top Text Area */}
+      <textarea
+        ref={textareaRef}
+        value={text}
+        onChange={handleInput}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        disabled={disabled}
+        rows={1}
+        className="w-full resize-none bg-transparent px-2 py-1 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none max-h-40 min-h-[44px] leading-relaxed"
+      />
+
+      {/* Bottom Action Bar */}
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/30 px-1 mt-1">
+        {/* Left: + Menu Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="h-9 w-9 flex items-center justify-center rounded-full shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors focus:outline-none"
-            title="Add target URL or crawl options"
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer transition-colors focus:outline-none"
+            title="Add target URL, crawl options or files"
           >
-            <PlusIcon className="size-5" />
+            <PlusIcon className="size-4" />
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="start" className="w-56 p-1.5 shadow-xl rounded-xl">
+          <DropdownMenuContent align="start" className="w-60 p-1.5 shadow-2xl rounded-xl bg-card border border-border">
             <DropdownMenuItem
               onClick={onOpenPasteUrl}
-              className="cursor-pointer text-xs flex items-center gap-2 py-2"
+              className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg"
             >
-              <GlobeIcon className="size-4 text-primary" />
+              <GlobeIcon className="size-4 text-foreground" />
               <span>Paste Target Web App URL</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem
               onClick={onOpenSettings}
-              className="cursor-pointer text-xs flex items-center gap-2 py-2"
+              className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg"
             >
-              <SlidersIcon className="size-4 text-purple-400" />
-              <span>Crawl & AI Settings</span>
+              <SlidersIcon className="size-4 text-foreground" />
+              <span>Crawl & AI Execution Settings</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem className="cursor-pointer text-xs flex items-center gap-2 py-2">
+            <DropdownMenuItem className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg">
               <PaperclipIcon className="size-4 text-muted-foreground" />
-              <span>Attach OpenAPI Spec File</span>
+              <span>Attach OpenAPI / Postman Spec</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Text Area */}
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={handleInput}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={disabled}
-          rows={1}
-          className="flex-1 resize-none bg-transparent py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-44 min-h-[40px] leading-relaxed"
-        />
+        {/* Right: Model Selector + Mic + Send */}
+        <div className="flex items-center gap-1.5">
+          {/* Claude-style Model & Effort Selector */}
+          <ClaudeModelSelector value={modelSelection} onChange={onModelSelectionChange} />
 
-        {/* Send Button */}
-        <Button
-          type="submit"
-          size="icon"
-          disabled={disabled || !text.trim()}
-          className="h-9 w-9 rounded-full shrink-0 bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 cursor-pointer transition-opacity"
-        >
-          <SendIcon className="size-4" />
-        </Button>
+          {/* Voice Input Trigger Icon */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer"
+            title="Voice input"
+          >
+            <MicIcon className="size-4" />
+          </Button>
+
+          {/* Audio Stream Trigger Icon */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer"
+            title="Audio stream"
+          >
+            <AudioWaveformIcon className="size-4" />
+          </Button>
+
+          {/* Send Button */}
+          <Button
+            type="submit"
+            size="icon"
+            disabled={disabled || !text.trim()}
+            className="h-8 w-8 rounded-lg shrink-0 bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 cursor-pointer transition-opacity"
+          >
+            <ArrowUpIcon className="size-4" />
+          </Button>
+        </div>
       </div>
     </form>
   );

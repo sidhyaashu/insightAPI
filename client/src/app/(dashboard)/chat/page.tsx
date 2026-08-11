@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { LockedFeature } from "@/components/ui/LockedFeature";
 import {
   Conversation,
   ConversationContent,
-  ConversationEmptyState,
   ConversationDownload,
   MessageItem,
 } from "@/components/ui/conversation";
@@ -21,8 +20,8 @@ import {
 } from "@/components/ui/chain-of-thought";
 import { PromptInput, PromptInputMessage } from "@/components/ui/prompt-input";
 import { CrawlSettingsModal, CrawlSettings } from "@/components/chat/CrawlSettingsModal";
-import { TerminalIcon, BotIcon, GlobeIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ModelSelection } from "@/components/chat/ClaudeModelSelector";
+import { GlobeIcon, FileCodeIcon, ShieldCheckIcon, DownloadIcon, SparklesIcon, TerminalIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -37,19 +36,17 @@ interface AgentProcessStep {
 
 export default function ChatGPTPage() {
   const [sessionId] = useState(() => `chat-${Date.now()}`);
-  const [messages, setMessages] = useState<MessageItem[]>([
-    {
-      id: "init-1",
-      role: "assistant",
-      content: "Hello! I am **InsightAPI Assistant**. Paste a web application URL or ask me to explore REST/GraphQL endpoints, generate OpenAPI documentation, or test route safety guardrails.",
-    },
-  ]);
+  const [messages, setMessages] = useState<MessageItem[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentResponse, setCurrentResponse] = useState("");
   const [activeSteps, setActiveSteps] = useState<AgentProcessStep[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
   const [targetUrlInput, setTargetUrlInput] = useState("");
+  const [modelSelection, setModelSelection] = useState<ModelSelection>({
+    model: "gpt-4o-mini",
+    effort: "Medium",
+  });
   const [activeSettings, setActiveSettings] = useState<CrawlSettings>({
     targetUrl: "",
     maxPages: 15,
@@ -61,7 +58,16 @@ export default function ChatGPTPage() {
 
   const { isConnected, lastMessage, sendMessage } = useWebSocket(`/chat/${sessionId}`);
 
-  // Handle incoming WebSocket messages
+  // Dynamic time greeting (e.g. Moonlit chat?, Sunlit chat?, Evening chat?)
+  const greetingTitle = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 12) return "Sunlit chat?";
+    if (hour >= 12 && hour < 17) return "Afternoon chat?";
+    if (hour >= 17 && hour < 21) return "Evening chat?";
+    return "Moonlit chat?";
+  }, []);
+
+  // Handle incoming WebSocket streaming messages
   useEffect(() => {
     if (!lastMessage) return;
 
@@ -137,8 +143,16 @@ export default function ChatGPTPage() {
     sendMessage({
       message: msg.text,
       target_url: activeSettings.targetUrl,
-      settings: activeSettings,
+      settings: { ...activeSettings, model: modelSelection.model },
     });
+  };
+
+  const handleActionChipClick = (promptText: string) => {
+    if (promptText.includes("URL")) {
+      setIsUrlModalOpen(true);
+    } else {
+      handleSendMessage({ text: promptText });
+    }
   };
 
   const handleApplyUrl = () => {
@@ -152,110 +166,165 @@ export default function ChatGPTPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7.5rem)] max-w-5xl mx-auto w-full px-4 lg:px-6 py-4">
-      {/* Header Bar */}
-      <div className="flex items-center justify-between pb-3 border-b border-border/60 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-card text-foreground border border-border/60 shadow-xs">
-            <TerminalIcon className="size-4" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold tracking-tight text-foreground flex items-center gap-2">
-              InsightAPI Intelligence Workspace
-              <Badge variant="outline" className="text-[10px] font-mono border-border/60 text-muted-foreground">
-                {activeSettings.model}
-              </Badge>
-            </h1>
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-              <span className={`inline-block size-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
-              <span>{isConnected ? "Live WebSocket Engine" : "Local Engine"}</span>
-              {activeSettings.targetUrl && (
-                <span className="ml-2 font-mono text-[11px] text-foreground truncate max-w-[220px] inline-block align-bottom">
-                  Target: {activeSettings.targetUrl}
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
+    <div className="flex flex-col h-[calc(100vh-4rem)] w-full bg-background text-foreground font-sans">
+      <LockedFeature requiredTier="STARTER" featureName="AI Chatbot" className="flex-1 flex flex-col h-full min-h-0">
+        {/* State A: Centered Claude Hero View (No Messages Yet) */}
+        {messages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-3xl mx-auto w-full">
+            {/* Dynamic Claude Greeting */}
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <span className="text-3xl sm:text-4xl text-[#e07a5f] font-serif select-none">✳</span>
+              <h1 className="text-3xl sm:text-4xl font-serif tracking-tight text-foreground font-normal">
+                {greetingTitle}
+              </h1>
+            </div>
 
-        <div className="flex items-center gap-2">
-          <ConversationDownload messages={messages} />
-        </div>
-      </div>
-
-      {/* Main Chat Scroll Area */}
-      <LockedFeature requiredTier="STARTER" featureName="AI Chatbot" className="flex-1 flex flex-col min-h-0">
-        <Conversation className="flex-1 py-4">
-          <ConversationContent>
-            {messages.length === 0 && (
-              <ConversationEmptyState
-                icon={<BotIcon className="size-8 text-muted-foreground/40" />}
-                title="Start Agent Exploration"
-                description="Type a query or click the + icon on the prompt bar to paste a target application URL."
+            {/* Floating Claude Prompt Container */}
+            <div className="w-full mb-6">
+              <PromptInput
+                onSubmit={handleSendMessage}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenPasteUrl={() => setIsUrlModalOpen(true)}
+                modelSelection={modelSelection}
+                onModelSelectionChange={setModelSelection}
+                disabled={isStreaming}
               />
-            )}
+            </div>
 
-            {messages.map((m) => (
-              <Message key={m.id} from={m.role}>
-                <MessageContent from={m.role}>
-                  <MessageResponse content={m.content} />
-                </MessageContent>
-              </Message>
-            ))}
+            {/* Platform Quick Action Suggestion Chips */}
+            <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl">
+              <button
+                type="button"
+                onClick={() => handleActionChipClick("Explore Web App URL")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-muted/80 text-xs font-medium text-foreground transition-colors cursor-pointer shadow-xs"
+              >
+                <GlobeIcon className="size-3.5 text-muted-foreground" />
+                <span>Explore Target URL</span>
+              </button>
 
-            {/* Live Streaming Message & Chain of Thought Steps */}
-            {(isStreaming || activeSteps.length > 0) && (
-              <Message from="assistant">
-                {activeSteps.length > 0 && (
-                  <ChainOfThought defaultOpen={true}>
-                    <ChainOfThoughtHeader>
-                      Reasoning & Process Steps ({activeSteps.filter(s => s.status === "complete").length}/{activeSteps.length} complete)
-                    </ChainOfThoughtHeader>
-                    <ChainOfThoughtContent>
-                      {activeSteps.map((step) => (
-                        <ChainOfThoughtStep
-                          key={step.id}
-                          label={step.label}
-                          description={step.description}
-                          status={step.status}
-                        >
-                          {step.tags && step.tags.length > 0 && (
-                            <ChainOfThoughtSearchResults>
-                              {step.tags.map((tag, idx) => (
-                                <ChainOfThoughtSearchResult key={idx}>
-                                  {tag}
-                                </ChainOfThoughtSearchResult>
-                              ))}
-                            </ChainOfThoughtSearchResults>
-                          )}
-                        </ChainOfThoughtStep>
-                      ))}
-                    </ChainOfThoughtContent>
-                  </ChainOfThought>
+              <button
+                type="button"
+                onClick={() => handleActionChipClick("Generate OpenAPI 3.1 Specification for API endpoints")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-muted/80 text-xs font-medium text-foreground transition-colors cursor-pointer shadow-xs"
+              >
+                <FileCodeIcon className="size-3.5 text-muted-foreground" />
+                <span>Generate OpenAPI 3.1</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleActionChipClick("Test Two-Tier Action Safety Guardrails")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-muted/80 text-xs font-medium text-foreground transition-colors cursor-pointer shadow-xs"
+              >
+                <ShieldCheckIcon className="size-3.5 text-muted-foreground" />
+                <span>Safety Guardrails</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleActionChipClick("Export Postman Collection for endpoints")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-muted/80 text-xs font-medium text-foreground transition-colors cursor-pointer shadow-xs"
+              >
+                <DownloadIcon className="size-3.5 text-muted-foreground" />
+                <span>Export Postman v2.1</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleActionChipClick("Explain AXTree Accessibility Snapshotting architecture")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-muted/80 text-xs font-medium text-foreground transition-colors cursor-pointer shadow-xs"
+              >
+                <SparklesIcon className="size-3.5 text-muted-foreground" />
+                <span>AXTree Architecture</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* State B: Active Conversation Stream View */
+          <div className="flex-1 flex flex-col h-full max-w-4xl mx-auto w-full px-4 py-4 min-h-0">
+            {/* Header bar */}
+            <div className="flex items-center justify-between pb-3 border-b border-border/60 shrink-0">
+              <div className="flex items-center gap-2">
+                <TerminalIcon className="size-4 text-muted-foreground" />
+                <h2 className="text-xs font-bold font-mono tracking-tight text-foreground">
+                  InsightAPI Stream Session
+                </h2>
+                {activeSettings.targetUrl && (
+                  <span className="text-[11px] font-mono text-muted-foreground truncate max-w-[200px]">
+                    ({activeSettings.targetUrl})
+                  </span>
                 )}
+              </div>
+              <ConversationDownload messages={messages} />
+            </div>
 
-                {currentResponse && (
-                  <MessageContent from="assistant">
-                    <MessageResponse content={currentResponse} isStreaming={isStreaming} />
-                  </MessageContent>
+            {/* Messages Log */}
+            <Conversation className="flex-1 py-4">
+              <ConversationContent>
+                {messages.map((m) => (
+                  <Message key={m.id} from={m.role}>
+                    <MessageContent from={m.role}>
+                      <MessageResponse content={m.content} />
+                    </MessageContent>
+                  </Message>
+                ))}
+
+                {(isStreaming || activeSteps.length > 0) && (
+                  <Message from="assistant">
+                    {activeSteps.length > 0 && (
+                      <ChainOfThought defaultOpen={true}>
+                        <ChainOfThoughtHeader>
+                          Reasoning & Execution Steps ({activeSteps.filter((s) => s.status === "complete").length}/{activeSteps.length} complete)
+                        </ChainOfThoughtHeader>
+                        <ChainOfThoughtContent>
+                          {activeSteps.map((step) => (
+                            <ChainOfThoughtStep
+                              key={step.id}
+                              label={step.label}
+                              description={step.description}
+                              status={step.status}
+                            >
+                              {step.tags && step.tags.length > 0 && (
+                                <ChainOfThoughtSearchResults>
+                                  {step.tags.map((tag, idx) => (
+                                    <ChainOfThoughtSearchResult key={idx}>
+                                      {tag}
+                                    </ChainOfThoughtSearchResult>
+                                  ))}
+                                </ChainOfThoughtSearchResults>
+                              )}
+                            </ChainOfThoughtStep>
+                          ))}
+                        </ChainOfThoughtContent>
+                      </ChainOfThought>
+                    )}
+
+                    {currentResponse && (
+                      <MessageContent from="assistant">
+                        <MessageResponse content={currentResponse} isStreaming={isStreaming} />
+                      </MessageContent>
+                    )}
+                  </Message>
                 )}
-              </Message>
-            )}
-          </ConversationContent>
-        </Conversation>
+              </ConversationContent>
+            </Conversation>
 
-        {/* ChatGPT-style Prompt Input Bar */}
-        <div className="pt-2 pb-1 shrink-0">
-          <PromptInput
-            onSubmit={handleSendMessage}
-            onOpenSettings={() => setIsSettingsOpen(true)}
-            onOpenPasteUrl={() => setIsUrlModalOpen(true)}
-            disabled={isStreaming}
-          />
-        </div>
+            {/* Bottom Floating Prompt Input */}
+            <div className="pt-2 pb-2 shrink-0">
+              <PromptInput
+                onSubmit={handleSendMessage}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenPasteUrl={() => setIsUrlModalOpen(true)}
+                modelSelection={modelSelection}
+                onModelSelectionChange={setModelSelection}
+                disabled={isStreaming}
+              />
+            </div>
+          </div>
+        )}
       </LockedFeature>
 
-      {/* Crawl & AI Settings Modal */}
+      {/* Crawl Settings Modal */}
       <CrawlSettingsModal
         open={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
@@ -263,7 +332,7 @@ export default function ChatGPTPage() {
         initialSettings={activeSettings}
       />
 
-      {/* Paste Target URL Quick Modal */}
+      {/* Quick Target URL Modal */}
       <Dialog open={isUrlModalOpen} onOpenChange={setIsUrlModalOpen}>
         <DialogContent className="max-w-md p-6 rounded-2xl shadow-xl bg-card text-card-foreground border border-border/60">
           <DialogHeader>

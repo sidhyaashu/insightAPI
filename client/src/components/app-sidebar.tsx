@@ -12,14 +12,19 @@ import {
   IconFileText,
   IconInnerShadowTop,
   IconLogout,
-  IconArrowLeft,
-  IconChevronDown,
+  IconUser,
+  IconKey,
+  IconHelp,
+  IconDownload,
+  IconChevronRight,
+  IconPlus,
 } from "@tabler/icons-react";
 
 import { useAppSelector, useAppDispatch } from "@/store";
 import { authApi } from "@/features/auth/api/auth.api";
 import { clearCredentials } from "@/features/auth/store/authSlice";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Sidebar,
   SidebarContent,
@@ -28,51 +33,18 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarGroup,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import env from "@/lib/env";
-
-const docsNav = [
-  {
-    title: "Getting Started",
-    url: "#python-sdk",
-    items: [
-      { title: "Python SDK Setup", url: "#python-sdk" },
-      { title: "CLI Engine Setup", url: "#cli-engine" },
-      { title: "Architecture Overview", url: "#gateway-endpoints" },
-    ],
-  },
-  {
-    title: "Autonomous Engine",
-    url: "#python-sdk",
-    items: [
-      { title: "Accessibility Tree Snapping", url: "#python-sdk" },
-      { title: "Two-Tier Safety Guardrails", url: "#cli-engine" },
-      { title: "DOM State Hashing & SPAs", url: "#gateway-endpoints" },
-    ],
-  },
-  {
-    title: "API Intelligence & Observers",
-    url: "#gateway-endpoints",
-    items: [
-      { title: "Network Traffic Observer", url: "#gateway-endpoints" },
-      { title: "Path Parameter Normalization", url: "#gateway-endpoints" },
-      { title: "GraphQL Query Parsing", url: "#gateway-endpoints" },
-    ],
-  },
-  {
-    title: "API Reference & Exports",
-    url: "#gateway-endpoints",
-    items: [
-      { title: "OpenAPI 3.1 Specification", url: "#gateway-endpoints" },
-      { title: "Postman v2.1 Collections", url: "#gateway-endpoints" },
-      { title: "Gateway REST Endpoints", url: "#gateway-endpoints" },
-    ],
-  },
-];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
@@ -80,14 +52,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
 
-  const isDocs = pathname.startsWith("/docs");
-
   const handleLogout = async () => {
     try {
       await authApi.logout();
     } catch {}
     dispatch(clearCredentials());
     router.replace("/login");
+  };
+
+  const getInitials = (name?: string | null, email?: string | null) => {
+    if (name) {
+      return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (email) {
+      return email.slice(0, 2).toUpperCase();
+    }
+    return "AS";
   };
 
   const navMain = [
@@ -100,17 +85,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+    <Sidebar collapsible="icon" className="border-r border-border/40 bg-sidebar" {...props}>
+      <SidebarHeader className="p-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs shrink-0">
                 <IconInnerShadowTop className="size-5" />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-foreground">{env.APP_NAME}</span>
+                  <span className="font-bold text-foreground font-mono tracking-tight">{env.APP_NAME}</span>
                   {user?.tier === "ADMIN" ? (
                     <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono border-primary/40 text-primary">
                       ADMIN
@@ -122,52 +107,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   )}
                 </div>
                 <span className="text-[10px] text-muted-foreground font-mono">
-                  {isDocs ? "Documentation Portal" : "Agentic API Intelligence"}
+                  Agentic API Intelligence
                 </span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+
+        {/* Quick New Chat Button */}
+        <div className="mt-2 group-data-[collapsible=icon]:hidden px-1">
+          <Link
+            href="/chat"
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-card border border-border/60 hover:bg-muted/60 text-xs font-medium text-foreground transition-colors shadow-xs"
+          >
+            <IconPlus className="size-4 text-muted-foreground" />
+            <span>New Chat</span>
+          </Link>
+        </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
-        {isDocs ? (
-          /* Docs-Specific Sidebar Menu with Dropdown Groups */
-          <SidebarGroup>
-            <div className="mb-4 px-2">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 text-xs font-semibold text-primary hover:underline"
-              >
-                <IconArrowLeft className="size-3.5" />
-                <span>Back to Dashboard</span>
-              </Link>
-            </div>
-
-            <SidebarMenu className="gap-2">
-              {docsNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton render={<a href={item.url} />} className="font-semibold text-foreground flex items-center justify-between">
-                    <span>{item.title}</span>
-                    <IconChevronDown className="size-3 text-muted-foreground" />
-                  </SidebarMenuButton>
-                  {item.items?.length ? (
-                    <SidebarMenuSub className="ml-0 border-l border-border px-1.5 mt-1 space-y-1">
-                      {item.items.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton render={<a href={subItem.url} />} className="text-xs text-muted-foreground hover:text-foreground">
-                            {subItem.title}
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  ) : null}
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
-        ) : (
-          /* Main Dashboard Sidebar Menu */
+      <SidebarContent className="px-2 py-2">
+        <SidebarGroup>
           <SidebarMenu className="gap-1">
             {navMain.map((item) => {
               const isActive = pathname === item.href;
@@ -177,10 +137,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <SidebarMenuButton
                     render={<Link href={item.href} />}
                     isActive={isActive}
+                    tooltip={item.title}
                     className={`font-medium transition-colors ${
                       isActive
-                        ? "bg-primary text-primary-foreground font-semibold"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        ? "bg-muted text-foreground font-semibold"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     }`}
                   >
                     <Icon className="size-4" />
@@ -190,23 +151,96 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               );
             })}
           </SidebarMenu>
-        )}
+        </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-col truncate">
-            <span className="text-xs font-semibold text-foreground truncate">{user?.name || user?.email || "Developer"}</span>
-            <span className="text-[10px] text-muted-foreground truncate">{user?.email}</span>
-          </div>
-          <button
-            onClick={handleLogout}
-            title="Sign Out"
-            className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition"
-          >
-            <IconLogout className="size-4" />
-          </button>
-        </div>
+      {/* Claude-style Sidebar Footer User Profile */}
+      <SidebarFooter className="border-t border-border/40 p-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center justify-between gap-2.5 w-full p-1.5 rounded-xl hover:bg-muted/60 transition cursor-pointer focus:outline-none border-none bg-transparent text-left">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted border border-border text-foreground font-bold text-xs shadow-xs">
+                {getInitials(user?.name, user?.email)}
+                <span className="absolute bottom-0 right-0 size-2 rounded-full bg-emerald-500 ring-2 ring-background" />
+              </div>
+              <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
+                <span className="text-xs font-semibold text-foreground truncate">
+                  {user?.name || "Asutosh Sidhya"}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-mono truncate">
+                  {user?.tier || "Free"} plan
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 group-data-[collapsible=icon]:hidden text-muted-foreground">
+              <IconDownload className="size-4 hover:text-foreground transition-colors" title="Download desktop app" />
+            </div>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="start" side="right" className="w-64 p-2 shadow-2xl rounded-2xl bg-card border border-border">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="font-normal p-2">
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-semibold leading-none text-foreground">
+                    {user?.name || "Asutosh Sidhya"}
+                  </p>
+                  <p className="text-[11px] leading-none text-muted-foreground truncate font-mono">
+                    {user?.email || "sidhyaasutosh@gmail.com"}
+                  </p>
+                  <div className="pt-1.5 flex items-center gap-2">
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0.2 font-mono border-border">
+                      {user?.tier || "Free"} Plan
+                    </Badge>
+                    <Link href="/billing" className="text-[10px] text-primary hover:underline font-medium">
+                      Upgrade plan
+                    </Link>
+                  </div>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
+                <IconUser className="size-4 text-muted-foreground" />
+                <span>Profile & Account</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => router.push("/billing")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
+                <IconCreditCard className="size-4 text-muted-foreground" />
+                <span>Billing & Subscriptions</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
+                <IconKey className="size-4 text-muted-foreground" />
+                <span>API Keys & SDK Setup</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => router.push("/docs")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
+                <IconFileText className="size-4 text-muted-foreground" />
+                <span>Documentation Reference</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+
+            <div className="px-2 py-1.5 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Appearance</span>
+              <ThemeToggle />
+            </div>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="cursor-pointer text-xs flex items-center gap-2 py-2 text-destructive focus:bg-destructive/10"
+            >
+              <IconLogout className="size-4" />
+              <span>Sign Out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
