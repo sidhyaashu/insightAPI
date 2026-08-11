@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Header
 from fastapi.responses import Response, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +8,7 @@ from app.repositories.crawl_repo import CrawlRepository
 from app.services.openapi_exporter import OpenAPIExporter
 from app.services.postman_exporter import PostmanExporter
 from app.services.markdown_exporter import MarkdownExporter
+from app.services.fuzzer import APIFuzzer
 
 router = APIRouter()
 
@@ -50,38 +51,89 @@ async def get_report_by_id(
 @router.get("/{session_id}/export")
 async def export_report(
     session_id: str,
-    format: str = Query("openapi", enum=["openapi", "postman", "markdown"])
+    format: str = Query("openapi", enum=["openapi", "postman", "markdown"]),
+    x_user_tier: str | None = Header(None, alias="X-User-Tier"),
+    db: AsyncSession = Depends(get_db),
 ):
     """Export captured API documentation for a session in OpenAPI, Postman, or Markdown format."""
-    if session_id not in CRAWL_SESSIONS:
+    # Server-side Tier check (Postman / Markdown require STARTER+)
+    user_tier = (x_user_tier or "FREE").upper()
+    if format in ["postman", "markdown"] and user_tier == "FREE":
+        raise HTTPException(
+            status_code=403,
+            detail=f"Exporting in {format.upper()} format requires STARTER tier or higher. Upgrade to unlock.",
+        )
+
+    # 1. Check memory store
+    session = CRAWL_SESSIONS.get(session_id)
+
+    # 2. Check DB fallback if memory store misses
+    if not session:
+        try:
+            repo = CrawlRepository(db)
+            db_session = await repo.get_by_id(session_id)
+            if db_session:
+                session = {
+                    "target_url": db_session.target_url,
+                    "captured_endpoints": db_session.captured_endpoints or [],
+                    "openapi_spec": db_session.openapi_spec,
+                    "postman_collection": db_session.postman_collection,
+                    "markdown_docs": db_session.markdown_docs,
+                }
+        except Exception:
+            pass
+
+    if not session:
         raise HTTPException(status_code=404, detail="Crawl session not found.")
 
-    session = CRAWL_SESSIONS[session_id]
     target_url = session.get("target_url", "https://example.com")
     sample_endpoints = session.get("captured_endpoints", [])
 
     if format == "openapi":
-        spec = OpenAPIExporter.generate_spec(f"Session-{session_id}", target_url, sample_endpoints)
+        spec = session.get("openapi_spec") or OpenAPIExporter.generate_spec(f"Session-{session_id}", target_url, sample_endpoints)
         return JSONResponse(content=spec)
     elif format == "postman":
-        collection = PostmanExporter.generate_collection(f"Session-{session_id}", target_url, sample_endpoints)
+        collection = session.get("postman_collection") or PostmanExporter.generate_collection(f"Session-{session_id}", target_url, sample_endpoints)
         return JSONResponse(content=collection)
     else:
-        md_text = MarkdownExporter.generate_markdown(f"Session-{session_id}", target_url, sample_endpoints)
+        md_text = session.get("markdown_docs") or MarkdownExporter.generate_markdown(f"Session-{session_id}", target_url, sample_endpoints)
         return Response(content=md_text, media_type="text/markdown")
 
 
 @router.post("/{session_id}/fuzz")
-async def fuzz_session_report(session_id: str):
+async def fuzz_session_report(
+    session_id: str,
+    x_user_tier: str | None = Header(None, alias="X-User-Tier"),
+    db: AsyncSession = Depends(get_db),
+):
     """Run property-based API fuzzing on a session's OpenAPI spec."""
-    if session_id not in CRAWL_SESSIONS:
+    user_tier = (x_user_tier or "FREE").upper()
+    if user_tier == "FREE":
+        raise HTTPException(
+            status_code=403,
+            detail="Property-based API fuzzing requires STARTER tier or higher.",
+        )
+
+    session = CRAWL_SESSIONS.get(session_id)
+    if not session:
+        try:
+            repo = CrawlRepository(db)
+            db_session = await repo.get_by_id(session_id)
+            if db_session:
+                session = {
+                    "target_url": db_session.target_url,
+                    "captured_endpoints": db_session.captured_endpoints or [],
+                    "openapi_spec": db_session.openapi_spec,
+                }
+        except Exception:
+            pass
+
+    if not session:
         raise HTTPException(status_code=404, detail="Crawl session not found.")
 
-    session = CRAWL_SESSIONS[session_id]
     target_url = session.get("target_url", "https://example.com")
     sample_endpoints = session.get("captured_endpoints", [])
 
-    spec = OpenAPIExporter.generate_spec(f"Session-{session_id}", target_url, sample_endpoints)
-    from app.services.fuzzer import APIFuzzer
+    spec = session.get("openapi_spec") or OpenAPIExporter.generate_spec(f"Session-{session_id}", target_url, sample_endpoints)
     fuzz_results = APIFuzzer.fuzz_openapi_spec(spec)
     return JSONResponse(content=fuzz_results)

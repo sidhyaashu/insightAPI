@@ -21,6 +21,16 @@ PRICE_TO_TIER = {
 }
 
 
+@router.get("/plans")
+async def get_payment_plans():
+    """Return configured Stripe price IDs for available plans."""
+    return {
+        "STARTER": settings.STRIPE_PRICE_STARTER,
+        "PRO": settings.STRIPE_PRICE_PRO,
+        "ENTERPRISE": settings.STRIPE_PRICE_ENTERPRISE,
+    }
+
+
 class CheckoutRequest(BaseModel):
     price_id: str
     success_url: str = f"{settings.APP_URL}/billing?session=success"

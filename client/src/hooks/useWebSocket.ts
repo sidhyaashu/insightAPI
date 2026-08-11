@@ -9,24 +9,26 @@ export function useWebSocket(path: string | null) {
   const connectionRef = useRef<WSConnection | null>(null);
   const mockTimerRef = useRef<any>(null);
 
+  const isDevMockEnabled = process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_ENABLE_MOCK === "true";
+
   const sendMessage = useCallback((data: any) => {
     if (connectionRef.current && isConnected) {
       connectionRef.current.send(data);
-    } else {
-      // Mock Fallback response for Chatbot when WS is offline
+    } else if (isDevMockEnabled) {
+      // Mock Fallback response for Chatbot when WS is offline (Dev mode only)
       if (data?.message) {
-        setLastMessage({ type: "token", content: `InsightBot (Mock Response): I received your message "${data.message}". Since the backend agent service is currently offline, this is a simulated response demonstrating real-time token streaming in your UI development environment.` });
+        setLastMessage({ type: "token", content: `InsightBot (Dev Mock): Received message "${data.message}".` });
         setTimeout(() => {
           setLastMessage({ type: "done", session_id: "mock-session" });
-        }, 1200);
+        }, 1000);
       }
+    } else {
+      setLastMessage({ type: "error", message: "WebSocket connection is offline. Please check service status." });
     }
-  }, [isConnected]);
+  }, [isConnected, isDevMockEnabled]);
 
   useEffect(() => {
     if (!path) return;
-
-    let wsFailed = false;
 
     const conn = wsManager.connect(path, {
       onOpen: () => {
@@ -34,32 +36,35 @@ export function useWebSocket(path: string | null) {
       },
       onClose: () => {
         setIsConnected(false);
-        triggerMockSimulation();
+        if (isDevMockEnabled) {
+          triggerMockSimulation();
+        }
       },
       onMessage: (data) => setLastMessage(data),
       onError: () => {
         setIsConnected(false);
-        wsFailed = true;
-        triggerMockSimulation();
+        if (isDevMockEnabled) {
+          triggerMockSimulation();
+        } else {
+          setLastMessage({ type: "error", message: "WebSocket connection failed." });
+        }
       },
     });
 
     connectionRef.current = conn;
 
     function triggerMockSimulation() {
-      // Simulate connection open for smooth UI development
       setIsConnected(true);
       setLastMessage({ type: "connected", session_id: "mock-session-live" });
 
       if (path?.includes("/stream")) {
-        // Simulate live crawl log events
         let count = 0;
         mockTimerRef.current = setInterval(() => {
           count += 1;
           if (count <= 5) {
             setLastMessage({
               type: "log",
-              message: `[Mock Agent Engine] Exploration pass ${count} on target routes...`,
+              message: `[Dev Mock Engine] Exploration pass ${count} on target routes...`,
               page: count,
               endpoints_found: count * 4,
             });
@@ -77,7 +82,7 @@ export function useWebSocket(path: string | null) {
       connectionRef.current = null;
       setIsConnected(false);
     };
-  }, [path]);
+  }, [path, isDevMockEnabled]);
 
   return { isConnected, lastMessage, sendMessage };
 }
