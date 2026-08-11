@@ -2,12 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { billingApi } from "@/features/billing/api/billing.api";
-import apiClient from "@/lib/api-client";
 import { useTier } from "@/hooks/useTier";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckIcon, CreditCardIcon, AlertTriangleIcon } from "lucide-react";
+import { CheckIcon, CreditCardIcon, AlertTriangleIcon, ExternalLinkIcon } from "lucide-react";
 
 export default function BillingPage() {
   const { tier } = useTier();
@@ -21,18 +20,7 @@ export default function BillingPage() {
   // Fetch backend Stripe plan price IDs dynamically
   const { data: plansData } = useQuery({
     queryKey: ["payment-plans"],
-    queryFn: async () => {
-      try {
-        const res = await apiClient.get("/payments/plans");
-        return res.data;
-      } catch {
-        return {
-          STARTER: "price_starter_placeholder",
-          PRO: "price_pro_placeholder",
-          ENTERPRISE: "price_enterprise_placeholder",
-        };
-      }
-    },
+    queryFn: () => billingApi.getPlans(),
   });
 
   const handleUpgrade = async (tierName: string) => {
@@ -52,6 +40,17 @@ export default function BillingPage() {
     }
   };
 
+  const handleManageBilling = async () => {
+    try {
+      const res = await billingApi.createPortalSession();
+      if (res.portal_url) {
+        window.location.href = res.portal_url;
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "No active Stripe customer profile found.");
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-8 font-sans">
       <div>
@@ -61,9 +60,15 @@ export default function BillingPage() {
 
       {/* Current Subscription Box */}
       <div className="border border-border/60 p-6 rounded-xl bg-card shadow-xs space-y-4">
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 border-b border-border/40 pb-2">
-          <CreditCardIcon className="size-4 text-muted-foreground" /> Current Subscription Overview
-        </h2>
+        <div className="flex items-center justify-between border-b border-border/40 pb-2">
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <CreditCardIcon className="size-4 text-muted-foreground" /> Current Subscription Overview
+          </h2>
+          <Button variant="outline" size="sm" onClick={handleManageBilling} className="text-xs">
+            Manage Billing <ExternalLinkIcon className="size-3 ml-1" />
+          </Button>
+        </div>
+
         {isSubLoading ? (
           <div className="py-2 text-xs text-muted-foreground font-mono animate-pulse">Loading subscription status...</div>
         ) : (

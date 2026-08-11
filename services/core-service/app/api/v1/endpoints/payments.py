@@ -31,6 +31,28 @@ async def get_payment_plans():
     }
 
 
+@router.post("/portal")
+async def create_portal_session(x_user_id: str = Header(...)):
+    """Create a Stripe Customer Portal session for managing billing and subscriptions."""
+    if not settings.STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=503, detail="Payment service not configured.")
+
+    import stripe
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    async with contextlib.asynccontextmanager(get_db)() as db:
+        user_repo = UserRepository(db)
+        user = await user_repo.get_by_id(x_user_id)
+        if not user or not user.stripe_customer_id:
+            raise HTTPException(status_code=400, detail="No active Stripe customer profile found.")
+
+        portal_session = stripe.billing_portal.Session.create(
+            customer=user.stripe_customer_id,
+            return_url=f"{settings.APP_URL}/billing",
+        )
+        return {"portal_url": portal_session.url}
+
+
 class CheckoutRequest(BaseModel):
     price_id: str
     success_url: str = f"{settings.APP_URL}/billing?session=success"

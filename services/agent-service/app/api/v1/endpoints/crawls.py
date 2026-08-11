@@ -185,25 +185,25 @@ async def run_background_crawl(
 
 @router.get("")
 async def list_crawl_sessions(
-    x_user_id: Optional[str] = Header(default=None, alias="x-user-id"),
+    x_user_id: str = Header(..., alias="x-user-id"),
     limit: int = 20,
+    offset: int = 0,
     db: AsyncSession = Depends(get_db),
 ):
     """List crawl sessions for the authenticated user."""
-    if x_user_id:
-        try:
-            repo = CrawlRepository(db)
-            db_sessions = await repo.get_by_user(user_id=x_user_id, limit=limit)
-            return [s.to_dict() for s in db_sessions]
-        except Exception as e:
-            logger.warning(f"DB query failed, falling back to memory store: {e}")
+    try:
+        repo = CrawlRepository(db)
+        db_sessions = await repo.get_by_user(user_id=x_user_id, limit=limit, offset=offset)
+        return [s.to_dict() for s in db_sessions]
+    except Exception as e:
+        logger.warning(f"DB query failed, falling back to memory store: {e}")
 
     # Fallback to memory store
     user_sessions = [
         s for s in CRAWL_SESSIONS.values()
-        if not x_user_id or s.get("user_id") == x_user_id
+        if s.get("user_id") == x_user_id
     ]
-    return user_sessions[:limit]
+    return user_sessions[offset : offset + limit]
 
 
 from app.core.constants import TIER_QUOTAS, TIER_MAX_PAGES, TIER_MAX_AGENTS
@@ -212,7 +212,7 @@ from app.core.constants import TIER_QUOTAS, TIER_MAX_PAGES, TIER_MAX_AGENTS
 async def start_crawl(
     request: CrawlRequest,
     background_tasks: BackgroundTasks,
-    x_user_id: Optional[str] = Header(default="anonymous", alias="x-user-id"),
+    x_user_id: str = Header(..., alias="x-user-id"),
     x_user_tier: Optional[str] = Header(default="FREE", alias="x-user-tier"),
     db: AsyncSession = Depends(get_db),
 ):
