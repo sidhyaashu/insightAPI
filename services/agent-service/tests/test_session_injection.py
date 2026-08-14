@@ -112,6 +112,8 @@ async def test_crawl_sessions_does_not_store_session_state():
             max_pages=1,
             headless=True,
             session_state=fake_session,
+            user_id="test-user-id",
+            user_tier="enterprise",
         )
 
     stored = CRAWL_SESSIONS[session_id]

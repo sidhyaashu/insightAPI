@@ -246,31 +246,28 @@ The LangGraph state dict that flows between all nodes:
 ## What's Built vs. What's Planned
 
 ### ✅ Fully Built & Working (v1.0.0 Release)
-- **LangGraph Agent Loop**: PlannerNode → RiskEvaluatorNode → ExecutorNode → ReflectionNode → AnalyzerNode state machine
-- **LLM-Powered Planner**: Coverage gap reasoning, goal-directed selection, anti-loop stagnation guidance
-- **Smart Form Injection**: Contextually-aware form field value generation via `LLMFormInjector`
-- **Batched Semantic Summaries**: Auto-generated descriptions, tags, and category labels attached to schema output
-- **GPT-4o Vision Fallback**: Screenshot-based visual UI control extraction when AXTree is sparse
-- **Network Loading & Stability Tracker**: `PageNetworkStabilizer` (400ms quiet window & UI loading spinner detection)
-- **Loop Breaker & Stagnation Detector**: `StagnationDetector` (zero-yield streak tracking, state oscillation detection, force un-stuck recovery)
-- **Token Budget & Cost Manager**: `LLMCostManager` + `ModelRouter` (`FAST`, `SMART`, `VISION` model tiers with USD cost tracking)
-- **Goal-Directed Crawling**: `--goal` parameter guiding exploration toward target objectives
-- **Parallel Multi-Agent Crawling**: `CrawlCoordinator` (concurrent sub-agent workers across section goals)
-- **Vector Store Memory & Search**: `EndpointVectorStore` + `POST /api/v1/search` semantic endpoint search
-- **DOM Distillation**: Shadow DOM piercing + iframe piercing + virtualized container scroll support
-- **Network Observer**: REST XHR/fetch, GraphQL operation parsing, WebSocket handshakes, SSE
-- **URL Parameterization & Deduplication**: Path parameterization (`/users/{id}`), DOM state hashing, route cluster pruning
-- **Safety & Compliance**: Two-tier risk evaluator (regex fast-path + context fallback), robots.txt checking, per-domain rate limiting, SSRF protection, secret redaction
-- **Multi-Format Exporters**: OpenAPI 3.0.3 (with redacted payload examples), Postman v2.1, Markdown documentation
-- **Distribution Interfaces**: Python SDK (`AgentEngine`), Typer CLI (`insightapi`), FastAPI REST API
-- **Verification**: **92 unit & integration tests passing 100% cleanly**
-- **Docker Setup**: FastAPI + PostgreSQL/pgvector + Redis compose setup
+- **Production Next.js Web UI Client**: Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, and Redux Toolkit. Features Claude-inspired warm charcoal aesthetic, borderless layout, and zero mock fallbacks.
+- **Authentication & Identity Unification**: Email/Password authentication, verification emails, password resets, Google OAuth, GitHub OAuth, and automatic Identity Account Unification.
+- **Security & Token Rotation**: Memory-only access tokens + HttpOnly/Secure/SameSite refresh token rotation with single-use reuse detection.
+- **Interactive Workspace Dashboard (`/dashboard`)**: Crawl launcher with tier-based max pages budget, goal focus, and real-time recent crawl history table.
+- **Crawl Live Stream (`/crawls/[id]`)**: REST hydration on mount + real-time WebSocket log streaming with manual reconnect controls.
+- **Crawl History Manager (`/crawls`)**: Table pagination (`limit` & `offset`), row deletion (`DELETE /crawls/{id}`) with confirm dialog, and status filtering.
+- **Multi-Format Report Export (`/reports/[id]`)**: OpenAPI 3.0.3/3.1, Postman v2.1, and Markdown exports with server-side tier quota gating.
+- **API Key Management (`/settings`)**: SHA-256 hashed API key issuance, show-once key modal, 5-key max quota, and key revocation.
+- **Stripe Billing & Customer Portal (`/billing`)**: Dynamic plan pricing, Stripe Checkout for STARTER/PRO/ENTERPRISE tiers, and Stripe Customer Portal integration.
+- **LangGraph Agent Loop**: PlannerNode → RiskEvaluatorNode → ExecutorNode → ReflectionNode → AnalyzerNode state machine.
+- **LLM-Powered Planner**: Coverage gap reasoning, goal-directed selection, anti-loop stagnation guidance.
+- **Smart Form Injection**: Contextually-aware form field value generation via `LLMFormInjector`.
+- **DOM Distillation**: Accessibility Tree (AXTree) extraction, Shadow DOM piercing, iframe piercing, virtualized container scroll support.
+- **Network Observer & Deduplication**: REST XHR/fetch, GraphQL operation parsing, WebSocket handshakes, SSE, dynamic route parameterization (`/users/{id}`), DOM state hashing, route cluster pruning.
+- **Safety & Compliance**: Two-tier risk evaluator (regex fast-path + context fallback), robots.txt checking, per-domain rate limiting, SSRF protection, secret redaction.
+- **Distribution Interfaces**: Python SDK (`AgentEngine`), Typer CLI (`insightapi`), FastAPI REST API.
 
-### 🚧 Future Roadmap (Post-v1.0.0 — Client Web App)
-- **1. Marketing Landing Page (`/`)** — Dark-mode gradient hero, interactive 15-second live sandbox, feature grid, and pricing cards
-- **2. Interactive Workspace Dashboard (`/dashboard`)** — Crawl launcher, budget/agent sliders, live agent logs, React Flow endpoint graph, and semantic search bar
-- **3. Interactive Documentation Portal (`/docs`)** — Embedded Swagger UI / Redoc viewer, SDK/CLI reference, and 1-click OpenAPI/Postman exports
-- **Self-Healing Test Suite Generator** — Auto-generate Playwright test scripts from recorded crawl traces
+### 🚧 Future Roadmap (Post-v1.0.0)
+- **Automated API Drift Detection**: Compare OpenAPI specs across releases to highlight breaking changes.
+- **Vision Set-of-Mark (SoM) Fallback Classifier**: Screenshot coordinate overlay for Canvas/WebGL controls.
+- **GitHub Action & CI/CD Pipeline Plugin**: Automated PR crawl checks in CI pipelines.
+- **Self-Healing Test Suite Generator**: Auto-generate Playwright test scripts from recorded crawl traces.
 
 
 ---

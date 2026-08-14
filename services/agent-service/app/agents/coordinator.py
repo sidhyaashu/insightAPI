@@ -65,12 +65,12 @@ class CrawlCoordinator:
         )
 
         try:
-            from app.agents.nodes.llm_client import get_llm, ModelTier
+            from app.agents.nodes.llm_client import get_llm, ModelTier, extract_text_content, repair_json_string
             llm = get_llm(ModelTier.FAST)
             response = await llm.ainvoke(prompt)
-            response_text = response.content if hasattr(response, "content") else str(response)
+            response_text = extract_text_content(response)
 
-            clean = response_text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+            clean = repair_json_string(response_text)
             sub_goals = json.loads(clean)
             if isinstance(sub_goals, list) and sub_goals:
                 logger.info(f"🔀 Coordinator split crawl into {len(sub_goals)} parallel section goals: {sub_goals}")

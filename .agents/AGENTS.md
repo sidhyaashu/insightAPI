@@ -6,8 +6,8 @@
 
 ## 1. Project Context & Stack
 
-* **Project Goal**: InsightAPI AI is an Agentic Web API Intelligence Platform and Open-Source Python SDK that autonomously explores web applications, observes network traffic, analyzes API behavior, infers endpoint relationships, and generates structured OpenAPI/Postman documentation.
-* **Distribution Model**: **Python SDK + CLI Engine + Standalone REST API**. Open-source, embeddable in CI/CD pipelines or Python scripts.
+* **Project Goal**: InsightAPI AI is an Agentic Web API Intelligence Platform and Python SDK that autonomously explores web applications, observes network traffic, analyzes API behavior, infers endpoint relationships, and generates structured OpenAPI/Postman documentation.
+* **Distribution Model**: **Python SDK + CLI Engine + Standalone REST API**. Embeddable in CI/CD pipelines or Python scripts.
 * **Technology Stack**:
   * **Core Engine, SDK & CLI**: Python (Typer + Rich + Asyncio)
   * **Backend & REST API**: FastAPI (Python)

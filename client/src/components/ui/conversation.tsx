@@ -21,7 +21,7 @@ export const Conversation = ({ className, children, ...props }: ConversationProp
   return (
     <div
       ref={containerRef}
-      className={cn("relative flex-1 overflow-y-auto pr-2 scroll-smooth", className)}
+      className={cn("relative flex-1 overflow-y-auto pr-2 scroll-smooth no-scrollbar", className)}
       role="log"
       {...props}
     >

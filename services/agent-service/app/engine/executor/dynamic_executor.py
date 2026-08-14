@@ -125,15 +125,14 @@ class LLMFormInjector:
         )
 
         try:
-            from app.agents.nodes.llm_client import get_llm, ModelTier
+            from app.agents.nodes.llm_client import get_llm, ModelTier, ModelRouter, extract_text_content
             llm = get_llm(ModelTier.FAST)
             response = await llm.ainvoke(prompt)
-            value = (response.content if hasattr(response, "content") else str(response)).strip()
+            value = extract_text_content(response).strip()
 
             tokens_est = (len(prompt) + len(value)) // 4
             if cost_manager:
-                from app.core.config import settings as s
-                model_name = s.AZURE_OPENAI_DEPLOYMENT_FAST if s.AZURE_OPENAI_ENDPOINT else s.OPENAI_MODEL_FAST
+                model_name = ModelRouter.get_model_name(ModelTier.FAST)
                 cost_manager.record_usage(tokens_est, model_name)
 
             # Cache per form context

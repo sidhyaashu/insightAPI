@@ -1,14 +1,36 @@
-"""Agent Service — FastAPI application entry point."""
+import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.database import engine, Base
 from app.api.v1.router import api_router
 from app.routers import stream, chat
+
+# Ensure all SQLAlchemy models are registered on Base.metadata
+from app.models.crawl_session import CrawlSession
+from app.models.chat_message import ChatMessage
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Ensure agent service database schema is created on startup."""
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info(" Agent Service: Database schema initialized successfully.")
+    except Exception as e:
+        logger.error(f" Agent Service: Database initialization error: {e}")
+    yield
+
 
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} — Agent Service",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
+    lifespan=lifespan,
 )
 
 # CORS — restricted in production; gateway handles cross-origin for clients
@@ -22,8 +44,10 @@ app.add_middleware(
 
 # REST API (v1)
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat")
+app.include_router(chat.router, prefix="/api/chat")
 
-# WebSocket routers (no /api/v1 prefix — accessed via /ws/*)
+# WebSocket routers (accessed via /ws/*)
 app.include_router(stream.router, prefix="/ws")
 app.include_router(chat.router, prefix="/ws")
 

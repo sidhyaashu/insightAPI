@@ -16,7 +16,7 @@ class SessionRepository:
 
     async def store_refresh_token(self, user_id: str, jti: str) -> None:
         redis = await get_redis_client()
-        ttl = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS).seconds * 24
+        ttl = int(timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds())
         await redis.set(f"session:refresh:{user_id}:{jti}", "1", ex=ttl)
 
     async def is_refresh_token_valid(self, user_id: str, jti: str) -> bool:
@@ -38,7 +38,7 @@ class SessionRepository:
     async def cache_user_session(self, user_id: str, tier: str) -> None:
         """Cache user tier in Redis — read by gateway for fast x-user-id injection."""
         redis = await get_redis_client()
-        ttl = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES + 5).seconds
+        ttl = int(timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES + 5).total_seconds())
         await redis.hset(f"user:session:{user_id}", mapping={"tier": tier})
         await redis.expire(f"user:session:{user_id}", ttl)
 

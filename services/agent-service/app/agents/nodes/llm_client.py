@@ -25,16 +25,52 @@ from app.core.config import settings
 logger = logging.getLogger("agent.llm_client")
 
 
+def extract_text_content(content: Any) -> str:
+    """
+    Safely extracts plain text string from any LLM response or message content.
+    Handles:
+    - Plain string (ChatOpenAI, AzureChatOpenAI)
+    - List of dicts/blocks (ChatGoogleGenerativeAI: [{'type': 'text', 'text': ...}])
+    - Objects with .content attribute (AIMessage, BaseMessage)
+    - Fallback str conversion
+    """
+    if content is None:
+        return ""
+    if hasattr(content, "content"):
+        content = content.content
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                if item.get("type") == "text" and "text" in item:
+                    parts.append(str(item["text"]))
+                elif "text" in item:
+                    parts.append(str(item["text"]))
+                else:
+                    parts.append(str(item))
+            elif isinstance(item, str):
+                parts.append(item)
+            else:
+                parts.append(str(item))
+        return "".join(parts)
+    return str(content)
+
+
 def repair_json_string(raw_text: str) -> str:
     """
     Cleans and repairs common JSON formatting issues in raw LLM outputs:
+    - Extracts text if given an AIMessage/dict list
     - Strips markdown code fences (```json ... ```)
     - Removes trailing commas before closing brackets/braces
     - Strips leading/trailing non-JSON commentary
     """
     import re
-    if not raw_text:
+    if raw_text is None:
         return "{}"
+    if not isinstance(raw_text, str):
+        raw_text = extract_text_content(raw_text)
 
     text = raw_text.strip()
     # 1. Strip markdown fences
@@ -65,12 +101,11 @@ class ModelTier(str, Enum):
     Task-complexity tiers that drive model selection.
 
     FAST   – High-frequency, low-complexity tasks (planner routing, form
-             injection, endpoint summaries).  Uses the cheapest capable model.
+             injection, endpoint summaries). Uses the cheapest capable model.
     SMART  – Complex reasoning tasks (reflection, goal-directed planning).
              Uses the most capable reasoning model.
     VISION – Screenshot-based UI understanding when AXTree extraction fails.
-             Uses a vision-capable model (gpt-4o-mini supports vision and is
-             significantly cheaper than gpt-4o).
+             Uses a vision-capable model (gemini-3.6-flash / gpt-4o-mini).
     """
     FAST = "fast"
     SMART = "smart"
@@ -83,6 +118,10 @@ class ModelTier(str, Enum):
 # ---------------------------------------------------------------------------
 
 _PRICE_PER_1K_TOKENS: Dict[str, float] = {
+    "gemini-3.6-flash": 0.000100,
+    "gemini-3.7-flash": 0.000150,
+    "gemini-2.5-flash": 0.000100,
+    "gemini-2.5-pro": 0.001250,
     "gpt-4o-mini": 0.000150,   # input $0.15/M tokens
     "gpt-4o": 0.005,           # input $5.00/M tokens
     "gpt-5.4": 0.005,          # treat like gpt-4o for estimation
@@ -107,37 +146,63 @@ class ModelRouter:
 
     Decision logic
     --------------
-    1. If Azure credentials are configured → use AzureChatOpenAI with the
-       deployment name mapped to the tier.
-    2. Otherwise → use ChatOpenAI with the standard OpenAI model name.
+    1. If provider is explicitly specified in settings.LLM_PROVIDER, use that.
+    2. Otherwise auto-detects in order: Gemini -> Azure OpenAI -> OpenAI.
     3. Falls back to FAST tier model on any configuration error.
 
     Model assignment per tier (configurable via config.py / .env):
-        FAST   → OPENAI_MODEL_FAST   / AZURE_OPENAI_DEPLOYMENT_FAST
-        SMART  → OPENAI_MODEL_SMART  / AZURE_OPENAI_DEPLOYMENT_SMART
-        VISION → OPENAI_MODEL_VISION / AZURE_OPENAI_DEPLOYMENT_VISION
+        Gemini: GEMINI_MODEL_FAST / GEMINI_MODEL_SMART / GEMINI_MODEL_VISION
+        Azure:  AZURE_OPENAI_DEPLOYMENT_FAST / SMART / VISION
+        OpenAI: OPENAI_MODEL_FAST / SMART / VISION
     """
 
-    @staticmethod
-    def _is_azure() -> bool:
-        return bool(settings.AZURE_OPENAI_ENDPOINT and settings.AZURE_OPENAI_API_KEY)
+    @classmethod
+    def get_provider(cls) -> str:
+        """
+        Determines active provider: "gemini", "azure", or "openai".
+        """
+        req_provider = (getattr(settings, "LLM_PROVIDER", "auto") or "auto").lower()
+        if req_provider in ("gemini", "google"):
+            return "gemini"
+        if req_provider == "azure":
+            return "azure"
+        if req_provider == "openai":
+            return "openai"
+
+        # Auto-detection priority
+        if settings.GEMINI_API_KEY:
+            return "gemini"
+        if settings.AZURE_OPENAI_ENDPOINT and settings.AZURE_OPENAI_API_KEY:
+            return "azure"
+        if settings.OPENAI_API_KEY:
+            return "openai"
+        return "gemini" if settings.GEMINI_API_KEY else "openai"
 
     @classmethod
     def get_model_name(cls, tier: ModelTier) -> str:
         """Returns the resolved model/deployment name for a tier."""
-        if cls._is_azure():
+        provider = cls.get_provider()
+        if provider == "gemini":
+            mapping = {
+                ModelTier.FAST: settings.GEMINI_MODEL_FAST,
+                ModelTier.SMART: settings.GEMINI_MODEL_SMART,
+                ModelTier.VISION: settings.GEMINI_MODEL_VISION,
+            }
+            return mapping.get(tier, settings.GEMINI_MODEL_FAST)
+        elif provider == "azure":
             mapping = {
                 ModelTier.FAST: settings.AZURE_OPENAI_DEPLOYMENT_FAST,
                 ModelTier.SMART: settings.AZURE_OPENAI_DEPLOYMENT_SMART,
                 ModelTier.VISION: settings.AZURE_OPENAI_DEPLOYMENT_VISION,
             }
+            return mapping.get(tier, settings.AZURE_OPENAI_DEPLOYMENT_FAST)
         else:
             mapping = {
                 ModelTier.FAST: settings.OPENAI_MODEL_FAST,
                 ModelTier.SMART: settings.OPENAI_MODEL_SMART,
                 ModelTier.VISION: settings.OPENAI_MODEL_VISION,
             }
-        return mapping.get(tier, settings.OPENAI_MODEL_FAST)
+            return mapping.get(tier, settings.OPENAI_MODEL_FAST)
 
     @classmethod
     def get_llm(cls, tier: ModelTier = ModelTier.FAST, temperature: float = 0.0):
@@ -149,10 +214,18 @@ class ModelRouter:
         tier        : Task complexity tier (FAST / SMART / VISION).
         temperature : Sampling temperature; default 0.0 for deterministic outputs.
         """
+        provider = cls.get_provider()
         model_name = cls.get_model_name(tier)
 
         try:
-            if cls._is_azure():
+            if provider == "gemini":
+                from langchain_google_genai import ChatGoogleGenerativeAI
+                return ChatGoogleGenerativeAI(
+                    model=model_name,
+                    google_api_key=settings.GEMINI_API_KEY,
+                    temperature=temperature,
+                )
+            elif provider == "azure":
                 from langchain_openai import AzureChatOpenAI
                 return AzureChatOpenAI(
                     azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
@@ -169,7 +242,9 @@ class ModelRouter:
                     temperature=temperature,
                 )
         except Exception as e:
-            logger.error(f"ModelRouter: Failed to build LLM client for tier={tier}, model={model_name}: {e}")
+            logger.error(
+                f"ModelRouter: Failed to build LLM client (provider={provider}, tier={tier}, model={model_name}): {e}"
+            )
             raise
 
 

@@ -18,12 +18,24 @@ Be concise, technical, and helpful. Format code examples in markdown."""
 
 
 def _build_langchain_client():
-    """Build LangChain chat client using Azure or standard OpenAI based on config."""
-    if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
+    """Build LangChain chat client using Gemini, Azure, or standard OpenAI based on config."""
+    from app.agents.nodes.llm_client import ModelRouter, ModelTier
+
+    provider = ModelRouter.get_provider()
+
+    if provider == "gemini":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=settings.GEMINI_MODEL_SMART,
+            google_api_key=settings.GEMINI_API_KEY,
+            streaming=True,
+            temperature=0.7,
+        )
+    elif provider == "azure":
         from langchain_openai import AzureChatOpenAI
         return AzureChatOpenAI(
             azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-            azure_deployment=settings.AZURE_OPENAI_DEPLOYMENT,
+            azure_deployment=settings.AZURE_OPENAI_DEPLOYMENT_SMART or settings.AZURE_OPENAI_DEPLOYMENT,
             api_version=settings.AZURE_OPENAI_API_VERSION,
             api_key=settings.AZURE_OPENAI_API_KEY,
             streaming=True,
@@ -70,8 +82,10 @@ async def stream_chat_response(
     messages.append(HumanMessage(content=user_message))
 
     try:
+        from app.agents.nodes.llm_client import extract_text_content
+
         async for chunk in client.astream(messages):
-            token = chunk.content
+            token = extract_text_content(chunk.content if hasattr(chunk, "content") else chunk)
             if token:
                 yield token
     except Exception as e:

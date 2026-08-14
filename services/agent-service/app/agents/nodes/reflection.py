@@ -80,18 +80,18 @@ class ReflectionNode:
         )
 
         try:
-            from app.agents.nodes.llm_client import get_llm, ModelTier
-            # Reflection is a complex reasoning task — use SMART tier (gpt-4o / gpt-5.4)
+            from app.agents.nodes.llm_client import get_llm, ModelTier, ModelRouter, extract_text_content, repair_json_string
+            # Reflection is a complex reasoning task — use SMART tier
             llm = get_llm(ModelTier.SMART)
             response = await llm.ainvoke(prompt)
-            response_text = response.content if hasattr(response, "content") else str(response)
+            response_text = extract_text_content(response)
 
             tokens_est = (len(prompt) + len(response_text)) // 4
             if cost_manager:
-                model_name = settings.AZURE_OPENAI_DEPLOYMENT_SMART if settings.AZURE_OPENAI_ENDPOINT else settings.OPENAI_MODEL_SMART
+                model_name = ModelRouter.get_model_name(ModelTier.SMART)
                 cost_manager.record_usage(tokens_est, model_name)
 
-            clean = response_text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+            clean = repair_json_string(response_text)
             reflection_data = json.loads(clean)
 
             state["reflection_notes"] = json.dumps(reflection_data)

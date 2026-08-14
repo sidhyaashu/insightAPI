@@ -30,12 +30,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard Overview",
-  "/crawls": "Crawl Session History",
-  "/chat": "AI Endpoint Assistant",
-  "/billing": "Billing & Plan Tier",
-  "/settings": "Account Settings",
-  "/docs": "Technical Documentation",
+  "/chat": "AI Chatbot Assistant",
+  "/billing": "Billing & Subscriptions",
+  "/settings": "Account Settings & Profile",
 };
 
 export function SiteHeader() {
@@ -44,7 +41,7 @@ export function SiteHeader() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
 
-  const title = PAGE_TITLES[pathname] || "Dashboard";
+  const title = PAGE_TITLES[pathname] || "AI Chatbot";
 
   const handleLogout = async () => {
     try {
@@ -70,11 +67,11 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center justify-between gap-2 border-b bg-card px-4 lg:px-6 transition-[width,height] ease-linear">
-      <div className="flex items-center gap-2">
-        <SidebarTrigger className="-ml-1 cursor-pointer" />
-        <Separator orientation="vertical" className="mx-2 h-4" />
-        <h1 className="text-sm font-semibold tracking-tight text-foreground">{title}</h1>
+    <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center gap-3">
+        <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition cursor-pointer" />
+        <Separator orientation="vertical" className="h-4" />
+        <h1 className="text-sm font-semibold text-foreground tracking-tight">{title}</h1>
       </div>
 
       <div className="flex items-center gap-3">
@@ -137,11 +134,6 @@ export function SiteHeader() {
               <DropdownMenuItem onClick={() => router.push("/billing")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
                 <IconCreditCard className="size-4 text-muted-foreground" />
                 <span>Billing & Subscriptions</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
-                <IconKey className="size-4 text-muted-foreground" />
-                <span>API Keys & SDK</span>
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={() => router.push("/docs")} className="cursor-pointer text-xs flex items-center gap-2 py-2">

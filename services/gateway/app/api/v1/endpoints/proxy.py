@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 import httpx
 from fastapi import APIRouter, Request, Response, HTTPException
-from fastapi.responses import StreamingResponse
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -20,6 +19,8 @@ ROUTE_TABLE = {
     "/api/users": settings.CORE_SERVICE_URL,
     "/api/payments": settings.CORE_SERVICE_URL,
     "/api/internal": settings.CORE_SERVICE_URL,
+    "/api/v1/chat": settings.AGENT_SERVICE_URL,
+    "/api/chat": settings.AGENT_SERVICE_URL,
     "/api/v1": settings.AGENT_SERVICE_URL,
 }
 
@@ -29,7 +30,8 @@ _client: httpx.AsyncClient | None = None
 async def get_http_client() -> httpx.AsyncClient:
     global _client
     if _client is None or _client.is_closed:
-        _client = httpx.AsyncClient(timeout=120.0, follow_redirects=True)
+        # Disable follow_redirects so HTTP 307/302 OAuth redirects are passed directly to the user's browser
+        _client = httpx.AsyncClient(timeout=120.0, follow_redirects=False)
     return _client
 
 
@@ -70,9 +72,16 @@ async def reverse_proxy(request: Request, path: str):
         logger.error(f"Upstream request error: {e}")
         raise HTTPException(status_code=502, detail="Upstream service unavailable.")
 
+    # Filter out hop-by-hop and conflicting headers (e.g. transfer-encoding + content-length)
+    res_headers = dict(upstream_resp.headers)
+    res_headers.pop("server", None)
+    res_headers.pop("date", None)
+    res_headers.pop("transfer-encoding", None)
+    res_headers.pop("content-length", None)
+
     return Response(
         content=upstream_resp.content,
         status_code=upstream_resp.status_code,
-        headers=dict(upstream_resp.headers),
+        headers=res_headers,
         media_type=upstream_resp.headers.get("content-type"),
     )

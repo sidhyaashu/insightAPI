@@ -125,22 +125,21 @@ class LLMPlannerStrategy:
 
         # LLM call
         try:
-            from app.agents.nodes.llm_client import get_llm, ModelTier
+            from app.agents.nodes.llm_client import get_llm, ModelTier, ModelRouter, extract_text_content, repair_json_string
             # Use FAST model for routine planner decisions
             llm = get_llm(ModelTier.FAST)
             response = await llm.ainvoke(prompt)
-            response_text = response.content if hasattr(response, "content") else str(response)
+            response_text = extract_text_content(response)
 
             # Estimate tokens (rough: 1 token ≈ 4 chars)
             tokens_est = (len(prompt) + len(response_text)) // 4
             if cost_manager:
-                model_name = settings.AZURE_OPENAI_DEPLOYMENT_FAST if settings.AZURE_OPENAI_ENDPOINT else settings.OPENAI_MODEL_FAST
+                model_name = ModelRouter.get_model_name(ModelTier.FAST)
                 cost_manager.record_usage(tokens_est, model_name, is_planner_call=True)
                 cost_manager.put_cache(prompt_cache_key, response_text, tokens_est)
 
             # Parse response
-            # Strip markdown code fences if present
-            clean = response_text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+            clean = repair_json_string(response_text)
             result = json.loads(clean)
             idx = int(result.get("index", 0))
             reason = result.get("reason", "")

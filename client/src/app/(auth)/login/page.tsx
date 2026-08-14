@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAppDispatch } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { setCredentials } from "@/features/auth/store/authSlice";
 import { authApi } from "@/features/auth/api/auth.api";
 import env from "@/lib/env";
@@ -11,6 +11,13 @@ import env from "@/lib/env";
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      router.replace("/chat");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   const [tab, setTab] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -21,10 +28,12 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState("");
 
   const handleGithubLogin = () => {
+    sessionStorage.setItem("oauth_provider", "github");
     window.location.href = `${env.API_BASE_URL}/auth/github/login`;
   };
 
   const handleGoogleLogin = () => {
+    sessionStorage.setItem("oauth_provider", "google");
     window.location.href = `${env.API_BASE_URL}/auth/google/login`;
   };
 
@@ -39,14 +48,14 @@ export default function LoginPage() {
         const tokens = await authApi.login({ email, password });
         if (tokens.user && tokens.access_token) {
           dispatch(setCredentials({ user: tokens.user, accessToken: tokens.access_token }));
-          router.push("/dashboard");
+          router.push("/chat");
         }
       } else {
         const tokens = await authApi.register({ email, password, name });
         if (tokens.user && tokens.access_token) {
           dispatch(setCredentials({ user: tokens.user, accessToken: tokens.access_token }));
           setSuccessMsg("Account created successfully! Check your email for verification link.");
-          setTimeout(() => router.push("/dashboard"), 1500);
+          setTimeout(() => router.push("/chat"), 1500);
         }
       }
     } catch (err: any) {

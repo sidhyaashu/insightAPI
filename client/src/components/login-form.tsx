@@ -33,8 +33,7 @@ export function LoginForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default demo login redirect to dashboard
-    router.push("/dashboard");
+    router.push("/chat");
   };
 
   return (

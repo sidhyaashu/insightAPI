@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import React, { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import {
     NavigationMenu,
@@ -22,15 +21,10 @@ import {
     Zap,
     Menu,
     Bot,
-    Search,
-    Globe,
     FileText,
     Sparkles,
-    LineChart,
     ArrowRight,
-    ChevronRight,
     Shield,
-    Code,
     Cpu,
     Terminal,
     Network
@@ -116,13 +110,13 @@ export default function NavBar() {
                                             <div className="flex flex-col border-r border-border py-8 px-6">
                                                 <h4 className="text-sm font-medium text-muted-foreground mb-6 px-2">Discovery Engine</h4>
                                                 <ul className="grid gap-1">
-                                                    <ListItem href="/docs" title="Autonomous Crawler" icon={<Bot className="h-4 w-4 text-orange-500" />}>
+                                                    <ListItem href="#features" title="Autonomous Crawler" icon={<Bot className="h-4 w-4 text-orange-500" />}>
                                                         Playwright AI driver with smart form populator & SPA state navigation
                                                     </ListItem>
-                                                    <ListItem href="/docs" title="Accessibility Snapper" icon={<Cpu className="h-4 w-4 text-orange-500" />}>
+                                                    <ListItem href="#features" title="Accessibility Snapper" icon={<Cpu className="h-4 w-4 text-orange-500" />}>
                                                         Token-efficient AXTree extraction filtering raw 100k+ HTML bloat
                                                     </ListItem>
-                                                    <ListItem href="/docs" title="Two-Tier Risk Classifier" icon={<Shield className="h-4 w-4 text-orange-500" />}>
+                                                    <ListItem href="#features" title="Two-Tier Risk Classifier" icon={<Shield className="h-4 w-4 text-orange-500" />}>
                                                         Guardrail system protecting target sites from destructive actions
                                                     </ListItem>
                                                 </ul>
@@ -132,13 +126,13 @@ export default function NavBar() {
                                             <div className="flex flex-col border-r border-border py-8 px-6">
                                                 <h4 className="text-sm font-medium text-muted-foreground mb-6 px-2">Intelligence & Exports</h4>
                                                 <ul className="grid gap-1">
-                                                    <ListItem href="/docs" title="OpenAPI 3.1 & Postman" icon={<FileText className="h-4 w-4 text-orange-500" />}>
+                                                    <ListItem href="#features" title="OpenAPI 3.1 & Postman" icon={<FileText className="h-4 w-4 text-orange-500" />}>
                                                         Instant one-click specification export with auto schemas
                                                     </ListItem>
-                                                    <ListItem href="/docs" title="Network Observer" icon={<Network className="h-4 w-4 text-orange-500" />}>
+                                                    <ListItem href="#features" title="Network Observer" icon={<Network className="h-4 w-4 text-orange-500" />}>
                                                         Intercepts hidden AJAX/XHR, GraphQL operations & REST routes
                                                     </ListItem>
-                                                    <ListItem href="/docs" title="Path Normalizer" icon={<Sparkles className="h-4 w-4 text-orange-500" />}>
+                                                    <ListItem href="#features" title="Path Normalizer" icon={<Sparkles className="h-4 w-4 text-orange-500" />}>
                                                         Normalizes dynamic resource URLs into parameterized /users/{'{id}'}
                                                     </ListItem>
                                                 </ul>
@@ -157,8 +151,8 @@ export default function NavBar() {
                                                         Run <code className="bg-background px-1.5 py-0.5 rounded border border-border text-foreground font-mono">pip install insightapi</code> for zero-dependency in-memory session mode.
                                                     </p>
                                                 </div>
-                                                <Link href="/docs" className="inline-flex items-center justify-center rounded-md text-xs font-medium px-3 py-1.5 w-fit cursor-pointer bg-orange-500 hover:bg-orange-600 text-white transition-colors">
-                                                    Explore Python SDK <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                                <Link href="/login" className="inline-flex items-center justify-center rounded-md text-xs font-medium px-3 py-1.5 w-fit cursor-pointer bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+                                                    Get Started <ArrowRight className="ml-1 h-3.5 w-3.5" />
                                                 </Link>
                                             </div>
                                         </div>
@@ -167,9 +161,6 @@ export default function NavBar() {
                             </NavigationMenuList>
                         </NavigationMenu>
 
-                        <Link href="/docs" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                            Docs & SDK
-                        </Link>
                         <Link href="#features" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                             Features
                         </Link>
@@ -184,8 +175,8 @@ export default function NavBar() {
                     {/* Action Buttons */}
                     <div className="hidden md:flex items-center gap-3">
                         {isAuthenticated ? (
-                            <Link href="/dashboard" className="inline-flex items-center justify-center rounded-md text-sm font-medium px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white cursor-pointer transition-colors">
-                                Dashboard ({user?.name || user?.email?.split('@')[0]})
+                            <Link href="/chat" className="inline-flex items-center justify-center rounded-md text-sm font-medium px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white cursor-pointer transition-colors">
+                                AI Chatbot ({user?.name || user?.email?.split('@')[0]})
                             </Link>
                         ) : (
                             <>
@@ -215,22 +206,21 @@ export default function NavBar() {
                                         <AccordionItem value="products">
                                             <AccordionTrigger className="text-sm font-medium">Products & Engine</AccordionTrigger>
                                             <AccordionContent className="flex flex-col gap-2 pt-2">
-                                                <Link href="/docs" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">Autonomous Crawler</Link>
-                                                <Link href="/docs" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">Accessibility Snapper</Link>
-                                                <Link href="/docs" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">OpenAPI & Postman Export</Link>
-                                                <Link href="/docs" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">Python SDK</Link>
+                                                <Link href="#features" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">Autonomous Crawler</Link>
+                                                <Link href="#features" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">Accessibility Snapper</Link>
+                                                <Link href="#features" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">OpenAPI & Postman Export</Link>
+                                                <Link href="#features" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">Python SDK</Link>
                                             </AccordionContent>
                                         </AccordionItem>
                                     </Accordion>
-                                    <Link href="/docs" onClick={() => setIsOpen(false)} className="text-sm font-medium">Docs & SDK</Link>
                                     <Link href="#features" onClick={() => setIsOpen(false)} className="text-sm font-medium">Features</Link>
                                     <Link href="#pricing" onClick={() => setIsOpen(false)} className="text-sm font-medium">Pricing</Link>
                                     <Link href="#faq" onClick={() => setIsOpen(false)} className="text-sm font-medium">FAQ</Link>
 
                                     <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
                                         {isAuthenticated ? (
-                                            <Link href="/dashboard" onClick={() => setIsOpen(false)} className="inline-flex items-center justify-center rounded-md text-sm font-medium px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white w-full text-center">
-                                                Go to Dashboard
+                                            <Link href="/chat" onClick={() => setIsOpen(false)} className="inline-flex items-center justify-center rounded-md text-sm font-medium px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white w-full text-center">
+                                                Launch AI Chatbot
                                             </Link>
                                         ) : (
                                             <>

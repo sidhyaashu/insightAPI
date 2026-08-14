@@ -90,9 +90,9 @@ class VisionFallback:
                 'Example: [{"text": "Search Products", "tag": "button", "role": "button", "selector": "button:has-text(\'Search Products\')"}]'
             )
 
-            # 3. Call Vision Model via ModelRouter (ModelTier.VISION uses gpt-4o-mini with vision)
+            # 3. Call Vision Model via ModelRouter
             from langchain_core.messages import HumanMessage
-            from app.agents.nodes.llm_client import get_llm, ModelTier
+            from app.agents.nodes.llm_client import get_llm, ModelTier, ModelRouter, extract_text_content, repair_json_string
 
             llm = get_llm(ModelTier.VISION)
             message = HumanMessage(
@@ -103,16 +103,16 @@ class VisionFallback:
             )
 
             response = await llm.ainvoke([message])
-            response_text = response.content if hasattr(response, "content") else str(response)
+            response_text = extract_text_content(response)
 
             # Record token usage (approximate for vision: ~1000 tokens per image + prompt)
             tokens_est = 1200 + len(prompt_text) // 4
             if cost_manager:
-                model_name = settings.AZURE_OPENAI_DEPLOYMENT_VISION if settings.AZURE_OPENAI_ENDPOINT else settings.OPENAI_MODEL_VISION
+                model_name = ModelRouter.get_model_name(ModelTier.VISION)
                 cost_manager.record_usage(tokens_est, model_name)
 
             # 4. Parse Vision Elements
-            clean = response_text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+            clean = repair_json_string(response_text)
             vision_items = json.loads(clean)
 
             added_count = 0

@@ -76,12 +76,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   const navMain = [
-    { title: "Dashboard", href: "/dashboard", icon: IconDashboard },
-    { title: "Crawl History", href: "/crawls", icon: IconListDetails },
     { title: "AI Chatbot", href: "/chat", icon: IconMessages },
-    { title: "Billing & Tier", href: "/billing", icon: IconCreditCard },
-    { title: "Settings", href: "/settings", icon: IconSettings },
-    { title: "Docs & SDK", href: "/docs", icon: IconFileText },
+    { title: "Billing & Subscriptions", href: "/billing", icon: IconCreditCard },
+    { title: "Settings & Profile", href: "/settings", icon: IconSettings },
   ];
 
   return (
@@ -89,11 +86,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
+            <SidebarMenuButton size="lg" render={<Link href="/chat" />} className="group-data-[collapsible=icon]:justify-center">
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs shrink-0">
                 <IconInnerShadowTop className="size-5" />
               </div>
-              <div className="flex flex-col gap-0.5 leading-none">
+              <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-foreground font-mono tracking-tight">{env.APP_NAME}</span>
                   {user?.tier === "ADMIN" ? (
@@ -120,7 +117,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             href="/chat"
             className="flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-card border border-border/60 hover:bg-muted/60 text-xs font-medium text-foreground transition-colors shadow-xs"
           >
-            <IconPlus className="size-4 text-muted-foreground" />
+            <IconPlus className="size-4 text-muted-foreground shrink-0" />
             <span>New Chat</span>
           </Link>
         </div>
@@ -128,7 +125,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent className="px-2 py-2">
         <SidebarGroup>
-          <SidebarMenu className="gap-1">
+          <SidebarMenu className="gap-1.5">
             {navMain.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -138,14 +135,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     render={<Link href={item.href} />}
                     isActive={isActive}
                     tooltip={item.title}
-                    className={`font-medium transition-colors ${
+                    className={`font-medium transition-colors group-data-[collapsible=icon]:justify-center ${
                       isActive
                         ? "bg-muted text-foreground font-semibold"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     }`}
                   >
-                    <Icon className="size-4" />
-                    <span>{item.title}</span>
+                    <Icon className="size-4 shrink-0" />
+                    <span className="group-data-[collapsible=icon]:hidden truncate">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );
@@ -157,7 +154,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Claude-style Sidebar Footer User Profile */}
       <SidebarFooter className="border-t border-border/40 p-2">
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center justify-between gap-2.5 w-full p-1.5 rounded-xl hover:bg-muted/60 transition cursor-pointer focus:outline-none border-none bg-transparent text-left">
+          <DropdownMenuTrigger className="flex items-center justify-between group-data-[collapsible=icon]:justify-center gap-2.5 w-full p-1.5 rounded-xl hover:bg-muted/60 transition cursor-pointer focus:outline-none border-none bg-transparent text-left">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted border border-border text-foreground font-bold text-xs shadow-xs">
                 {getInitials(user?.name, user?.email)}
@@ -210,16 +207,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DropdownMenuItem onClick={() => router.push("/billing")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
                 <IconCreditCard className="size-4 text-muted-foreground" />
                 <span>Billing & Subscriptions</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
-                <IconKey className="size-4 text-muted-foreground" />
-                <span>API Keys & SDK Setup</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => router.push("/docs")} className="cursor-pointer text-xs flex items-center gap-2 py-2">
-                <IconFileText className="size-4 text-muted-foreground" />
-                <span>Documentation Reference</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
 

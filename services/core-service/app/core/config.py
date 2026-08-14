@@ -41,7 +41,15 @@ class CoreSettings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
 
     # OAuth shared
-    OAUTH_REDIRECT_URI: str = "http://localhost/api/auth/callback"
+    OAUTH_REDIRECT_URI: str = "http://localhost:3000/callback"
+
+    # SMTP Email Delivery Credentials
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_TLS: bool = True
 
     # Stripe (Payment — inside core-service)
     STRIPE_SECRET_KEY: str = ""

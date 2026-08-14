@@ -126,24 +126,41 @@ class UserRepository:
         name: str | None = None,
         avatar_url: str | None = None,
     ) -> User:
-        """Create or update a user from OAuth profile data and check admin status."""
+        """
+        Create or update a user from OAuth profile data.
+        Implements Identity Account Unification: if user created an account via Email/Password 
+        with the same email, link the OAuth provider to that existing account.
+        """
+        normalized_email = email.strip().lower()
+        
+        # 1. First search by explicit (provider, sub)
         user = await self.get_by_oauth_sub(provider, sub)
-        is_admin_email = email.strip().lower() == ADMIN_EMAIL.lower()
+
+        # 2. If not found by sub, search by email to unify existing account
+        if not user:
+            user = await self.get_by_email(normalized_email)
+
+        is_admin_email = normalized_email == ADMIN_EMAIL.lower()
 
         if user:
-            user.email = email
-            user.name = name
-            user.avatar_url = avatar_url
+            # Unify / Link OAuth provider to existing user record
+            user.oauth_provider = provider
+            user.oauth_sub = sub
+            if name and not user.name:
+                user.name = name
+            if avatar_url:
+                user.avatar_url = avatar_url
+            user.is_verified = True  # OAuth provider verifies email
             if is_admin_email:
                 user.tier = TIER_ADMIN
                 user.role = ROLE_ADMIN
-                user.is_verified = True
         else:
+            # Create brand new user record
             user = User(
                 oauth_provider=provider,
                 oauth_sub=sub,
                 login_method=provider,
-                email=email,
+                email=normalized_email,
                 name=name,
                 avatar_url=avatar_url,
                 is_verified=True,

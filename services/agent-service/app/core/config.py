@@ -10,6 +10,16 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
 
+    # LLM Provider Selection ("auto", "gemini", "azure", "openai")
+    LLM_PROVIDER: str = "auto"
+
+    # Google Gemini Settings
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-3.7-flash"
+    GEMINI_MODEL_FAST: str = "gemini-3.7-flash"
+    GEMINI_MODEL_SMART: str = "gemini-3.7-flash"
+    GEMINI_MODEL_VISION: str = "gemini-3.7-flash"
+
     # Azure OpenAI Settings
     AZURE_OPENAI_ENDPOINT: Optional[str] = None
     AZURE_OPENAI_API_VERSION: str = "2024-12-01-preview"
@@ -31,6 +41,24 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     AGENT_SERVICE_REDIS_PREFIX: str = "insightapi:agent:"
+
+    # Chatbot Subscription Tier Daily Message Limits
+    TIER_CHAT_LIMIT_FREE: int = 15
+    TIER_CHAT_LIMIT_STARTER: int = 50
+    TIER_CHAT_LIMIT_PRO: int = 250
+    TIER_CHAT_LIMIT_ENTERPRISE: int = 10000
+    TIER_CHAT_LIMIT_ADMIN: int = 10000
+
+    def get_tier_chat_limit(self, tier: str) -> int:
+        normalized = (tier or "FREE").upper()
+        mapping = {
+            "FREE": self.TIER_CHAT_LIMIT_FREE,
+            "STARTER": self.TIER_CHAT_LIMIT_STARTER,
+            "PRO": self.TIER_CHAT_LIMIT_PRO,
+            "ENTERPRISE": self.TIER_CHAT_LIMIT_ENTERPRISE,
+            "ADMIN": self.TIER_CHAT_LIMIT_ADMIN,
+        }
+        return mapping.get(normalized, self.TIER_CHAT_LIMIT_FREE)
 
     # Engine Defaults & Compliance Guardrails
     MAX_CRAWL_PAGES: int = 15

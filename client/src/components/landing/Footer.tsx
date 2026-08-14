@@ -22,40 +22,40 @@ function Footer() {
         {
             title: "Products & Engine",
             links: [
-                { name: "Autonomous Crawler", href: "/docs" },
-                { name: "Accessibility Snapper", href: "/docs" },
-                { name: "Two-Tier Guardrails", href: "/docs" },
-                { name: "Network Observer", href: "/docs" },
-                { name: "OpenAPI Exporter", href: "/docs" }
+                { name: "Autonomous Crawler", href: "#features" },
+                { name: "Accessibility Snapper", href: "#features" },
+                { name: "Two-Tier Guardrails", href: "#features" },
+                { name: "Network Observer", href: "#features" },
+                { name: "OpenAPI Exporter", href: "#features" }
             ]
         },
         {
             title: "Use Cases",
             links: [
-                { name: "API Reverse Engineering", href: "/docs" },
-                { name: "Legacy System Audit", href: "/docs" },
-                { name: "CI/CD Schema Validation", href: "/docs" },
-                { name: "Postman Collection Export", href: "/docs" },
-                { name: "Security & Compliance", href: "/docs" }
+                { name: "API Reverse Engineering", href: "#features" },
+                { name: "Legacy System Audit", href: "#features" },
+                { name: "CI/CD Schema Validation", href: "#features" },
+                { name: "Postman Collection Export", href: "#features" },
+                { name: "Security & Compliance", href: "#features" }
             ]
         },
         {
-            title: "Documentation & SDK",
+            title: "Platform Features",
             links: [
-                { name: "Getting Started Guide", href: "/docs" },
-                { name: "Python SDK Reference", href: "/docs" },
-                { name: "FastAPI REST API Specs", href: "/docs" },
-                { name: "Docker Deployment", href: "/docs" },
-                { name: "GitHub Integration", href: "/docs" }
+                { name: "Interactive Dashboard", href: "/login" },
+                { name: "Python SDK Integration", href: "/login" },
+                { name: "FastAPI REST Gateway", href: "/login" },
+                { name: "Docker Container Setup", href: "/login" },
+                { name: "Stripe Tier Subscriptions", href: "#pricing" }
             ]
         },
         {
             title: "Company & Platform",
             links: [
                 { name: "About InsightAPI", href: "/" },
-                { name: "Open Source SDK", href: "https://github.com" },
-                { name: "Architecture & Roadmap", href: "/docs" },
-                { name: "Community & OSS", href: "https://github.com" }
+                { name: "Features & Guardrails", href: "#features" },
+                { name: "Pricing & Plans", href: "#pricing" },
+                { name: "FAQ & Support", href: "#faq" }
             ]
         }
     ]

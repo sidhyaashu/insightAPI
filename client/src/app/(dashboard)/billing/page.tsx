@@ -6,7 +6,7 @@ import { useTier } from "@/hooks/useTier";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckIcon, CreditCardIcon, AlertTriangleIcon, ExternalLinkIcon } from "lucide-react";
+import { CheckIcon, CreditCardIcon, AlertTriangleIcon, ExternalLinkIcon, SparklesIcon, ZapIcon } from "lucide-react";
 
 export default function BillingPage() {
   const { tier } = useTier();
@@ -52,15 +52,15 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-8 font-sans">
+    <div className="max-w-5xl mx-auto flex flex-col gap-8 font-sans p-4 sm:p-6">
       <div>
         <h1 className="text-xl font-bold tracking-tight mb-1">Billing & Subscription Tier</h1>
-        <p className="text-xs text-muted-foreground">Manage active plan tier, usage quotas, and Stripe billing preferences.</p>
+        <p className="text-xs text-muted-foreground">Manage your SaaS chatbot tier, daily message limits, and billing preferences.</p>
       </div>
 
       {/* Current Subscription Box */}
-      <div className="border border-border/60 p-6 rounded-xl bg-card shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-border/40 pb-2">
+      <div className="border border-border/60 p-6 rounded-2xl bg-card shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-border/40 pb-3">
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <CreditCardIcon className="size-4 text-muted-foreground" /> Current Subscription Overview
           </h2>
@@ -75,13 +75,15 @@ export default function BillingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
             <div>
               <span className="text-muted-foreground block mb-1">Active Tier</span>
-              <Badge variant="outline" className="font-mono text-xs px-2.5 py-0.5">
+              <Badge variant="outline" className="font-mono text-xs px-2.5 py-0.5 border-primary/40 text-primary bg-primary/10">
                 {tier}
               </Badge>
             </div>
             <div>
-              <span className="text-muted-foreground block mb-1">Subscription Status</span>
-              <span className="font-semibold text-foreground capitalize font-mono">{subData?.status || "Free Plan"}</span>
+              <span className="text-muted-foreground block mb-1">Daily Limit</span>
+              <span className="font-semibold text-foreground font-mono">
+                {tier === "ADMIN" || tier === "ENTERPRISE" ? "Unlimited" : tier === "PRO" ? "250 msgs / day" : tier === "STARTER" ? "50 msgs / day" : "15 msgs / day"}
+              </span>
             </div>
             <div>
               <span className="text-muted-foreground block mb-1">Current Period End</span>
@@ -110,15 +112,15 @@ export default function BillingPage() {
       {/* Upgrade Options Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Starter Plan */}
-        <div className="border border-border/60 p-6 rounded-xl bg-card flex flex-col justify-between shadow-xs">
+        <div className="border border-border/60 p-6 rounded-2xl bg-card flex flex-col justify-between shadow-xs">
           <div>
             <h3 className="font-bold text-base mb-1 font-mono">Starter</h3>
-            <p className="text-2xl font-extrabold mb-4 font-mono">$29 <span className="text-xs font-normal text-muted-foreground">/ month</span></p>
-            <ul className="text-xs flex flex-col gap-2 text-muted-foreground mb-6">
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> 20 crawls per day</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> 50 pages per crawl</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> OpenAPI 3.1 & Postman v2.1 Export</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> AI Workspace Access</li>
+            <p className="text-2xl font-extrabold mb-4 font-mono">$19 <span className="text-xs font-normal text-muted-foreground">/ month</span></p>
+            <ul className="text-xs flex flex-col gap-2.5 text-muted-foreground mb-6">
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> 50 AI messages per day</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Gemini 3.7 Flash & GPT-4o-mini</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Standard Response Speed</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Chat Session History & Export</li>
             </ul>
           </div>
           <Button
@@ -131,40 +133,46 @@ export default function BillingPage() {
         </div>
 
         {/* Pro Plan */}
-        <div className="border border-primary/60 p-6 rounded-xl bg-card flex flex-col justify-between relative shadow-sm">
+        <div className="border border-primary/60 p-6 rounded-2xl bg-card flex flex-col justify-between relative shadow-sm">
           <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 font-mono font-bold">
-            RECOMMENDED
+            MOST POPULAR
           </Badge>
           <div>
-            <h3 className="font-bold text-base mb-1 font-mono">Pro</h3>
-            <p className="text-2xl font-extrabold mb-4 font-mono">$99 <span className="text-xs font-normal text-muted-foreground">/ month</span></p>
-            <ul className="text-xs flex flex-col gap-2 text-muted-foreground mb-6">
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> 100 crawls per day</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> 200 pages per crawl</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> 3 Parallel Agent Workers</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> GPT-4o Vision Fallback</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Priority Crawl Queue</li>
+            <div className="flex items-center gap-1.5 mb-1">
+              <SparklesIcon className="size-4 text-primary" />
+              <h3 className="font-bold text-base font-mono">Pro</h3>
+            </div>
+            <p className="text-2xl font-extrabold mb-4 font-mono">$49 <span className="text-xs font-normal text-muted-foreground">/ month</span></p>
+            <ul className="text-xs flex flex-col gap-2.5 text-muted-foreground mb-6">
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> 250 AI messages per day</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Priority High-Speed Inference</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Advanced Reasoning & Code Intelligence</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Extended Context Window</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Priority Support</li>
             </ul>
           </div>
           <Button
             onClick={() => handleUpgrade("PRO")}
             disabled={tier === "PRO"}
-            className="w-full text-xs font-medium"
+            className="w-full text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {tier === "PRO" ? "Current Plan" : "Upgrade to Pro"}
           </Button>
         </div>
 
         {/* Enterprise Plan */}
-        <div className="border border-border/60 p-6 rounded-xl bg-card flex flex-col justify-between shadow-xs">
+        <div className="border border-border/60 p-6 rounded-2xl bg-card flex flex-col justify-between shadow-xs">
           <div>
-            <h3 className="font-bold text-base mb-1 font-mono">Enterprise</h3>
-            <p className="text-2xl font-extrabold mb-4 font-mono">$499 <span className="text-xs font-normal text-muted-foreground">/ month</span></p>
-            <ul className="text-xs flex flex-col gap-2 text-muted-foreground mb-6">
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Unlimited Crawls & Pages</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> On-Premises Docker Deployment</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> 10 Parallel Agent Workers</li>
-              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Dedicated SLA & Support</li>
+            <div className="flex items-center gap-1.5 mb-1">
+              <ZapIcon className="size-4 text-amber-500" />
+              <h3 className="font-bold text-base font-mono">Enterprise</h3>
+            </div>
+            <p className="text-2xl font-extrabold mb-4 font-mono">$199 <span className="text-xs font-normal text-muted-foreground">/ month</span></p>
+            <ul className="text-xs flex flex-col gap-2.5 text-muted-foreground mb-6">
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Unlimited AI messages per day</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Dedicated High-Throughput Processing</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Custom Domain & Multi-User Seats</li>
+              <li className="flex items-center gap-1.5"><CheckIcon className="size-3.5 text-emerald-500" /> Dedicated 24/7 SLA Support</li>
             </ul>
           </div>
           <Button

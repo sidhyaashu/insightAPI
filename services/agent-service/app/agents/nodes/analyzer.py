@@ -440,20 +440,19 @@ async def _enrich_endpoints_with_llm(
                 pass
 
     try:
-        from app.agents.nodes.llm_client import get_llm, ModelTier
+        from app.agents.nodes.llm_client import get_llm, ModelTier, ModelRouter, extract_text_content, repair_json_string
         llm = get_llm(ModelTier.FAST)  # Summarization is a FAST-tier task
         response = await llm.ainvoke(prompt)
-        response_text = response.content if hasattr(response, "content") else str(response)
+        response_text = extract_text_content(response)
 
         tokens_est = (len(prompt) + len(response_text)) // 4
         if cost_manager:
-            from app.core.config import settings as s
-            model_name = s.AZURE_OPENAI_DEPLOYMENT_FAST if s.AZURE_OPENAI_ENDPOINT else s.OPENAI_MODEL_FAST
+            model_name = ModelRouter.get_model_name(ModelTier.FAST)
             cost_manager.record_usage(tokens_est, model_name)
             cost_manager.put_cache(prompt_key, response_text, tokens_est)
 
         # Parse batch response
-        clean = response_text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        clean = repair_json_string(response_text)
         enrichments = json.loads(clean)
 
         # Extract categories discovered for state (used by LLM Planner)

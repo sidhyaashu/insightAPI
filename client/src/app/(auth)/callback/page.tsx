@@ -14,7 +14,7 @@ function CallbackContent() {
   useEffect(() => {
     async function processCallback() {
       const code = searchParams.get("code");
-      const provider = searchParams.get("provider") || "github";
+      const provider = searchParams.get("provider") || sessionStorage.getItem("oauth_provider") || "google";
 
       if (!code) {
         router.replace("/login?error=missing_code");
@@ -25,7 +25,7 @@ function CallbackContent() {
         const tokens = await authApi.exchangeOAuthCode(code, provider);
         if (tokens.user && tokens.access_token) {
           dispatch(setCredentials({ user: tokens.user, accessToken: tokens.access_token }));
-          router.replace("/dashboard");
+          router.replace("/chat");
         } else {
           router.replace("/login?error=invalid_token");
         }
