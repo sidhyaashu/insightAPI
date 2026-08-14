@@ -133,7 +133,7 @@ async def get_chat_quota_endpoint(
 async def chat_websocket(
     websocket: WebSocket,
     chat_session_id: str,
-    token: str = Query(..., description="Access token (validated by gateway before proxying)"),
+    token: str | None = Query(default=None, description="Access token (validated by gateway before proxying)"),
     x_user_id: str = Query(default="", alias="uid", description="Injected by gateway"),
     db: AsyncSession = Depends(get_db),
 ):
@@ -147,9 +147,14 @@ async def chat_websocket(
       Server → Client: {"type": "quota_exceeded", "message": "...", "quota": {...}} (if limit reached)
       Server → Client: {"type": "error", "message": "..."} (on failure)
     """
+    auth_token = (
+        token
+        or websocket.cookies.get("access_token")
+        or websocket.headers.get("x-access-token")
+    )
     user_tier = "FREE"
-    if token:
-        payload = decode_jwt_token(token)
+    if auth_token:
+        payload = decode_jwt_token(auth_token)
         x_user_id = payload.get("sub", x_user_id)
         user_tier = payload.get("tier", "FREE").upper()
 

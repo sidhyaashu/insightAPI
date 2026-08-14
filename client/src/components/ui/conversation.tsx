@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ArrowDownIcon, DownloadIcon } from "lucide-react";
+import { DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 
 export type MessageItem = {
   id: string;
@@ -33,7 +33,7 @@ export const Conversation = ({ className, children, ...props }: ConversationProp
 export type ConversationContentProps = ComponentProps<"div">;
 
 export const ConversationContent = ({ className, ...props }: ConversationContentProps) => (
-  <div className={cn("flex flex-col gap-6 p-4 max-w-4xl mx-auto pb-12", className)} {...props} />
+  <div className={cn("flex flex-col gap-5 p-2 sm:p-4 max-w-4xl mx-auto pb-12 w-full min-w-0", className)} {...props} />
 );
 
 export type ConversationEmptyStateProps = ComponentProps<"div"> & {

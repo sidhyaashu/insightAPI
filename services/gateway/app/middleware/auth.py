@@ -34,14 +34,16 @@ async def auth_middleware(request: Request, call_next):
     if path in PUBLIC_PATHS or path.startswith("/docs"):
         return await call_next(request)
 
-    # WebSocket auth via query param `?token=`
-    token = None
-    if request.headers.get("upgrade", "").lower() == "websocket":
-        token = request.query_params.get("token")
-    else:
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            token = auth_header[7:]
+    # Extract token from HttpOnly cookie `access_token`, Authorization header, or query param
+    token = request.cookies.get("access_token")
+
+    if not token:
+        if request.headers.get("upgrade", "").lower() == "websocket":
+            token = request.query_params.get("token")
+        else:
+            auth_header = request.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                token = auth_header[7:].strip()
 
     if not token:
         raise HTTPException(status_code=401, detail="Missing authentication token.")

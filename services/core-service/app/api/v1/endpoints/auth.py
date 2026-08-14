@@ -59,6 +59,16 @@ async def register(payload: RegisterPayload, response: Response):
             raise HTTPException(status_code=400, detail=str(e))
 
         response.set_cookie(
+            key="access_token",
+            value=result["access_token"],
+            httponly=True,
+            secure=settings.APP_ENV == "production",
+            samesite="lax",
+            max_age=15 * 60,
+            path="/",
+        )
+
+        response.set_cookie(
             key="refresh_token",
             value=result["refresh_token"],
             httponly=True,
@@ -89,6 +99,16 @@ async def login(payload: LoginPayload, response: Response):
             )
         except ValueError as e:
             raise HTTPException(status_code=401, detail=str(e))
+
+        response.set_cookie(
+            key="access_token",
+            value=result["access_token"],
+            httponly=True,
+            secure=settings.APP_ENV == "production",
+            samesite="lax",
+            max_age=15 * 60,
+            path="/",
+        )
 
         response.set_cookie(
             key="refresh_token",
@@ -213,6 +233,16 @@ async def oauth_callback(
             tokens = await token_svc.issue_token_pair(user.id, user.tier)
 
             response.set_cookie(
+                key="access_token",
+                value=tokens["access_token"],
+                httponly=True,
+                secure=settings.APP_ENV == "production",
+                samesite="lax",
+                max_age=15 * 60,
+                path="/",
+            )
+
+            response.set_cookie(
                 key="refresh_token",
                 value=tokens["refresh_token"],
                 httponly=True,
@@ -274,6 +304,16 @@ async def refresh_token(request: Request, response: Response):
             tokens = await token_svc.rotate_tokens(refresh_token, user.tier)
 
             response.set_cookie(
+                key="access_token",
+                value=tokens["access_token"],
+                httponly=True,
+                secure=settings.APP_ENV == "production",
+                samesite="lax",
+                max_age=15 * 60,
+                path="/",
+            )
+
+            response.set_cookie(
                 key="refresh_token",
                 value=tokens["refresh_token"],
                 httponly=True,
@@ -305,13 +345,17 @@ async def refresh_token(request: Request, response: Response):
 
 @router.post("/logout")
 async def logout(request: Request, response: Response):
-    """Revoke refresh token session and clear browser cookie."""
+    """Revoke refresh token session and clear browser cookies."""
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token:
         session_repo = SessionRepository()
         token_svc = TokenService(session_repo)
         await token_svc.revoke_session(refresh_token)
 
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+    )
     response.delete_cookie(
         key="refresh_token",
         path="/api/auth/refresh",

@@ -26,8 +26,17 @@ async def ws_proxy(websocket: WebSocket, path: str):
     if query_string:
         upstream_url += f"?{query_string}"
 
+    # Forward Cookie and Auth headers to upstream
+    headers = {}
+    if "cookie" in websocket.headers:
+        headers["Cookie"] = websocket.headers["cookie"]
+
+    token = websocket.cookies.get("access_token") or websocket.query_params.get("token")
+    if token:
+        headers["X-Access-Token"] = token
+
     try:
-        async with websockets.connect(upstream_url) as upstream_ws:
+        async with websockets.connect(upstream_url, extra_headers=headers if headers else None) as upstream_ws:
             async def client_to_upstream():
                 try:
                     while True:

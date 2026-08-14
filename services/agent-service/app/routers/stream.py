@@ -14,7 +14,7 @@ router = APIRouter()
 async def stream_crawl_events(
     websocket: WebSocket,
     session_id: str,
-    token: str = Query(..., description="Access token for authentication (validated by gateway)"),
+    token: str | None = Query(default=None, description="Access token for authentication (validated by gateway)"),
 ):
     """
     WebSocket endpoint that streams crawl log events for a given session.

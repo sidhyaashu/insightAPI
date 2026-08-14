@@ -55,10 +55,22 @@
 * **DOM State Graph Hashing**: Hash `(normalized_URL, AXTree_structural_fingerprint)` to distinguish SPA modal/tab states at the same URL and prune saturated template route clusters.
 * **Shadow DOM & Virtualized Scrolling**: Recursively pierce `shadowRoot` trees and perform incremental scroll passes over virtualized list containers (`react-window`, `TanStack Virtual`).
 * **Legal & Compliance Guardrails**: Parse and respect target site `robots.txt` disallow rules and enforce per-domain minimum request delay spacing (default: 500ms).
-* **Stealth & Anti-Detection**: Spoof WebGL vendor/renderer signatures (`Intel Inc.`), patch Permissions API, and override hardware concurrency metrics.
+### F. Frontend Markdown Rendering & UI Architecture
+* **Modular Renderer**: Always use the modular `<MarkdownRenderer />` component for rendering AI and markdown content.
+* **Specialized Blocks**: Support syntax-highlighted code blocks (Prism for 30+ languages), ````http```` API endpoint blocks with method badges, KaTeX math expressions (`$inline$` and `$$block$$`), dynamic theme-aware Mermaid diagrams, GitHub callout alerts (`[!NOTE]`, `[!TIP]`, `[!WARNING]`, `[!IMPORTANT]`, `[!CAUTION]`), and responsive tables with internal horizontal scrolling.
+* **Streaming Resilience**: Always pass streaming tokens through `repairStreamingMarkdown` to automatically repair unclosed code fences and math blocks during LLM token streaming.
+* **Layout Design**: Never enclose assistant message text in rigid, boxed card borders or fixed widths; keep assistant message layouts full-width, clean, and transparent matching modern AI assistants.
+
+### G. Security & WebSocket Authentication
+* **HttpOnly Cookies**: Pass JWT access tokens via `HttpOnly; SameSite=Lax; Path=/` cookies instead of exposing tokens in URL query strings (`?token=...`).
+* **Log Redaction**: Ensure NGINX access log mapping redacts any query parameters containing sensitive tokens (`token=[REDACTED]`).
+* **URL Sanitization**: Always validate markdown link/image URLs with `isSafeUrl()` to block dangerous protocols (`javascript:`, `vbscript:`, unsafe `data:` URLs).
 
 ---
 
-## 3. Maintenance of Guidelines
+## 3. Maintenance of Guidelines & Feature Tracking
 
-* Update this `.agents/AGENTS.md` file whenever new edge cases, anti-patterns, or architectural guidelines are established during development.
+* **Mandatory Feature Tracking**: Whenever a new feature, endpoint, or architectural component is implemented:
+  1. Update `V1_IMPLEMENTATION.md` to document the new capability, subcomponents, and endpoints.
+  2. Update this `.agents/AGENTS.md` file whenever new edge cases, anti-patterns, or architectural guidelines are established during development.
+
