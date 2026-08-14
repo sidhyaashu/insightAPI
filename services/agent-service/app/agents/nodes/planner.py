@@ -466,6 +466,25 @@ class PlannerNode:
             tag_info = selected_action.get("tag") or selected_action.get("role")
             logger.info(f"🎯 Selected Next Action (Score {score}): [{tag_info}] selector=`{selected_action.get('selector')}` text='{selected_action.get('text', '')[:30]}'")
         else:
+            # Check if Vision LLM fallback can explore canvas / graphical UI before terminating
+            page = state.get("page_ref")
+            needs_vision = state.get("needs_vision_fallback", False)
+            if not needs_vision and page:
+                from app.engine.browser.dom_distiller import DOMDistiller
+                if await DOMDistiller.has_canvas_element(page):
+                    needs_vision = True
+                    state["needs_vision_fallback"] = True
+
+            if needs_vision and page and getattr(settings, "LLM_VISION_FALLBACK_ENABLED", True):
+                logger.info("👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...")
+                from app.agents.nodes.vision_planner import VisionPlannerNode
+                vision_action = await VisionPlannerNode.select_action(state)
+                if vision_action:
+                    state["next_action"] = vision_action
+                    state["planner_reasoning"] = vision_action.get("reasoning", "Vision LLM Set-of-Mark selection")
+                    state["visited_state_hashes"].append(current_hash)
+                    return state
+
             logger.info("Frontier queue empty. No remaining unexplored interactive elements found. Terminating crawl.")
             state["is_complete"] = True
             state["next_action"] = None

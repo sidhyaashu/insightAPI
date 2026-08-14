@@ -54,4 +54,9 @@ class CrawlState(TypedDict):
     cost_manager: Optional[Any]          # LLMCostManager instance
     llm_planner_call_count: Optional[int]
     zero_yield_streak: Optional[int]     # Consecutive actions with 0 new API endpoints
+    action_traces: Optional[List[Dict[str, Any]]]  # Ordered sequence of executed actions & triggered network calls
+    needs_vision_fallback: Optional[bool]          # True when page has <canvas> and sparse/zero DOM interactive controls
+    vision_action_count: Optional[int]             # Number of actions executed via Vision LLM coordinate fallback
+    humanize_interactions: Optional[bool]          # Whether to use humanized Bezier mouse paths and typing jitter
+
 

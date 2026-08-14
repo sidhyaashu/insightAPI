@@ -34,8 +34,9 @@ class User(Base):
     tier: Mapped[str] = mapped_column(String(32), default=TIER_FREE, nullable=False)   # FREE | STARTER | PRO | ENTERPRISE | ADMIN
     role: Mapped[str] = mapped_column(String(32), default=ROLE_USER, nullable=False)   # user | admin
 
-    # Stripe customer ID
+    # Stripe customer ID & Billing Preferences
     stripe_customer_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    allow_overage: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 

@@ -48,6 +48,7 @@ class CrawlRepository:
         openapi_spec: dict | None = None,
         postman_collection: dict | None = None,
         markdown_docs: str | None = None,
+        action_traces: list | None = None,
         error_message: str | None = None,
     ) -> None:
         values: dict = {
@@ -61,6 +62,8 @@ class CrawlRepository:
             values["postman_collection"] = postman_collection
         if markdown_docs is not None:
             values["markdown_docs"] = markdown_docs
+        if action_traces is not None:
+            values["action_traces"] = action_traces
         if error_message is not None:
             values["error_message"] = error_message
 
@@ -90,3 +93,73 @@ class CrawlRepository:
         pipe.incr(key)
         pipe.expire(key, 90000)   # 25 hours TTL
         await pipe.execute()
+
+    # ── Review / Approval Gate ────────────────────────────────────────────────
+
+    async def set_pending_review(
+        self, session_id: str, captured_count: int, action_traces: list | None = None
+    ) -> None:
+        """Transition crawl to pending_review after analysis completes.
+
+        Called when ``require_review=True`` on the crawl request.
+        Exporters do NOT run at this point; they run on approval.
+        """
+        values: dict = {
+            "status": "pending_review",
+            "captured_count": captured_count,
+            "updated_at": datetime.now(timezone.utc),
+        }
+        if action_traces is not None:
+            values["action_traces"] = action_traces
+
+        await self.db.execute(
+            update(CrawlSession).where(CrawlSession.id == session_id).values(**values)
+        )
+        await self.db.commit()
+
+    async def save_reviewed_endpoints(
+        self, session_id: str, reviewed_endpoints: dict
+    ) -> None:
+        """Persist the full reviewed_endpoints dict (keyed by endpoint_key).
+
+        Structure: ``{ endpoint_key: { "reviewed_schema": dict, "is_excluded": bool } }``
+
+        Called by ``PATCH /crawls/{id}/endpoints/{key}`` to merge-patch a single
+        endpoint's overrides into the blob.
+        """
+        await self.db.execute(
+            update(CrawlSession)
+            .where(CrawlSession.id == session_id)
+            .values(
+                reviewed_endpoints=reviewed_endpoints,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
+        await self.db.commit()
+
+    async def approve_crawl(
+        self,
+        session_id: str,
+        openapi_spec: dict,
+        postman_collection: dict,
+        markdown_docs: str,
+        captured_count: int,
+    ) -> None:
+        """Finalize review: persist exports and transition to completed.
+
+        Called by ``POST /crawls/{id}/approve``.
+        """
+        await self.db.execute(
+            update(CrawlSession)
+            .where(CrawlSession.id == session_id)
+            .values(
+                status="completed",
+                captured_count=captured_count,
+                openapi_spec=openapi_spec,
+                postman_collection=postman_collection,
+                markdown_docs=markdown_docs,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
+        await self.db.commit()
+

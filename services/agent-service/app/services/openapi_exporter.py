@@ -128,6 +128,12 @@ class OpenAPIExporter:
                     "x-ai-category": ep.get("ai_endpoint_category", ""),
                     "responses": {},
                 }
+                if ep.get("is_vision_derived"):
+                    operation["x-vision-derived"] = True
+                if ep.get("triggered_by"):
+                    operation["x-triggered-by"] = ep["triggered_by"]
+                if ep.get("related_calls"):
+                    operation["x-related-calls"] = ep["related_calls"]
                 if tags:
                     operation["tags"] = tags
                 if parameters:
@@ -148,9 +154,8 @@ class OpenAPIExporter:
             # ── Request Body (POST / PUT / PATCH) ──────────────────────────────
             if method in {"post", "put", "patch"} and "requestBody" not in paths[route][method]:
                 request_examples = OpenAPIExporter._build_examples_object(examples, "request_payload")
+                req_schema = ep.get("form_inferred_request_schema") or {"type": "object"}
                 if request_examples:
-                    # Infer a simple request schema from the first non-null payload
-                    req_schema: Dict[str, Any] = {"type": "object"}
                     for pair in examples:
                         payload = pair.get("request_payload")
                         if isinstance(payload, dict):
@@ -160,13 +165,14 @@ class OpenAPIExporter:
                             }
                             break
 
+                if req_schema.get("properties") or request_examples:
+                    req_content: Dict[str, Any] = {"schema": req_schema}
+                    if request_examples:
+                        req_content["examples"] = request_examples
                     paths[route][method]["requestBody"] = {
                         "required": True,
                         "content": {
-                            "application/json": {
-                                "schema": req_schema,
-                                "examples": request_examples,
-                            }
+                            "application/json": req_content
                         },
                     }
 

@@ -21,6 +21,22 @@ const plans = [
         href: "/login"
     },
     {
+        name: "Pay-as-you-go",
+        price: "$1.50",
+        period: "/crawl",
+        description: "Zero monthly commitment, pay strictly for what you crawl.",
+        features: [
+            "Metered billing per completed crawl",
+            "No monthly minimum or subscription",
+            "Full OpenAPI 3.1 & Postman export",
+            "AI Chatbot query access",
+            "Automated Stripe metered invoicing"
+        ],
+        highlight: false,
+        buttonText: "Start Pay-as-you-go",
+        href: "/login"
+    },
+    {
         name: "Starter",
         price: "$29",
         period: "/month",
@@ -88,7 +104,7 @@ export default function Pricing() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-t border-b border-gray-200 dark:border-gray-800">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 border-t border-b border-gray-200 dark:border-gray-800">
                 {plans.map((plan, idx) => (
                     <div
                         key={plan.name}

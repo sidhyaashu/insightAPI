@@ -165,10 +165,20 @@ class ExecutorNode:
 
             # 1. Execute interaction safely (with popup trap handling)
             selector = next_action.get("selector", "")
-            action_type = next_action.get("tag", "action")
+            action_type = next_action.get("action") or next_action.get("tag") or "click"
+            action_value = next_action.get("value") or next_action.get("text") or ""
+            url_before = state.get("current_url") or getattr(page, "url", "")
+            
+            observer = state.get("network_observer")
+            endpoints_before_idx = len(observer.captured_endpoints) if observer and hasattr(observer, "captured_endpoints") else len(state.get("captured_endpoints") or [])
+
             logger.info(f"⚡ Executing action [{action_type}] on selector `{selector}`")
             
-            dynamic_executor = DynamicRuntimeExecutor(page, cost_manager=state.get("cost_manager"))
+            dynamic_executor = DynamicRuntimeExecutor(
+                page,
+                cost_manager=state.get("cost_manager"),
+                humanize=state.get("humanize_interactions"),
+            )
             res = await cls.handle_popup_navigation(page, state, dynamic_executor.execute_action(next_action))
             logger.info(f"Action execution status: success={res.get('success')} | message='{res.get('message', '')}'")
 
@@ -176,12 +186,163 @@ class ExecutorNode:
             from app.engine.browser.stabilizer import PageNetworkStabilizer
             await PageNetworkStabilizer.wait_until_stable(page, timeout_ms=10000)
 
-            # 3. Update current URL and visited URLs list
+            # 3. Update current URL, visited URLs, and captured endpoints
             current_url = page.url
             state["current_url"] = current_url
-            if current_url not in state.get("visited_urls", []):
-                state["visited_urls"].append(current_url)
+            visited_list = state.setdefault("visited_urls", [])
+            if current_url not in visited_list:
+                visited_list.append(current_url)
                 logger.info(f"Explored new URL page state: {current_url}")
+
+            # Check if this was a vision-driven interaction
+            is_vision = bool(next_action.get("is_vision_action"))
+            if is_vision:
+                state["vision_action_count"] = state.get("vision_action_count", 0) + 1
+
+            # Check if this was a form submission interaction
+            is_form_submit = (
+                next_action.get("is_form_submit")
+                or action_type in ["submit"]
+                or (next_action.get("tag") in ["button", "input"] and (next_action.get("type") in ["submit"] or next_action.get("form_context")))
+            )
+
+            if observer and hasattr(observer, "captured_endpoints"):
+                triggered_raw = observer.captured_endpoints[endpoints_before_idx:]
+                # Flag newly captured endpoints from this step if vision-driven
+                if is_vision:
+                    for ep in triggered_raw:
+                        if hasattr(ep, "is_vision_derived"):
+                            ep.is_vision_derived = True
+                        elif isinstance(ep, dict):
+                            ep["is_vision_derived"] = True
+
+                # Attribute form submission metadata to triggered endpoints
+                if is_form_submit and triggered_raw:
+                    form_context = next_action.get("form_context") or ""
+                    form_action = next_action.get("form_action") or ""
+                    form_method = next_action.get("form_method") or "POST"
+                    form_fields = next_action.get("form_fields") or []
+                    field_names = [f.get("name") for f in form_fields if isinstance(f, dict) and f.get("name")]
+                    submitted_values = res.get("submitted_fields") or next_action.get("submitted_fields") or {}
+
+                    triggered_by_data = {
+                        "action_type": "form_submit",
+                        "selector": selector,
+                        "form_context": form_context,
+                        "form_action": form_action,
+                        "form_method": form_method,
+                        "field_names": field_names,
+                        "submitted_fields": submitted_values,
+                    }
+
+                    if len(triggered_raw) == 1:
+                        primary = triggered_raw[0]
+                        if hasattr(primary, "triggered_by"):
+                            primary.triggered_by = triggered_by_data
+                        elif isinstance(primary, dict):
+                            primary["triggered_by"] = triggered_by_data
+                    else:
+                        def _rank_endpoint(ep):
+                            m = (getattr(ep, "method", None) or (ep.get("method") if isinstance(ep, dict) else "")).upper()
+                            s = int(getattr(ep, "status", None) or (ep.get("status") if isinstance(ep, dict) else 200))
+                            u = getattr(ep, "url", None) or (ep.get("url") if isinstance(ep, dict) else "")
+                            score = 0
+                            if form_action and form_action in u:
+                                score += 50
+                            if m in ["POST", "PUT", "PATCH"]:
+                                score += 30
+                            elif m in ["DELETE"]:
+                                score += 20
+                            if 200 <= s < 400:
+                                score += 15
+                            return score
+
+                        sorted_raw = sorted(triggered_raw, key=_rank_endpoint, reverse=True)
+                        primary = sorted_raw[0]
+                        related = [
+                            (ep.to_dict() if hasattr(ep, "to_dict") else ep) for ep in sorted_raw[1:]
+                        ]
+                        if hasattr(primary, "triggered_by"):
+                            primary.triggered_by = triggered_by_data
+                            primary.related_calls = related
+                        elif isinstance(primary, dict):
+                            primary["triggered_by"] = triggered_by_data
+                            primary["related_calls"] = related
+
+                state["captured_endpoints"] = [
+                    ep.to_dict() if hasattr(ep, "to_dict") else ep for ep in observer.captured_endpoints
+                ]
+            else:
+                triggered_raw = (state.get("captured_endpoints") or [])[endpoints_before_idx:]
+                if is_vision:
+                    for ep in triggered_raw:
+                        if isinstance(ep, dict):
+                            ep["is_vision_derived"] = True
+
+                if is_form_submit and triggered_raw:
+                    form_context = next_action.get("form_context") or ""
+                    form_action = next_action.get("form_action") or ""
+                    form_method = next_action.get("form_method") or "POST"
+                    form_fields = next_action.get("form_fields") or []
+                    field_names = [f.get("name") for f in form_fields if isinstance(f, dict) and f.get("name")]
+                    submitted_values = res.get("submitted_fields") or next_action.get("submitted_fields") or {}
+
+                    triggered_by_data = {
+                        "action_type": "form_submit",
+                        "selector": selector,
+                        "form_context": form_context,
+                        "form_action": form_action,
+                        "form_method": form_method,
+                        "field_names": field_names,
+                        "submitted_fields": submitted_values,
+                    }
+
+                    if len(triggered_raw) == 1:
+                        if isinstance(triggered_raw[0], dict):
+                            triggered_raw[0]["triggered_by"] = triggered_by_data
+                    else:
+                        def _rank_dict(ep):
+                            m = str(ep.get("method", "")).upper()
+                            s = int(ep.get("status", 200))
+                            u = str(ep.get("url", ""))
+                            score = 0
+                            if form_action and form_action in u:
+                                score += 50
+                            if m in ["POST", "PUT", "PATCH"]:
+                                score += 30
+                            if 200 <= s < 400:
+                                score += 15
+                            return score
+
+                        sorted_raw = sorted(triggered_raw, key=_rank_dict, reverse=True)
+                        sorted_raw[0]["triggered_by"] = triggered_by_data
+                        sorted_raw[0]["related_calls"] = sorted_raw[1:]
+
+            network_calls_triggered = [
+                ep.to_dict() if hasattr(ep, "to_dict") else ep for ep in triggered_raw
+            ]
+
+            # Record ordered action trace item
+            traces = state.get("action_traces")
+            if traces is None:
+                traces = []
+            trace_item = {
+                "step": len(traces) + 1,
+                "action_type": action_type,
+                "selector": selector,
+                "value": action_value,
+                "url_before": url_before,
+                "url_after": current_url,
+                "network_calls_triggered": network_calls_triggered,
+                "is_vision_action": is_vision,
+            }
+            if is_vision and next_action.get("coordinates"):
+                trace_item["coordinates"] = next_action["coordinates"]
+            if is_vision and next_action.get("mark"):
+                trace_item["mark"] = next_action["mark"]
+
+            traces.append(trace_item)
+            state["action_traces"] = traces
 
             # 4. Re-extract updated interactive AXTree snapshot
             snapshot = await DOMDistiller.extract_interactive_snapshot(

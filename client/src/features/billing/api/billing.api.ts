@@ -21,4 +21,12 @@ export const billingApi = {
     const { data } = await apiClient.post<{ portal_url: string }>("/payments/portal");
     return data;
   },
+
+  updateOveragePreference: async (allowOverage: boolean): Promise<{ allow_overage: boolean; message: string }> => {
+    const { data } = await apiClient.patch<{ allow_overage: boolean; message: string }>("/users/me/preferences", {
+      allow_overage: allowOverage,
+    });
+    return data;
+  },
 };
+

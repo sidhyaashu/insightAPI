@@ -58,6 +58,7 @@ class CoreSettings(BaseSettings):
     STRIPE_PRICE_STARTER: str = ""
     STRIPE_PRICE_PRO: str = ""
     STRIPE_PRICE_ENTERPRISE: str = ""
+    STRIPE_PRICE_METERED_CRAWL: str = ""
 
     # Internal
     GATEWAY_SECRET: str = "change-me-in-root-env"

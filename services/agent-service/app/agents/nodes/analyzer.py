@@ -193,6 +193,7 @@ def compute_confidence(
     example_count: int,
     schema_change_count: int,
     has_auth_header: bool,
+    is_vision_derived: bool = False,
 ) -> float:
     """
     Compute a confidence score in the range (0, 0.99] for a merged endpoint schema.
@@ -210,14 +211,18 @@ def compute_confidence(
         stability = 1 - (schema_change_count / max(1, example_count - 1))
 
     ``auth_bonus`` rewards routes that were observed with explicit authentication
-    (the request included an Authorization or Cookie header), because those
-    observations reflect real, production-like behaviour:
+    (the request included an Authorization or Cookie header):
 
         auth_bonus = 0.05 if any example had an auth header, else 0
 
+    ``vision_discount``: Endpoints derived from Vision LLM coordinate actions
+    are weighted with a 15% uncertainty factor due to lack of DOM selector contracts:
+
+        raw = (base * stability + auth_bonus) * (0.85 if is_vision_derived else 1.0)
+
     Final score (capped at 0.99 to signal it is still inferred, not ground truth):
 
-        confidence = round(min(0.99, base * stability + auth_bonus), 3)
+        confidence = round(min(0.99, raw), 3)
 
     Args:
         example_count:      Number of raw observations available for this route.
@@ -225,6 +230,7 @@ def compute_confidence(
                              a new example was merged in.
         has_auth_header:    True if any observation carried an Authorization or
                             Cookie request header.
+        is_vision_derived:  True if the endpoint was captured during Vision LLM navigation.
 
     Returns:
         Float confidence score in (0, 0.99].
@@ -232,7 +238,10 @@ def compute_confidence(
     base = min(1.0, 0.5 + 0.1 * example_count)
     stability = 1.0 - (schema_change_count / max(1, example_count - 1)) if example_count > 1 else 1.0
     auth_bonus = 0.05 if has_auth_header else 0.0
-    return round(min(0.99, base * stability + auth_bonus), 3)
+    raw_confidence = min(0.99, base * stability + auth_bonus)
+    if is_vision_derived:
+        raw_confidence *= 0.85
+    return round(raw_confidence, 3)
 
 
 # ---------------------------------------------------------------------------
@@ -263,9 +272,10 @@ class AnalyzerNode:
         example_count: int,
         schema_change_count: int,
         has_auth_header: bool,
+        is_vision_derived: bool = False,
     ) -> float:
         """Public alias — see module-level ``compute_confidence``."""
-        return compute_confidence(example_count, schema_change_count, has_auth_header)
+        return compute_confidence(example_count, schema_change_count, has_auth_header, is_vision_derived=is_vision_derived)
 
     @classmethod
     async def process(cls, state: Dict[str, Any]) -> Dict[str, Any]:
@@ -297,6 +307,7 @@ class AnalyzerNode:
             merged_schema: Optional[Dict[str, Any]] = None
             schema_change_count = 0
             has_auth = False
+            is_vision = any(obs.get("is_vision_derived") for obs in observations)
             example_pairs: List[Dict[str, Any]] = []
 
             for obs in observations:
@@ -331,16 +342,47 @@ class AnalyzerNode:
 
             # ── Step 3: assemble the enriched record ───────────────────────────
             example_count = len(observations)
-            confidence = compute_confidence(example_count, schema_change_count, has_auth)
+            confidence = compute_confidence(example_count, schema_change_count, has_auth, is_vision_derived=is_vision)
+
+            # Preserve triggered_by and related_calls metadata if captured from form submission
+            triggered_by = next((obs["triggered_by"] for obs in observations if obs.get("triggered_by")), None)
+            related_calls = next((obs["related_calls"] for obs in observations if obs.get("related_calls")), [])
 
             base["schema"] = merged_schema or {"type": "object"}
             base["confidence"] = confidence
             base["example_count"] = example_count
             base["examples"] = example_pairs
+            base["is_vision_derived"] = is_vision
+
+            if triggered_by:
+                base["triggered_by"] = triggered_by
+                if related_calls:
+                    base["related_calls"] = related_calls
+
+                # Enrich request body schema using discovered form field names and submitted values
+                fields = triggered_by.get("field_names") or []
+                submitted = triggered_by.get("submitted_fields") or {}
+                if fields:
+                    req_props = {}
+                    for f in fields:
+                        val = submitted.get(f)
+                        if isinstance(val, bool):
+                            req_props[f] = {"type": "boolean"}
+                        elif isinstance(val, int):
+                            req_props[f] = {"type": "integer"}
+                        elif isinstance(val, float):
+                            req_props[f] = {"type": "number"}
+                        else:
+                            req_props[f] = {"type": "string"}
+                    base["form_inferred_request_schema"] = {
+                        "type": "object",
+                        "properties": req_props,
+                    }
 
             analyzed_results.append(base)
 
         state["captured_endpoints"] = analyzed_results
+        state["vision_fallback_actions"] = state.get("vision_action_count", 0)
 
         # ── Step 4: LLM Semantic Enrichment (batched, optional) ───────────────
         cost_manager = state.get("cost_manager")

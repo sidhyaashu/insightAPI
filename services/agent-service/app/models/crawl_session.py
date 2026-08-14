@@ -26,6 +26,13 @@ class CrawlSession(Base):
     postman_collection: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     markdown_docs: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Human-reviewed endpoint overrides (schema corrections + exclusion flags)
+    # Populated by PATCH /crawls/{id}/endpoints/{key}; consumed at approve time.
+    reviewed_endpoints: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    # Replayable ordered sequence of executed actions & triggered network calls
+    action_traces: Mapped[list | None] = mapped_column(JSON, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
@@ -45,7 +52,9 @@ class CrawlSession(Base):
             "max_pages": self.max_pages,
             "goal": self.goal,
             "captured_count": self.captured_count,
+            "action_traces": self.action_traces or [],
             "error_message": self.error_message,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
+

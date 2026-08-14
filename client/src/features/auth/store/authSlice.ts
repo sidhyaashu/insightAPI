@@ -29,6 +29,11 @@ const authSlice = createSlice({
         (window as any).__INSIGHTAPI_ACCESS_TOKEN__ = action.payload.accessToken;
       }
     },
+    updateUser(state, action: PayloadAction<Partial<ApiUser>>) {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
     clearCredentials(state) {
       state.user = null;
       state.accessToken = null;
@@ -44,5 +49,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, clearCredentials, setLoading } = authSlice.actions;
+export const { setCredentials, updateUser, clearCredentials, setLoading } = authSlice.actions;
 export default authSlice.reducer;

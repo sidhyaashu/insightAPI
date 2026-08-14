@@ -28,7 +28,9 @@ async def get_payment_plans():
         "STARTER": settings.STRIPE_PRICE_STARTER,
         "PRO": settings.STRIPE_PRICE_PRO,
         "ENTERPRISE": settings.STRIPE_PRICE_ENTERPRISE,
+        "PAY_PER_CRAWL": settings.STRIPE_PRICE_METERED_CRAWL,
     }
+
 
 
 @router.post("/portal")
@@ -158,3 +160,91 @@ async def stripe_webhook(request: Request):
             logger.info(f"Subscription canceled: user={user_id} → FREE")
 
     return {"received": True}
+
+
+class UsageRecordRequest(BaseModel):
+    user_id: str
+    crawl_id: str
+    quantity: int = 1
+    description: str | None = None
+
+
+@router.post("/usage-records")
+async def report_usage_record(
+    body: UsageRecordRequest,
+    x_user_id: str | None = Header(None, alias="x-user-id"),
+):
+    """
+    Report metered crawl usage to Stripe for a pay-per-crawl execution.
+    Called on crawl completion when user has allow_overage=True or is on PAYG.
+    """
+    user_target_id = x_user_id or body.user_id
+    if not user_target_id:
+        raise HTTPException(status_code=400, detail="User ID is required.")
+
+    async with contextlib.asynccontextmanager(get_db)() as db:
+        user_repo = UserRepository(db)
+        user = await user_repo.get_by_id(user_target_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        # If Stripe is configured and user has a customer profile, record usage
+        if settings.STRIPE_SECRET_KEY:
+            import stripe
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+
+            customer_id = user.stripe_customer_id
+            if not customer_id:
+                # Create a Stripe customer on demand
+                try:
+                    customer = stripe.Customer.create(
+                        email=user.email,
+                        name=user.name or user.email,
+                        metadata={"user_id": user_target_id},
+                    )
+                    customer_id = customer.id
+                    await user_repo.update_stripe_customer_id(user_target_id, customer_id)
+                except Exception as cust_err:
+                    logger.warning(f"Failed to create Stripe customer for {user_target_id}: {cust_err}")
+
+            if customer_id:
+                try:
+                    # If metered price ID is configured, create invoice item with price
+                    if settings.STRIPE_PRICE_METERED_CRAWL:
+                        stripe.InvoiceItem.create(
+                            customer=customer_id,
+                            price=settings.STRIPE_PRICE_METERED_CRAWL,
+                            quantity=body.quantity,
+                            description=body.description or f"Pay-per-crawl execution: {body.crawl_id}",
+                        )
+                    else:
+                        # Fallback default: $1.50 per crawl (150 cents)
+                        stripe.InvoiceItem.create(
+                            customer=customer_id,
+                            amount=150 * body.quantity,
+                            currency="usd",
+                            description=body.description or f"Pay-per-crawl execution ($1.50): {body.crawl_id}",
+                        )
+                    logger.info(f"Recorded Stripe pay-per-crawl invoice item for user {user_target_id}, crawl {body.crawl_id}")
+                    return {
+                        "status": "success",
+                        "billed": True,
+                        "customer_id": customer_id,
+                        "quantity": body.quantity,
+                    }
+                except Exception as stripe_err:
+                    logger.error(f"Stripe invoice item creation failed: {stripe_err}")
+                    return {
+                        "status": "error",
+                        "billed": False,
+                        "error": str(stripe_err),
+                    }
+
+        logger.info(f"Usage record noted for user {user_target_id}, crawl {body.crawl_id} (Stripe offline/mock mode).")
+        return {
+            "status": "success",
+            "billed": False,
+            "note": "Stripe secret key not configured; recorded in mock mode.",
+            "quantity": body.quantity,
+        }
+

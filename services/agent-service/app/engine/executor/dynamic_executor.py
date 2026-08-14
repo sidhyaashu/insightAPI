@@ -145,15 +145,21 @@ class LLMFormInjector:
 
 
 
+from app.engine.browser.humanizer import Humanizer
+from app.core.config import settings
+
+
 class DynamicRuntimeExecutor:
     """
     Executes browser UI actions safely using a structured action interpreter,
     auto-dismisses blocking overlays, and injects realistic form dummy inputs.
     Uses LLMFormInjector for smarter context-aware form filling when enabled.
+    Routes interactions through Humanizer when humanize is enabled.
     """
-    def __init__(self, page: Page, cost_manager=None):
+    def __init__(self, page: Page, cost_manager=None, humanize: Optional[bool] = None):
         self.page = page
         self.cost_manager = cost_manager
+        self.humanize = getattr(settings, "HUMANIZE_INTERACTIONS", True) if humanize is None else humanize
 
     async def dismiss_interstitials(self, timeout_ms: int = 1000):
         """
@@ -163,7 +169,10 @@ class DynamicRuntimeExecutor:
             try:
                 btn = self.page.locator(sel).first
                 if await btn.is_visible(timeout=timeout_ms):
-                    await btn.click(timeout=timeout_ms)
+                    if self.humanize:
+                        await Humanizer.humanized_click(self.page, sel, timeout_ms=timeout_ms)
+                    else:
+                        await btn.click(timeout=timeout_ms)
                     logger.info(f"Dismissed blocking overlay using selector '{sel}'")
                     break
             except Exception:
@@ -179,8 +188,45 @@ class DynamicRuntimeExecutor:
         # 1. Pre-action check: Auto-dismiss overlays/interstitials
         await self.dismiss_interstitials(timeout_ms=1000)
 
+        # Check for coordinate-based visual action (Canvas / Set-of-Mark navigation)
+        coords = action.get("coordinates") or ({"x": action["x"], "y": action["y"]} if "x" in action and "y" in action else None)
+        if coords or action.get("is_vision_action"):
+            cx = coords.get("x") if coords else action.get("x", 100)
+            cy = coords.get("y") if coords else action.get("y", 100)
+            action_type = (action.get("action") or "click").lower()
+            try:
+                if action_type == "type" and action.get("value"):
+                    if self.humanize:
+                        await Humanizer.humanized_click(self.page, {"x": cx, "y": cy}, timeout_ms=timeout_ms)
+                        await self.page.keyboard.type(str(action["value"]))
+                    else:
+                        await self.page.mouse.click(cx, cy)
+                        await self.page.keyboard.type(str(action["value"]))
+                    return {"success": True, "result": f"Executed vision coordinate type '{action['value']}' at ({cx}, {cy})", "error": None}
+                else:
+                    if self.humanize:
+                        await Humanizer.humanized_click(self.page, {"x": cx, "y": cy}, timeout_ms=timeout_ms)
+                    else:
+                        await self.page.mouse.click(cx, cy)
+                    return {"success": True, "result": f"Executed vision coordinate click at ({cx}, {cy})", "error": None}
+            except Exception as e:
+                error_trace = f"{type(e).__name__}: {str(e)}"
+                logger.warning(f"Coordinate action execution failed at ({cx}, {cy}): {error_trace}")
+                return {"success": False, "result": None, "error": error_trace}
+
         selector = action.get("selector")
         action_type = (action.get("action") or "click").lower()
+
+        if action_type == "scroll":
+            delta_y = action.get("delta_y") or action.get("value") or 500
+            try:
+                if self.humanize:
+                    await Humanizer.humanized_scroll(self.page, int(delta_y))
+                else:
+                    await self.page.mouse.wheel(0, int(delta_y))
+                return {"success": True, "result": f"Scrolled page by {delta_y}px", "error": None}
+            except Exception as e:
+                return {"success": False, "result": None, "error": str(e)}
 
         if not selector:
             text = action.get("text")
@@ -195,15 +241,40 @@ class DynamicRuntimeExecutor:
         try:
             if input_type in ["radio", "checkbox"]:
                 try:
-                    await self.page.check(selector, timeout=timeout_ms)
+                    if self.humanize:
+                        await Humanizer.humanized_click(self.page, selector, timeout_ms=timeout_ms)
+                    else:
+                        await self.page.check(selector, timeout=timeout_ms)
                 except Exception:
                     # Self-healing fallback for styled hidden/covered radio/checkbox inputs
                     await self.page.click(selector, force=True, timeout=timeout_ms)
-            elif input_type in ["button", "submit"] or action_type == "click":
+            elif input_type in ["button", "submit"] or action_type in ["click", "submit"]:
+                # Auto-populate empty sibling fields in form before submission
+                submitted_fields = {}
+                form_fields = action.get("form_fields") or []
+                if form_fields:
+                    for f in form_fields:
+                        fname = f.get("name")
+                        ftype = f.get("type", "text")
+                        if fname:
+                            val = f.get("value")
+                            if not val and ftype not in ["submit", "button", "hidden", "reset"]:
+                                val = FormDummyInjector.get_dummy_value({"type": ftype, "name": fname, "placeholder": f.get("placeholder", "")})
+                                try:
+                                    field_sel = f"input[name='{fname}'], textarea[name='{fname}'], input#{fname}"
+                                    await self.page.fill(field_sel, str(val), timeout=500)
+                                except Exception:
+                                    pass
+                            submitted_fields[fname] = val
+
                 try:
-                    await self.page.click(selector, timeout=timeout_ms)
+                    if self.humanize:
+                        await Humanizer.humanized_click(self.page, selector, timeout_ms=timeout_ms)
+                    else:
+                        await self.page.click(selector, timeout=timeout_ms)
                 except Exception:
                     await self.page.click(selector, force=True, timeout=timeout_ms)
+                return {"success": True, "result": f"Clicked {selector}", "submitted_fields": submitted_fields, "error": None}
             elif action_type == "type" or tag in ["textarea"] or (tag == "input" and input_type not in ["radio", "checkbox", "button", "submit"]):
                 # Use LLMFormInjector for smarter context-aware values; fallback to keyword heuristic
                 text_to_type = action.get("text")
@@ -222,7 +293,10 @@ class DynamicRuntimeExecutor:
                     except Exception:
                         text_to_type = FormDummyInjector.get_dummy_value(action)
                 try:
-                    await self.page.fill(selector, text_to_type, timeout=timeout_ms)
+                    if self.humanize:
+                        await Humanizer.humanized_type(self.page, selector, text_to_type, timeout_ms=timeout_ms)
+                    else:
+                        await self.page.fill(selector, text_to_type, timeout=timeout_ms)
                 except Exception:
                     await self.page.fill(selector, text_to_type, force=True, timeout=timeout_ms)
 

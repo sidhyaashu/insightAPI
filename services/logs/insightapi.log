@@ -236,3 +236,672 @@ CREATE TABLE chat_messages (
 [2026-08-14 03:10:37] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]c:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
 [2026-08-14 03:22:44] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]c:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
 [2026-08-14 03:22:49] [INFO] [google_genai.models:8966] - AFC is enabled with max remote calls: 10.
+[2026-08-14 23:21:59] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:22:31] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:22:54] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:23:22] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:30:32] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:30:33] [INFO] [app.api.v1.endpoints.crawls:334] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-14 23:30:33] [INFO] [app.api.v1.endpoints.crawls:132] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-14 23:31:00] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:31:01] [INFO] [app.api.v1.endpoints.crawls:334] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-14 23:31:01] [INFO] [app.api.v1.endpoints.crawls:132] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-14 23:38:37] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:38:38] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-14 23:38:38] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-14 23:38:53] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:38:54] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-14 23:38:54] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-14 23:39:02] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:39:03] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-14 23:39:03] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-14 23:39:03] [INFO] [app.api.v1.endpoints.crawls:138] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-14 23:39:32] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:39:57] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:39:58] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-14 23:39:59] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-14 23:39:59] [INFO] [app.api.v1.endpoints.crawls:380] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-14 23:39:59] [INFO] [app.api.v1.endpoints.crawls:138] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-14 23:48:02] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:48:03] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-14 23:48:03] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-14 23:48:03] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-14 23:48:03] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-14 23:48:03] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-14 23:48:03] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-14 23:48:03] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-14 23:48:11] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:48:12] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-14 23:48:12] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-14 23:48:12] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-14 23:48:12] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-14 23:48:12] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-14 23:48:12] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-14 23:48:12] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-14 23:48:12] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-14 23:48:12] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-14 23:48:12] [INFO] [app.api.v1.endpoints.crawls:421] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-14 23:48:12] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-14 23:54:11] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:54:29] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:54:30] [WARNING] [insightapi.agent.executor:28] - 🔒 Login wall detected on URL: https://app.example.com/results. Halting crawl graph with 'auth_required'.
+[2026-08-14 23:54:45] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:54:47] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-14 23:54:47] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-14 23:54:47] [INFO] [insightapi.agent.executor:190] - Explored new URL page state: https://app.example.com/results
+[2026-08-14 23:54:47] [INFO] [insightapi.agent.executor:227] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-14 23:54:47] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-14 23:55:02] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:55:03] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-14 23:55:04] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-14 23:55:04] [INFO] [insightapi.agent.executor:190] - Explored new URL page state: https://app.example.com/results
+[2026-08-14 23:55:04] [INFO] [insightapi.agent.executor:227] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-14 23:55:04] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-14 23:55:20] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:55:21] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-14 23:55:22] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-14 23:55:22] [INFO] [insightapi.agent.executor:190] - Explored new URL page state: https://app.example.com/results
+[2026-08-14 23:55:22] [INFO] [insightapi.agent.executor:227] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-14 23:55:22] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-14 23:55:30] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-14 23:55:31] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-14 23:55:32] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-14 23:55:32] [INFO] [insightapi.agent.executor:190] - Explored new URL page state: https://app.example.com/results
+[2026-08-14 23:55:32] [INFO] [insightapi.agent.executor:227] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-14 23:55:32] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-14 23:55:32] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-14 23:55:32] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-14 23:55:32] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-14 23:55:32] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-14 23:55:32] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-14 23:55:32] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-14 23:55:32] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-14 23:55:32] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-14 23:55:32] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-14 23:55:32] [INFO] [app.api.v1.endpoints.crawls:425] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-14 23:55:32] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 00:00:52] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:00:53] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:01:13] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:01:14] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:01:20] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:01:22] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 00:01:22] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 00:01:22] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 00:01:22] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 00:01:25] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 00:01:45] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.6715902335000048 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-15 00:01:53] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 6f6b092d-d127-4e79-873e-7d77b72146ef. Total memory size: 1
+[2026-08-15 00:01:54] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 00:02:28] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.528098333088709 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-15 00:02:35] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 2.2379106459761635 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-15 00:04:51] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:04:53] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:04:53] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 00:04:54] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:04:54] [INFO] [insightapi.agent.executor:190] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 00:04:54] [INFO] [insightapi.agent.executor:227] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:04:54] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:04:54] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 00:04:54] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 00:04:54] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 00:04:54] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 00:04:54] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 00:04:54] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 00:04:54] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 00:04:54] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 00:04:54] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 00:04:54] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 00:04:54] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 00:04:54] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 00:04:54] [INFO] [app.api.v1.endpoints.crawls:425] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 00:04:54] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 00:04:54] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 00:04:54] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 00:04:54] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 00:04:54] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 00:04:54] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 00:04:54] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 00:04:54] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 00:04:59] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:05:03] [WARNING] [app.api.v1.endpoints.crawls:287] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 00:05:03] [INFO] [app.api.v1.endpoints.crawls:300] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 00:05:07] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:05:07] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'example.com'
+[2026-08-15 00:05:07] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> DISALLOWED by robots.txt: Blocked path: https://example.com/admin
+[2026-08-15 00:05:07] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> DISALLOWED by robots.txt: Blocked path: https://example.com/private/data
+[2026-08-15 00:05:07] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> Rate Limit Pausing: Waiting 0.10s to respect 100ms domain delay.
+[2026-08-15 00:05:07] [INFO] [insightapi.core.compliance:102] - Compliance Guard [disallowed-site.com] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'disallowed-site.com'
+[2026-08-15 00:05:07] [INFO] [insightapi.core.compliance:102] - Compliance Guard [blocked-target.org] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'blocked-target.org'
+[2026-08-15 00:05:08] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://blocked-target.org | Max Pages: 1 | Rate Limit: 500ms | Headless: True | Authenticated: False | Goal: all APIs
+[2026-08-15 00:05:08] [INFO] [insightapi.engine.sdk:172] - LLMCostManager initialized | Budget: 50000 tokens | Planner cap: 20 calls
+[2026-08-15 00:05:08] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 2: Parsing robots.txt Compliance Rules[/bold yellow] Domain target: https://blocked-target.org
+[2026-08-15 00:05:08] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 3: Launching Browser & Navigating[/bold yellow] URL: https://blocked-target.org
+[2026-08-15 00:05:16] [WARNING] [app.engine.browser.manager:192] - Navigation with strategy 'commit' failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://blocked-target.org/
+Call log:
+  - navigating to "https://blocked-target.org/", waiting until "commit"
+
+[2026-08-15 00:05:16] [WARNING] [app.engine.browser.manager:192] - Navigation with strategy 'domcontentloaded' failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://blocked-target.org/
+Call log:
+  - navigating to "https://blocked-target.org/", waiting until "domcontentloaded"
+
+[2026-08-15 00:05:16] [WARNING] [app.engine.browser.manager:192] - Navigation with strategy 'load' failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://blocked-target.org/
+Call log:
+  - navigating to "https://blocked-target.org/", waiting until "load"
+
+[2026-08-15 00:05:16] [INFO] [agent.vision:62] - 👁️ VisionFallback Triggered! AXTree extracted only 0 elements (threshold=3). Capturing screenshot for Vision LLM analysis.
+[2026-08-15 00:05:25] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 00:05:28] [INFO] [agent.vision:143] - 👁️ VisionFallback added 0 visual UI controls to snapshot.
+[2026-08-15 00:05:28] [INFO] [insightapi.engine.sdk:188] - Initial AXTree DOM snapshot extracted: 0 interactive elements found.
+[2026-08-15 00:05:28] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 4: Starting Autonomous Exploration Loop[/bold yellow] Invoking LangGraph Agent Graph
+[2026-08-15 00:05:28] [INFO] [insightapi.agent.planner:401] - Crawl limit reached (1/1 pages). Terminating crawl graph.
+[2026-08-15 00:05:28] [INFO] [insightapi.engine.sdk:235] - Exploration complete. Total captured network calls: 0
+[2026-08-15 00:05:28] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 5: Running Endpoint Disambiguation & Schema Analyzer[/bold yellow] 
+[2026-08-15 00:05:28] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 6: Session Completed Successfully[/bold yellow] Final Unique Endpoints Discovered: 0
+[2026-08-15 00:06:14] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:06:44] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:07:02] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:07:03] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:07:03] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:07:03] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:07:03] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:07:03] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 00:07:04] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:07:04] [INFO] [insightapi.agent.executor:190] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 00:07:04] [INFO] [insightapi.agent.executor:227] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:07:04] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:07:12] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:07:13] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:07:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:07:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:07:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:07:13] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 00:07:14] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:07:14] [INFO] [insightapi.agent.executor:190] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 00:07:14] [INFO] [insightapi.agent.executor:227] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:07:14] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:07:14] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 00:07:14] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 00:07:14] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 00:07:14] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 00:07:14] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 00:07:14] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 00:07:14] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 00:07:14] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 00:07:14] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 00:07:14] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 00:07:14] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 00:07:14] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 00:07:14] [INFO] [app.api.v1.endpoints.crawls:425] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 00:07:14] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 00:07:14] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 00:07:14] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 00:07:14] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 00:07:14] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 00:07:14] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 00:07:14] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 00:07:14] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 00:07:18] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:07:22] [WARNING] [app.api.v1.endpoints.crawls:287] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 00:07:22] [INFO] [app.api.v1.endpoints.crawls:300] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 00:07:26] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:14:04] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:14:04] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:14:04] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 00:14:04] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 00:14:04] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 00:14:04] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:14:04] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 00:14:04] [WARNING] [insightapi.agent.executor:28] - 🔒 Login wall detected on URL: https://draw.canvas-app.com. Halting crawl graph with 'auth_required'.
+[2026-08-15 00:14:20] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:14:20] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:14:20] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 00:14:20] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 00:14:20] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 00:14:20] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:14:20] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 00:14:20] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 00:14:21] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:14:21] [ERROR] [insightapi.agent.executor:276] - ExecutorNode failure executing action `canvas[mark=1,x=150,y=80]`: 'visited_urls'
+Traceback (most recent call last):
+  File "C:\Users\ashut\Devlopments\InsightAPI\services\agent-service\app\agents\nodes\executor.py", line 189, in process
+    state["visited_urls"].append(current_url)
+    ~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'visited_urls'
+[2026-08-15 00:14:42] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:14:43] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:14:43] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 00:14:43] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 00:14:43] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 00:14:43] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:14:43] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 00:14:43] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 00:14:43] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:14:43] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 00:14:43] [INFO] [insightapi.agent.executor:251] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:14:43] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:14:52] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:14:53] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:14:53] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 00:14:53] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 00:14:53] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 00:14:53] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:14:53] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 00:14:53] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 00:14:53] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:14:53] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 00:14:53] [INFO] [insightapi.agent.executor:251] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:14:53] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:14:53] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:14:53] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:14:53] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:14:53] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:14:53] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 00:14:54] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:14:54] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 00:14:54] [INFO] [insightapi.agent.executor:251] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:14:54] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:14:54] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 00:14:54] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 00:14:54] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 00:14:54] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 00:14:54] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 00:14:54] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 00:14:54] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 00:14:54] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 00:14:54] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 00:14:54] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 00:14:54] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 00:14:54] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 00:14:54] [INFO] [app.api.v1.endpoints.crawls:425] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 00:14:54] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 00:14:54] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 00:14:54] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 00:14:54] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 00:14:54] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 00:14:54] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 00:14:54] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 00:14:54] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 00:14:58] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:15:02] [WARNING] [app.api.v1.endpoints.crawls:287] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 00:15:02] [INFO] [app.api.v1.endpoints.crawls:300] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 00:15:06] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:18:35] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:18:36] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:18:36] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:18:36] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:18:36] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:18:36] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:18:37] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:18:37] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:18:37] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:18:37] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:18:37] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:18:37] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:18:38] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:18:38] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:18:38] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:18:38] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:18:41] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 00:18:46] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 8478b4c3-c48e-4ce5-9821-b34a63213887. Total memory size: 1
+[2026-08-15 00:19:12] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:19:13] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:19:13] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:19:13] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:19:13] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:19:13] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:19:13] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:19:14] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:19:14] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:19:14] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:19:14] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:19:14] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:19:14] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:19:14] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:19:14] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:19:14] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:19:17] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 00:19:45] [INFO] [google_genai._api_client:1623] - Retrying due to aiohttp error: Cannot connect to host generativelanguage.googleapis.com:443 ssl:<ssl.SSLContext object at 0x00000252FC653BB0> [The network location cannot be reached. For information about network troubleshooting, see Windows Help]
+[2026-08-15 00:19:46] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (ClientConnectorDNSError: Cannot connect to host generativelanguage.googleapis.com:443 ssl:<ssl.SSLContext object at 0x000002528312B890> [getaddrinfo failed]). Endpoints exported without AI summaries.
+[2026-08-15 00:19:46] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 40e92bd5-634f-4cb6-999b-64d745d13c9c. Total memory size: 1
+[2026-08-15 00:22:53] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:22:55] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:22:55] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:22:55] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:22:55] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:22:55] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:22:55] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:22:56] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:22:56] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:22:56] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:22:56] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:22:56] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:22:56] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:22:56] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:22:56] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:22:56] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:23:00] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 00:24:08] [INFO] [google_genai._api_client:1623] - Retrying due to aiohttp error: [WinError 1236] The network connection was aborted by the local system
+[2026-08-15 00:24:15] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.2564090335573135 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-15 00:24:48] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:24:49] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:24:49] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:24:49] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:24:49] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:24:49] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:24:49] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:24:50] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:24:50] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:24:50] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:24:50] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:24:50] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:24:50] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:24:50] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:24:50] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:24:50] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:25:01] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:25:03] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:25:03] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:25:03] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:25:03] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:25:03] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:25:03] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:25:04] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:25:04] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:25:04] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:25:04] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 00:25:04] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:25:04] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 00:25:04] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 00:25:05] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:25:05] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 00:25:05] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:25:05] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:25:05] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:25:05] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:25:05] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:25:05] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:25:05] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 00:25:06] [INFO] [insightapi.agent.executor:179] - Action execution status: success=True | message=''
+[2026-08-15 00:25:06] [INFO] [insightapi.agent.executor:191] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 00:25:06] [INFO] [insightapi.agent.executor:350] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:25:06] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:25:06] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 00:25:06] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 00:25:06] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 00:25:06] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 00:25:06] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 00:25:06] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 00:25:06] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 00:25:06] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 00:25:06] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 00:25:06] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 00:25:06] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 00:25:06] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 00:25:06] [INFO] [app.api.v1.endpoints.crawls:425] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 00:25:06] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 00:25:06] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 00:25:06] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 00:25:06] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 00:25:06] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 00:25:06] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 00:25:06] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 00:25:06] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 00:25:10] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:25:14] [WARNING] [app.api.v1.endpoints.crawls:287] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 00:25:14] [INFO] [app.api.v1.endpoints.crawls:300] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 00:25:18] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:32:23] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:32:38] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:32:50] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:32:54] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:32:57] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:32:57] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:32:57] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:32:57] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 1/3)
+[2026-08-15 00:32:57] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:33:00] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:33:00] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:33:00] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:33:00] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 1/3)
+[2026-08-15 00:33:01] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:33:02] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:33:02] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:33:02] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:33:02] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 1/3)
+[2026-08-15 00:33:02] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:33:02] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 00:33:03] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 00:33:03] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 00:33:03] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:33:03] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 00:33:03] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 00:33:04] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:33:04] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 00:33:04] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:33:04] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:33:04] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:33:04] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:33:04] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:33:04] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:33:04] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 00:33:05] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:33:05] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 00:33:05] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:33:05] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:33:05] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 00:33:05] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 00:33:05] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 00:33:05] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 00:33:05] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 00:33:05] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 00:33:05] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 00:33:05] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 00:33:05] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 00:33:05] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 00:33:05] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 00:33:05] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 00:33:05] [INFO] [app.api.v1.endpoints.crawls:425] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 00:33:05] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 00:33:05] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 00:33:05] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 00:33:05] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 00:33:05] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 00:33:05] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 00:33:05] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 00:33:05] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 00:33:09] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:33:13] [WARNING] [app.api.v1.endpoints.crawls:287] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 00:33:13] [INFO] [app.api.v1.endpoints.crawls:300] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 00:33:17] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:34:13] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:34:17] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:34:18] [INFO] [app.engine.executor.dynamic_executor:176] - Dismissed blocking overlay using selector 'button:has-text('Accept')'
+[2026-08-15 00:34:21] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:34:21] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:34:21] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:34:21] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 4 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:34:21] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:34:22] [INFO] [app.engine.executor.dynamic_executor:176] - Dismissed blocking overlay using selector 'button:has-text('Accept')'
+[2026-08-15 00:34:26] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:34:26] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:34:26] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:34:26] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 4 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:34:26] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:34:26] [INFO] [app.engine.executor.dynamic_executor:176] - Dismissed blocking overlay using selector 'button:has-text('Accept')'
+[2026-08-15 00:34:29] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:34:29] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:34:29] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:34:29] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 6 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:34:29] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:34:29] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 00:34:29] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 00:34:29] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 00:34:29] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:34:29] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 00:34:29] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 00:34:30] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:34:30] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 00:34:30] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:34:30] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:34:30] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:34:30] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:34:30] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:34:30] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:34:30] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 00:34:30] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:34:30] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 00:34:30] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:34:30] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:34:30] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 00:34:30] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 00:34:30] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 00:34:30] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 00:34:30] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 00:34:30] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 00:34:30] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 00:34:30] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 00:34:30] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 00:34:30] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 00:34:31] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 00:34:31] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 00:34:31] [INFO] [app.api.v1.endpoints.crawls:425] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 00:34:31] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 00:34:31] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 00:34:31] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 00:34:31] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 00:34:31] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 00:34:31] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 00:34:31] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 00:34:31] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 00:34:35] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:34:39] [WARNING] [app.api.v1.endpoints.crawls:287] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 00:34:39] [INFO] [app.api.v1.endpoints.crawls:300] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 00:34:43] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:34:55] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:34:55] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:34:56] [INFO] [app.engine.executor.dynamic_executor:176] - Dismissed blocking overlay using selector 'button:has-text('Accept')'
+[2026-08-15 00:34:59] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:34:59] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:34:59] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:34:59] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 4 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:00] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:35:00] [INFO] [app.engine.executor.dynamic_executor:176] - Dismissed blocking overlay using selector 'button:has-text('Accept')'
+[2026-08-15 00:35:04] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:04] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:35:04] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:04] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 4 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:04] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:35:04] [INFO] [app.engine.executor.dynamic_executor:176] - Dismissed blocking overlay using selector 'button:has-text('Accept')'
+[2026-08-15 00:35:07] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:07] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:35:07] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:07] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 6 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:18] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:35:18] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:35:22] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:22] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:35:22] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:22] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 3 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:22] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:35:26] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:26] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:35:26] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:26] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 3 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:26] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:35:28] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:28] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:35:28] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:28] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 4 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:34] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:35:35] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:35:38] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:38] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:35:38] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:38] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 3 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:54] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:35:55] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:35:55] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:56] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:35:56] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:56] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:56] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:35:57] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:57] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:35:57] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:57] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:35:57] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:35:58] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:35:58] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:35:58] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:35:58] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:36:06] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 00:36:09] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 00:36:10] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:36:10] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 00:36:10] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:36:10] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:36:10] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 00:36:11] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:36:11] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 00:36:11] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:36:11] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:36:11] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 00:36:12] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:36:12] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 00:36:12] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:36:12] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:36:12] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:36:12] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 00:36:12] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 00:36:12] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 00:36:12] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 00:36:12] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 00:36:12] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 00:36:13] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:36:13] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 00:36:13] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:36:13] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:36:13] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 00:36:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:36:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:36:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 00:36:13] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 00:36:14] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 00:36:14] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 00:36:14] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 00:36:14] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 00:36:14] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 00:36:14] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 00:36:14] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 00:36:14] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 00:36:14] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 00:36:14] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 00:36:14] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 00:36:14] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 00:36:14] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 00:36:14] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 00:36:14] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 00:36:14] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 00:36:14] [INFO] [app.api.v1.endpoints.crawls:425] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 00:36:14] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 00:36:14] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 00:36:14] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 00:36:14] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 00:36:14] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 00:36:14] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 00:36:14] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 00:36:14] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 00:36:18] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 00:36:22] [WARNING] [app.api.v1.endpoints.crawls:287] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 00:36:22] [INFO] [app.api.v1.endpoints.crawls:300] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 00:36:26] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.

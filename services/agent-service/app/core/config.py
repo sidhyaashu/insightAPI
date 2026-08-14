@@ -60,6 +60,9 @@ class Settings(BaseSettings):
         }
         return mapping.get(normalized, self.TIER_CHAT_LIMIT_FREE)
 
+    # Authentication Profile Encryption Key
+    AUTH_PROFILE_SECRET_KEY: str = "insightapi-auth-profile-encryption-key-32chars!"
+
     # Engine Defaults & Compliance Guardrails
     MAX_CRAWL_PAGES: int = 15
     CRAWL_TIMEOUT_SECONDS: int = 300
@@ -101,6 +104,7 @@ class Settings(BaseSettings):
 
     # ── Third-Party Integration Settings ─────────────────────────────────────
     STEALTH_MODE_ENABLED: bool = True
+    HUMANIZE_INTERACTIONS: bool = True
     PROXY_URL: Optional[str] = None
     CHROME_EXTENSION_PATHS: list[str] = []
     FUZZING_ENABLED: bool = True

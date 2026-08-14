@@ -184,3 +184,12 @@ class UserRepository:
         if user:
             user.stripe_customer_id = customer_id
             await self.db.commit()
+
+    async def update_overage_preference(self, user_id: str, allow_overage: bool) -> User | None:
+        user = await self.get_by_id(user_id)
+        if user:
+            user.allow_overage = allow_overage
+            await self.db.commit()
+            await self.db.refresh(user)
+        return user
+

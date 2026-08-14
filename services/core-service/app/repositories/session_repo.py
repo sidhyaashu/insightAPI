@@ -35,11 +35,17 @@ class SessionRepository:
         if keys:
             await redis.delete(*keys)
 
-    async def cache_user_session(self, user_id: str, tier: str) -> None:
-        """Cache user tier in Redis — read by gateway for fast x-user-id injection."""
+    async def cache_user_session(self, user_id: str, tier: str, allow_overage: bool = False) -> None:
+        """Cache user tier & overage setting in Redis — read by gateway for fast x-user-id injection."""
         redis = await get_redis_client()
         ttl = int(timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES + 5).total_seconds())
-        await redis.hset(f"user:session:{user_id}", mapping={"tier": tier})
+        await redis.hset(
+            f"user:session:{user_id}",
+            mapping={
+                "tier": tier,
+                "allow_overage": "true" if allow_overage else "false",
+            },
+        )
         await redis.expire(f"user:session:{user_id}", ttl)
 
     async def get_user_session(self, user_id: str) -> dict | None:

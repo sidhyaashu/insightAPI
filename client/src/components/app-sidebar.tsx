@@ -18,6 +18,8 @@ import {
   IconDownload,
   IconChevronRight,
   IconPlus,
+  IconGitCompare,
+  IconShieldCheck,
 } from "@tabler/icons-react";
 
 import { useAppSelector, useAppDispatch } from "@/store";
@@ -77,6 +79,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const navMain = [
     { title: "AI Chatbot", href: "/chat", icon: IconMessages },
+    { title: "Drift Reports", href: "/reports", icon: IconGitCompare },
+    { title: "Verified Domains", href: "/domains", icon: IconShieldCheck },
+    { title: "Auth Profiles", href: "/auth-profiles", icon: IconKey },
     { title: "Billing & Subscriptions", href: "/billing", icon: IconCreditCard },
     { title: "Settings & Profile", href: "/settings", icon: IconSettings },
   ];

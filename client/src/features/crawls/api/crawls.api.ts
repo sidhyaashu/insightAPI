@@ -2,7 +2,14 @@ import apiClient from "@/lib/api-client";
 import type { CrawlSession, CrawlReport } from "@/lib/api-client/types";
 
 export const crawlsApi = {
-  startCrawl: async (params: { target_url: string; max_pages?: number; goal?: string }): Promise<CrawlSession> => {
+  startCrawl: async (params: {
+    target_url: string;
+    max_pages?: number;
+    goal?: string;
+    require_review?: boolean;
+    tos_accepted?: boolean;
+    auth_profile_id?: string;
+  }): Promise<CrawlSession> => {
     const { data } = await apiClient.post<CrawlSession>("/v1/crawls/start", params);
     return data;
   },
@@ -25,4 +32,20 @@ export const crawlsApi = {
     const { data } = await apiClient.get<CrawlReport>(`/v1/reports/${sessionId}`);
     return data;
   },
+
+  generateTests: async (sessionId: string, format: "python" | "typescript" = "python"): Promise<string> => {
+    const { data } = await apiClient.get<string>(`/v1/crawls/${sessionId}/generate-tests?format=${format}`, {
+      responseType: "text" as const,
+    });
+    return data;
+  },
+
+  downloadTestSuiteZip: async (sessionId: string, format: "python" | "typescript" = "python"): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>(
+      `/v1/crawls/${sessionId}/generate-tests?format=${format}&as_zip=true`,
+      { responseType: "blob" as const }
+    );
+    return data;
+  },
 };
+

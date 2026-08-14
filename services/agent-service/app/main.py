@@ -10,6 +10,7 @@ from app.routers import stream, chat
 # Ensure all SQLAlchemy models are registered on Base.metadata
 from app.models.crawl_session import CrawlSession
 from app.models.chat_message import ChatMessage
+from app.models.crawl_snapshot import CrawlSnapshot  # noqa: F401 — registers crawl_snapshots table
 
 logger = logging.getLogger(__name__)
 

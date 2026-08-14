@@ -88,6 +88,39 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Pay-Per-Crawl Overage Settings */}
+      <div className="border border-border/60 p-6 rounded-2xl bg-card shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-border/40 pb-3 flex-wrap gap-2">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <CreditCardIcon className="size-4 text-muted-foreground" /> Pay-Per-Crawl Overage
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Allow automated crawling beyond your plan limit at a flat $1.50 per crawl.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono text-muted-foreground">
+              {user?.allow_overage ? "Allowed ($1.50/crawl)" : "Disabled (Hard Limit)"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-muted/20">
+          <div>
+            <p className="text-xs font-semibold text-foreground">Auto-Overage Billing</p>
+            <p className="text-[11px] text-muted-foreground">
+              Bypasses the 429 quota block and bills to your Stripe customer profile.
+            </p>
+          </div>
+          <Link href="/billing">
+            <Button variant="outline" size="sm" className="text-xs">
+              Configure in Billing
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       {/* Appearance & Theme */}
       <div className="border border-border/60 p-6 rounded-2xl bg-card shadow-xs flex items-center justify-between">
         <div>

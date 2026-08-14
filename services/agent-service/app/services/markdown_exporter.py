@@ -68,6 +68,12 @@ class MarkdownExporter:
                 meta_parts.append(f"**Category:** {ai_category}")
             if ai_tags:
                 meta_parts.append(f"**Tags:** {', '.join(f'`{t}`' for t in ai_tags)}")
+            if ep.get("is_vision_derived"):
+                meta_parts.append("**Source:** `Vision Fallback`")
+            if ep.get("triggered_by"):
+                trig = ep["triggered_by"]
+                ctx = trig.get("form_context") or trig.get("selector") or "Form Submit"
+                meta_parts.append(f"**Triggered By:** `{ctx[:35]}`")
             meta_parts.append(f"**Confidence:** `{confidence:.0%}`")
             if meta_parts:
                 lines.append(" · ".join(meta_parts))
@@ -76,6 +82,17 @@ class MarkdownExporter:
             lines.extend([
                 f"* **Target URL**: `{url}`",
                 f"* **Observed Status**: `{ep.get('status', 200)}`",
+            ])
+
+            if ep.get("related_calls"):
+                lines.append(f"* **Related Calls ({len(ep['related_calls'])})**:")
+                for rc in ep["related_calls"]:
+                    rc_method = rc.get("method", "GET")
+                    rc_route = rc.get("template_route", "/")
+                    rc_status = rc.get("status", 200)
+                    lines.append(f"  * `{rc_method} {rc_route}` (HTTP {rc_status})")
+
+            lines.extend([
                 "",
                 "#### Example cURL Request",
                 "```bash",

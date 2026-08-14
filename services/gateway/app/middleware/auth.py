@@ -56,16 +56,19 @@ async def auth_middleware(request: Request, call_next):
     user_id: str = payload.get("sub", "")
     tier: str = payload.get("tier", "FREE")
     role: str = payload.get("role", "user")
+    allow_overage: str = "false"
 
     if not user_id:
         raise HTTPException(status_code=401, detail="Token missing sub claim.")
 
-    # Try Redis cache for tier updates
+    # Try Redis cache for tier & overage updates
     try:
         redis = await get_redis()
         cached = await redis.hgetall(f"user:session:{user_id}")
         if cached and "tier" in cached:
             tier = cached["tier"]
+        if cached and "allow_overage" in cached:
+            allow_overage = cached["allow_overage"]
     except Exception:
         pass
 
@@ -73,11 +76,13 @@ async def auth_middleware(request: Request, call_next):
     request.state.user_id = user_id
     request.state.user_tier = tier
     request.state.user_role = role
+    request.state.allow_overage = allow_overage
 
     headers = dict(request.headers)
     headers[HEADER_USER_ID] = user_id
     headers[HEADER_USER_TIER] = tier
     headers[HEADER_USER_ROLE] = role
+    headers[HEADER_USER_ALLOW_OVERAGE] = allow_overage
 
     scope = request.scope
     scope["headers"] = [

@@ -22,7 +22,10 @@ class CapturedEndpoint:
         request_payload: Optional[Any],
         response_headers: Dict[str, str],
         response_body: Optional[Any],
-        graphql_operation_name: Optional[str] = None
+        graphql_operation_name: Optional[str] = None,
+        triggered_by: Optional[Dict[str, Any]] = None,
+        related_calls: Optional[List[Dict[str, Any]]] = None,
+        is_vision_derived: Optional[bool] = False,
     ):
         self.method = method
         self.url = url
@@ -34,9 +37,12 @@ class CapturedEndpoint:
         self.response_headers = response_headers
         self.response_body = response_body
         self.graphql_operation_name = graphql_operation_name
+        self.triggered_by = triggered_by
+        self.related_calls = related_calls or []
+        self.is_vision_derived = is_vision_derived or False
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        data = {
             "method": self.method,
             "url": self.url,
             "template_route": self.template_route,
@@ -46,8 +52,14 @@ class CapturedEndpoint:
             "request_payload": self.request_payload,
             "response_headers": self.response_headers,
             "response_body": self.response_body,
-            "graphql_operation_name": self.graphql_operation_name
+            "graphql_operation_name": self.graphql_operation_name,
+            "is_vision_derived": self.is_vision_derived,
         }
+        if self.triggered_by:
+            data["triggered_by"] = self.triggered_by
+        if self.related_calls:
+            data["related_calls"] = self.related_calls
+        return data
 
 
 # Maximum raw observations kept per (method, template_route, status) tuple.

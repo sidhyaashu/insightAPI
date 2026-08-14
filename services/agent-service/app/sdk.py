@@ -30,6 +30,7 @@ class CrawlResult:
         explored_count: int = 1,
         elapsed_time_seconds: float = 0.0,
         llm_metrics: Optional[Dict[str, Any]] = None,
+        action_traces: Optional[List[Dict[str, Any]]] = None,
     ):
         self.target_url = target_url
         self.captured_endpoints = captured_endpoints
@@ -37,6 +38,7 @@ class CrawlResult:
         self.explored_count = explored_count
         self.elapsed_time_seconds = elapsed_time_seconds
         self.llm_metrics: Dict[str, Any] = llm_metrics or {}
+        self.action_traces: List[Dict[str, Any]] = action_traces or []
         """UI-facing LLM cost metrics: tokens_used, llm_calls_made, estimated_cost_usd, etc."""
 
     @property
@@ -63,6 +65,14 @@ class CrawlResult:
         """Export Markdown API Documentation string."""
         return MarkdownExporter.generate_markdown("InsightAPI SDK", self.target_url, self.captured_endpoints)
 
+    def to_playwright_test(self, format: str = "python") -> str:
+        """Generate runnable Playwright regression test script from recorded action traces."""
+        from app.generators.playwright_test_gen import PlaywrightTestGenerator
+        if format.lower() in ["ts", "typescript"]:
+            return PlaywrightTestGenerator.generate_typescript_test(self.target_url, self.action_traces)
+        return PlaywrightTestGenerator.generate_python_test(self.target_url, self.action_traces)
+
+
 
 class AgentEngine:
     """
@@ -88,8 +98,15 @@ class AgentEngine:
 
         asyncio.run(main())
     """
-    def __init__(self, headless: bool = True):
+    def __init__(
+        self,
+        headless: bool = True,
+        humanize_interactions: bool = True,
+        fast_mode: bool = False,
+    ):
         self.headless = headless
+        self.humanize_interactions = humanize_interactions
+        self.fast_mode = fast_mode
 
     async def crawl(
         self,
@@ -97,9 +114,13 @@ class AgentEngine:
         max_pages: int = 10,
         rate_limit_ms: int = 500,
         session_state: Optional[Dict[str, Any]] = None,
+        auth_profile: Optional[Any] = None,
+        auth_profile_id: Optional[str] = None,
         goal: Optional[str] = None,
         parallel: bool = False,
         max_agents: int = 1,
+        humanize_interactions: Optional[bool] = None,
+        fast: bool = False,
     ) -> CrawlResult:
         """
         Autonomously explores target URL, captures network traffic, and returns CrawlResult.
@@ -108,14 +129,19 @@ class AgentEngine:
             url: Target website URL.
             max_pages: Maximum number of unique page states to explore.
             rate_limit_ms: Minimum per-domain delay spacing in milliseconds (default: 500ms).
-            session_state: Optional Playwright storage_state dict (cookies + localStorage)
-                previously saved by ``insightapi login`` or ``BrowserManager.save_storage_state()``.
+            session_state: Optional Playwright storage_state dict (cookies + localStorage).
+            auth_profile: Optional AuthProfile model instance for automated login prior to exploration.
+            auth_profile_id: Optional AuthProfile database ID to load and execute automated login.
             goal: Optional natural-language crawl objective (e.g. "Find all payment APIs").
                   When set, the LLM Planner biases exploration toward elements likely to
                   trigger APIs related to this goal.
             parallel: When True, uses CrawlCoordinator to launch concurrent sub-agent workers.
             max_agents: Number of parallel sub-agent workers to spawn when parallel=True.
+            humanize_interactions: Whether to use humanized Bezier mouse curves and typing cadence.
+            fast: When True, disables humanized pauses and typing jitter for fast trusted crawls.
         """
+        effective_humanize = False if (fast or self.fast_mode) else (self.humanize_interactions if humanize_interactions is None else humanize_interactions)
+
         if parallel and max_agents > 1:
             from app.agents.coordinator import CrawlCoordinator
             return await CrawlCoordinator.run_parallel_crawl(
@@ -128,10 +154,30 @@ class AgentEngine:
                 headless=self.headless,
             )
 
+        # ── Automated AuthProfile Login Execution ──────────────────────────
+        if session_state is None and (auth_profile or auth_profile_id):
+            try:
+                from app.engine.auth.executor import AutoLoginExecutor
+                active_profile = auth_profile
+                if not active_profile and auth_profile_id:
+                    from sqlalchemy import select
+                    from app.core.database import AsyncSessionLocal
+                    from app.models.auth_profile import AuthProfile
+                    async with AsyncSessionLocal() as db:
+                        stmt_res = await db.execute(select(AuthProfile).where(AuthProfile.id == auth_profile_id))
+                        active_profile = stmt_res.scalar_one_or_none()
+
+                if active_profile:
+                    log_step(logger, 0, "Executing Automated Login", f"Profile: {active_profile.name} [{active_profile.auth_type}] -> {active_profile.login_url}")
+                    session_state = await AutoLoginExecutor.execute_login(active_profile, headless=self.headless)
+                    logger.info(f"✓ AutoLoginExecutor: Session state acquired ({len(session_state.get('cookies', []))} cookies).")
+            except Exception as auth_err:
+                logger.error(f"Failed to execute automated login for profile: {auth_err}")
+
         start_time = time.time()
         session_id = str(uuid.uuid4())
 
-        log_step(logger, 1, "Initializing Engine Session", f"Target URL: {url} | Max Pages: {max_pages} | Rate Limit: {rate_limit_ms}ms | Headless: {self.headless} | Authenticated: {session_state is not None} | Goal: {goal or 'all APIs'}")
+        log_step(logger, 1, "Initializing Engine Session", f"Target URL: {url} | Max Pages: {max_pages} | Rate Limit: {rate_limit_ms}ms | Headless: {self.headless} | Humanized: {effective_humanize} | Authenticated: {session_state is not None} | Goal: {goal or 'all APIs'}")
 
         # Initialize per-session LLM cost manager
         from app.agents.nodes.llm_client import make_cost_manager
@@ -177,6 +223,7 @@ class AgentEngine:
                 "network_observer": observer,
                 "page_ref": page,
                 "rate_limit_ms": rate_limit_ms,
+                "humanize_interactions": effective_humanize,
                 # Intelligence-layer fields
                 "goal": goal,
                 "planner_reasoning": None,
@@ -229,9 +276,11 @@ class AgentEngine:
                 explored_count=explored_count,
                 elapsed_time_seconds=elapsed_sec,
                 llm_metrics=cost_manager.get_metrics(),
+                action_traces=analyzed_state.get("action_traces", []),
             )
         finally:
             await browser_manager.stop()
+
 
 
 

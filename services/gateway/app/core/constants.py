@@ -3,6 +3,7 @@
 HEADER_USER_ID = "x-user-id"
 HEADER_USER_TIER = "x-user-tier"
 HEADER_USER_ROLE = "x-user-role"
+HEADER_USER_ALLOW_OVERAGE = "x-user-allow-overage"
 HEADER_GATEWAY_SECRET = "x-gateway-secret"
 
 PUBLIC_PATHS = {

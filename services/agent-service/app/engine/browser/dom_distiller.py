@@ -51,9 +51,19 @@ JS_DOM_DISTILLER = r"""
                 continue;
             }
 
-            // Extract surrounding parent form & section context for risk analysis
-            const closestForm = el.closest('form');
+            // Extract surrounding parent form & section context for risk analysis and API attribution
+            const closestForm = el.closest('form, [data-form], .form, fieldset');
             const formContext = closestForm ? (closestForm.getAttribute('aria-label') || closestForm.name || closestForm.id || closestForm.innerText || '').slice(0, 150) : '';
+            const formAction = closestForm ? (closestForm.getAttribute('action') || '') : '';
+            const formMethod = closestForm ? (closestForm.getAttribute('method') || 'POST').toUpperCase() : '';
+            const formFields = closestForm ? Array.from(closestForm.querySelectorAll('input, select, textarea')).map(inp => ({
+                name: inp.name || inp.id || inp.placeholder || inp.getAttribute('aria-label') || '',
+                type: inp.type || inp.tagName.toLowerCase(),
+                placeholder: inp.placeholder || '',
+                value: inp.value || ''
+            })).filter(f => f.name) : [];
+
+            const isFormSubmit = el.type === 'submit' || (el.tagName.toLowerCase() === 'button' && (el.type === 'submit' || !el.type || el.closest('form')));
             const closestSection = el.closest('section, div, modal, dialog, fieldset');
             const parentText = closestSection ? (closestSection.innerText || '').slice(0, 100) : '';
 
@@ -67,6 +77,10 @@ JS_DOM_DISTILLER = r"""
                 ariaLabel: el.getAttribute('aria-label') || '',
                 selector: getCssSelector(el),
                 form_context: formContext,
+                form_action: formAction,
+                form_method: formMethod,
+                form_fields: formFields,
+                is_form_submit: isFormSubmit,
                 parent_text: parentText
             });
         }
@@ -196,6 +210,25 @@ class DOMDistiller:
             return []
 
     @staticmethod
+    async def has_canvas_element(page: Page) -> bool:
+        """
+        Detects if the page contains <canvas>, WebGL, or complex graphical containers
+        that lack standard HTML interactive elements.
+        """
+        try:
+            return await page.evaluate("""
+            () => !!(
+                document.querySelector('canvas') ||
+                document.querySelector('svg.dense-canvas') ||
+                document.querySelector('[data-interactive-canvas]') ||
+                document.querySelector('embed[type*="webgl"]') ||
+                document.querySelector('object[type*="webgl"]')
+            )
+            """)
+        except Exception:
+            return False
+
+    @staticmethod
     async def detect_login_wall(page: Page, snapshot: List[Dict[str, Any]]) -> bool:
         """
         Detects if the page presents an unauthenticated login wall by checking for password inputs
@@ -227,4 +260,5 @@ class DOMDistiller:
             return not has_session
         except Exception:
             return True
+
 

@@ -25,10 +25,11 @@ async def execute_crawl_pipeline(
     goal: str | None = None,
     parallel: bool = False,
     max_agents: int = 1,
+    fast: bool = False,
 ):
     """Executes the AgentEngine autonomous exploration pipeline and formats terminal output."""
     try:
-        engine = AgentEngine(headless=headless)
+        engine = AgentEngine(headless=headless, fast_mode=fast)
         result = await engine.crawl(
             url,
             max_pages=max_pages,
@@ -37,6 +38,7 @@ async def execute_crawl_pipeline(
             goal=goal,
             parallel=parallel,
             max_agents=max_agents,
+            fast=fast,
         )
         captured = result.captured_endpoints
 
@@ -169,6 +171,12 @@ def run_crawl(
         "-a",
         help="Number of parallel crawler sub-agents to spawn when --parallel is enabled (default: 1, max: 5)",
     ),
+    fast: bool = typer.Option(
+        False,
+        "--fast",
+        "-f",
+        help="Fast mode: disables humanized Bezier mouse curves and typing jitter for trusted/internal targets",
+    ),
 ):
     """
     Start an autonomous AI exploration session on a target URL.
@@ -231,6 +239,7 @@ def run_crawl(
         f"[bold cyan]InsightAPI AI Agent[/bold cyan]\n"
         f"Target URL: [bold yellow]{url}[/bold yellow]\n"
         f"Max Pages: {max_pages} | Rate Limit: {rate_limit}ms | Headless: {headless} | Format: {format.upper()} | "
+        f"Fast Mode: {'[bold red]Yes[/bold red]' if fast else '[bold green]No (Humanized)[/bold green]'} | "
         f"Authenticated: {'[bold green]Yes[/bold green]' if session_state else '[dim]No[/dim]'}",
         title="Starting Autonomous Crawl Session",
         border_style="cyan"
@@ -248,5 +257,6 @@ def run_crawl(
             goal=goal,
             parallel=parallel,
             max_agents=agents,
+            fast=fast,
         )
     )
