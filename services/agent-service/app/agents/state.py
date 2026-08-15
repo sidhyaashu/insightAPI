@@ -46,6 +46,10 @@ class CrawlState(TypedDict):
     page_ref: Optional[Any]
     rate_limit_ms: Optional[int]
 
+    # ── Session identity (used by nodes that write to DB directly) ────────────
+    crawl_id: Optional[str]              # Mirrors CrawlSession.id
+    user_id: Optional[str]               # Authenticated user who started the crawl
+
     # ── Intelligence-layer fields (Phase 1–3) ────────────────────────────────
     goal: Optional[str]
     planner_reasoning: Optional[str]
@@ -58,5 +62,11 @@ class CrawlState(TypedDict):
     needs_vision_fallback: Optional[bool]          # True when page has <canvas> and sparse/zero DOM interactive controls
     vision_action_count: Optional[int]             # Number of actions executed via Vision LLM coordinate fallback
     humanize_interactions: Optional[bool]          # Whether to use humanized Bezier mouse paths and typing jitter
+
+    # ── Security testing (Phase 4) ───────────────────────────────────────────
+    security_testing_enabled: Optional[bool]       # Opt-in flag set by user tier
+    allow_destructive_tests: Optional[bool]        # True only on verified domains w/ explicit user opt-in
+    security_findings: Optional[List[Dict[str, Any]]]  # Confirmed vulns from SecurityReasonerNode
+    security_approval_queue: Optional[List[Dict[str, Any]]]  # Queued destructive tests awaiting human approval
 
 

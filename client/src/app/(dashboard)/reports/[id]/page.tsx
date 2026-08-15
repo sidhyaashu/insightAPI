@@ -318,7 +318,7 @@ export default function CrawlReportDetailsPage() {
                   return (
                     <div key={i} className="p-4 hover:bg-muted/10 transition-colors space-y-2">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2 font-mono text-xs">
+                        <div className="flex items-center gap-2 font-mono text-xs flex-wrap">
                           <span className="size-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
                             {trace.step || i + 1}
                           </span>
@@ -333,11 +333,40 @@ export default function CrawlReportDetailsPage() {
                               value: <strong className="text-foreground">"{trace.value}"</strong>
                             </span>
                           )}
+                          {trace.is_vision_action && (
+                            <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-[9px] px-1.5 py-0">
+                              👁️ Vision LLM Coordinate
+                            </Badge>
+                          )}
+                          {trace.humanized && (
+                            <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/30 text-[9px] px-1.5 py-0">
+                              ✦ Humanized Bezier Movement
+                            </Badge>
+                          )}
                         </div>
                         <span className="text-[10px] font-mono text-muted-foreground">
                           {calls.length} API {calls.length === 1 ? "call" : "calls"} triggered
                         </span>
                       </div>
+
+                      {/* Form Submission Attribution Card */}
+                      {(trace.action_type === "form_submit" || trace.form_action || trace.submitted_fields) && (
+                        <div className="bg-muted/30 p-2.5 rounded-xl border border-border/50 text-[11px] font-mono space-y-1 mt-1">
+                          <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase">
+                            <span>Form Submission Context</span>
+                            {trace.form_method && (
+                              <Badge variant="outline" className="text-[9px] px-1 py-0 border-primary/30">
+                                {trace.form_method} {trace.form_action}
+                              </Badge>
+                            )}
+                          </div>
+                          {trace.submitted_fields && (
+                            <div className="text-muted-foreground text-[10px] truncate">
+                              Fields: {JSON.stringify(trace.submitted_fields)}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Triggered Network Calls */}
                       {calls.length > 0 && (
@@ -425,6 +454,29 @@ export default function CrawlReportDetailsPage() {
             <pre className="p-4 text-xs font-mono whitespace-pre-wrap overflow-x-auto text-foreground max-h-[600px]">
               {report?.markdown_docs || "No markdown docs generated"}
             </pre>
+          </div>
+        </TabsContent>
+
+        {/* Tab 4: LLM Cost & Tokens */}
+        <TabsContent value="costs" className="mt-4">
+          <div className="border border-border/60 rounded-2xl bg-card shadow-xs overflow-hidden p-6 space-y-4 font-mono text-xs">
+            <h2 className="text-sm font-semibold text-foreground font-sans">LLM Cost & Token Ledger</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-3 rounded-xl bg-muted/30 border border-border/40">
+                <div className="text-[10px] text-muted-foreground">Total AI Spend</div>
+                <div className="text-lg font-bold text-amber-500">${(session?.cost_usd || 0).toFixed(4)}</div>
+              </div>
+              <div className="p-3 rounded-xl bg-muted/30 border border-border/40">
+                <div className="text-[10px] text-muted-foreground">Tokens Consumed</div>
+                <div className="text-lg font-bold text-foreground">{(session?.total_tokens || 0).toLocaleString()}</div>
+              </div>
+              <div className="p-3 rounded-xl bg-muted/30 border border-border/40">
+                <div className="text-[10px] text-muted-foreground">Prompt / Completion Ratio</div>
+                <div className="text-lg font-bold text-primary">
+                  {session?.prompt_tokens || 0} / {session?.completion_tokens || 0}
+                </div>
+              </div>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

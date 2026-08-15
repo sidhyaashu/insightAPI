@@ -6,7 +6,7 @@ from fastapi import Request, HTTPException
 from jose import jwt, JWTError
 from app.core.config import settings
 from app.core.constants import (
-    PUBLIC_PATHS, HEADER_USER_ID, HEADER_USER_TIER, HEADER_USER_ROLE
+    PUBLIC_PATHS, HEADER_USER_ID, HEADER_USER_TIER, HEADER_USER_ROLE, HEADER_USER_ALLOW_OVERAGE
 )
 import redis.asyncio as aioredis
 

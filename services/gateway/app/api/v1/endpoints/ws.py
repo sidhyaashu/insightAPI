@@ -32,11 +32,17 @@ async def ws_proxy(websocket: WebSocket, path: str):
         headers["Cookie"] = websocket.headers["cookie"]
 
     token = websocket.cookies.get("access_token") or websocket.query_params.get("token")
-    if token:
-        headers["X-Access-Token"] = token
+    connect_kwargs = {}
+    if headers:
+        import inspect
+        sig = inspect.signature(websockets.connect)
+        if "additional_headers" in sig.parameters:
+            connect_kwargs["additional_headers"] = headers
+        else:
+            connect_kwargs["extra_headers"] = headers
 
     try:
-        async with websockets.connect(upstream_url, extra_headers=headers if headers else None) as upstream_ws:
+        async with websockets.connect(upstream_url, **connect_kwargs) as upstream_ws:
             async def client_to_upstream():
                 try:
                     while True:

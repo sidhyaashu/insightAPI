@@ -187,7 +187,7 @@
 
 ---
 
-## 9. Domain Ownership Verification & ToS Gating
+## 9. Domain Verification & ToS Gating
 
 * **Domain Verification Architecture**:
   * Added `verified_domains` table tracking `user_id`, `domain`, `verification_token`, `verification_method` (`dns_txt` or `well_known`), `is_verified`, `verified_at`, and timestamps.
@@ -339,12 +339,33 @@
 
 ---
 
+## 16. Production Readiness, Redis Job Queue & Observability Stack
+
+* **Decoupled Redis Job Queue Architecture (`app/queue/`)**:
+  * **`CrawlQueueClient` (`client.py`)**: Pushes crawl jobs to `insightapi:queue:crawls` and tracks metadata with 7-day TTL in `insightapi:job:{session_id}`.
+  * **`CrawlJobWorker` (`worker.py`)**: Dedicated asynchronous worker process pulling jobs via Redis `RPOP`/`BRPOP`, orchestrating browser automation, executing retries (up to 2), and recording execution status.
+  * **Fault-Tolerant Fallback**: If Redis is unavailable or when operating in lightweight SDK mode, the REST endpoint automatically falls back to local `BackgroundTasks`.
+* **Alembic Database Migrations (`alembic/`)**:
+  * Added `alembic.ini` and async `alembic/env.py` mapping to all SQLAlchemy models.
+  * Created baseline migration `001_initial_schema.py` (`crawl_sessions`, `crawl_snapshots`, `verified_domains`, `tos_acceptances`, `auth_profiles`, `audit_logs`, `chat_messages`).
+  * Guarded runtime `Base.metadata.create_all()` behind development/test mode flags in `main.py`.
+* **Database Connection Pooling**:
+  * Configured `AsyncAdaptedQueuePool` on `create_async_engine` with `pool_size=20`, `max_overflow=10`, `pool_timeout=30`, `pool_recycle=1800`, and `pool_pre_ping=True` across all backend services.
+* **Observability & Distributed Tracing (`app/core/observability.py`)**:
+  * **`CorrelationIdMiddleware`**: Injects and propagates `X-Correlation-ID` across gateway, core-service, and agent-service.
+  * **Prometheus Metrics Registry (`/metrics`)**: Exports standard Prometheus metrics including `insightapi_crawls_total`, `insightapi_active_crawls`, `insightapi_endpoints_discovered_total`, `insightapi_llm_tokens_total`, and `insightapi_llm_cost_usd_total`.
+* **Granular LLM Cost & Token Persistence**:
+  * Added `prompt_tokens`, `completion_tokens`, `total_tokens`, `cost_usd`, and `llm_metrics_json` to `CrawlSession` and `CrawlRepository`.
+
+---
+
 ## 🧪 Verification & Test Results
 
 | Test Category | Command / Procedure | Result |
 | :--- | :--- | :---: |
-| **TypeScript Compilation** | `npx.cmd tsc --noEmit` (Client) | **0 Errors** (Passed) |
+| **TypeScript Compilation** | `cmd /c "npx tsc --noEmit"` (Client) | **0 Errors** (Passed) |
 | **Next.js Production Build** | `npm.cmd run build` (Client) | **14/14 Routes Compiled** (Passed) |
+| **Production Readiness Tests** | `pytest services/agent-service/tests/test_production_readiness.py` | **5/5 Tests Passed** |
 | **Humanizer & Interaction Engine Tests** | `pytest services/agent-service/tests/test_humanizer.py` | **6/6 Tests Passed** |
 | **Form Submission Attribution Tests** | `pytest services/agent-service/tests/test_form_submission_attribution.py` | **5/5 Tests Passed** |
 | **Vision Fallback & SoM Unit Tests** | `pytest services/agent-service/tests/test_vision_fallback.py` | **6/6 Tests Passed** |
@@ -354,15 +375,118 @@
 | **Domain Verification Unit Tests** | `pytest services/agent-service/tests/test_domain_verification.py` | **7/7 Tests Passed** |
 | **Pay-Per-Crawl Unit Tests** | `pytest services/agent-service/tests/test_pay_per_crawl.py` | **4/4 Tests Passed** |
 | **Review Gate Unit Tests** | `pytest services/agent-service/tests/test_review_gate.py` | **3/3 Tests Passed** |
-| **Comprehensive Feature Suite** | `pytest (59 collected tests)` | **59/59 Tests Passed** |
+| **Comprehensive Feature Suite** | `pytest (64 collected tests across 12 suites)` | **64/64 Tests Passed (100%)** |
 | **Markdown & Regex Unit Tests** | `node --experimental-strip-types scripts/verify-markdown.mjs` | **17/17 Tests Passed** |
+---
+
+## 17. Isolated Sandbox Execution Engine (`SandboxExecutor`)
+
+* **Isolated Runtime Architecture (`app/engine/sandbox/executor.py`)**:
+  * `SandboxExecutor`: Runs active security test probes and actions in an isolated execution runtime strictly decoupled from the passive crawling browser context.
+* **Strict Egress Filtering & SSRF Defense**:
+  * `SandboxExecutor.validate_egress(url, target_domain)`: Validates that every probe strictly targets the authorized domain.
+  * Blocks localhost, RFC1918 private subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), cloud metadata endpoints (`169.254.169.254`), and third-party hostnames before socket initialization.
+* **Hard Resource Limits & Payload Truncation**:
+  * Wall-clock timeouts capped at 10.0s default (30.0s hard maximum).
+  * Enforces maximum response body size limits (512 KB) with automatic truncation previews to prevent buffer exhaustion.
+* **Single Entrypoint Invariant**:
+  * All active vulnerability checks and mutated HTTP probes MUST route through `SandboxExecutor` — no direct un-sandboxed requests permitted.
+
+---
+
+## 18. Domain Ownership Verification & Active Testing Opt-In Gate
+
+* **Dual-Requirement Security Gating**:
+  * Active security testing (destructive or non-destructive) requires that the target domain is **BOTH**:
+    1. Verified via DNS TXT or HTTP `.well-known` challenge (`VerifiedDomain.is_verified == True`).
+    2. Explicitly authorized by the user for active probing (`VerifiedDomain.active_testing_opt_in == True`).
+  * If either condition fails, the engine immediately halts active probing and returns `403 Forbidden`.
+* **Database Schema (`verified_domains`)**:
+  * Added `active_testing_opt_in: bool = False` column via Alembic migration `005_active_testing_opt_in.py`.
+* **Opt-In Management REST Endpoint**:
+  * `POST /api/v1/domains/{domain}/active-testing`: Allows domain owners to toggle `active_testing_opt_in`. Validates that the domain is verified before allowing opt-in activation.
+
+---
+
+## 19. Granular Per-Call LLM Usage Ledger & Cost Tracking
+
+* **`llm_usage` Ledger Table (`app/models/llm_usage.py`)**:
+  * Tracks every individual LLM API invocation across all agent nodes: `(id, crawl_id, user_id, node_name, model_name, tier, prompt_tokens, completion_tokens, total_tokens, cost_usd, cached, created_at)`.
+  * Exposes property aliases (`model`, `input_tokens`, `output_tokens`) for standardized analytics and reporting.
+* **Granular Cost Persistence & Reporting (`app/repositories/llm_usage_repo.py`, `app/api/v1/endpoints/costs.py`)**:
+  * Fire-and-forget asynchronous persistence from `LLMCostManager._persist_to_db()` and `SecurityReasonerNode._record_llm_usage()`.
+  * `GET /api/v1/costs/summary`: Aggregate spend, token counts, and cache-hit rate for the user.
+  * `GET /api/v1/costs/crawls/{id}`: Detailed per-node breakdown of tokens and cost for a single crawl.
+  * `GET /api/v1/costs/breakdown`: Spend grouped by model tier (`fast`, `smart`, `vision`) and agent node.
+
+---
+
+## 20. Adaptive, Memory-Driven Security Testing & Human Review Gate
+
+* **Domain-Agnostic Endpoint Signatures (`compute_endpoint_signature`)**:
+  * Generates SHA-256 fingerprint from structural properties: `(method + param_types + param_name_shapes + auth_required + response_schema_shape)`.
+  * Excludes literal URLs/domains to allow generalizable pattern transfer across distinct web applications.
+* **`security_test_patterns` Table (`app/models/security_test_pattern.py`)**:
+  * Stores `(endpoint_signature, vuln_class, test_strategy, is_destructive, outcome, confidence, occurrences, distinct_target_count, seen_domains, reasoning_trace, status, last_human_reviewed_at)`.
+* **Conservative False-Negative Promotion Safeguards**:
+  * **Hard Rule 1**: `is_destructive=True` patterns can **NEVER** be auto-promoted to `learned`, regardless of occurrence volume or confidence.
+  * **Hard Rule 2**: Promotion to `learned` requires:
+    * `occurrences >= 20`
+    * `distinct_target_count >= 15` (confirmed across 15 distinct domains, deduplicated via `seen_domains`)
+    * `confidence >= 0.80`
+    * `is_destructive == False`
+  * If any criterion fails, the pattern remains in `needs_review` indefinitely.
+* **Zero-Token Cache Replay Path**:
+  * When a non-destructive `learned` pattern matches, `SecurityReasonerNode` replays the test strategy directly via `SandboxExecutor` without invoking the LLM.
+  * Emits `cached=True` to `llm_usage`, demonstrating measurable token cost reduction over repeated scans.
+* **Human Review Gate for Destructive Probes**:
+  * Destructive test proposals (e.g. data modification, deletion, state mutation) create a `SecurityApproval` record (`status=pending`) and halt execution.
+  * `GET /api/v1/security-patterns/pending-review`: Review queue surfacing LLM `reasoning_trace` and pattern metadata for human inspection.
+  * `POST /api/v1/security-patterns/{approval_id}/approve-run`: Grants **single-use** approval for exactly one execution. Returns `409 Conflict` on reuse attempts.
+* **`security_findings` Vulnerability Ledger (`app/models/security_finding.py`)**:
+  * Records confirmed vulnerabilities: `(id, crawl_id, user_id, pattern_id, endpoint_signature, endpoint_route, method, vuln_class, severity, evidence, ran_via_cache, created_at)`.
+  * Surfaces `ran_via_cache: bool` to verify when a finding was discovered with zero LLM reasoning spend.
+
+---
+
+## 22. Minimalist Sidebar & Floating Avatar Architecture
+
+* **Clean Sidebar Navigation (`client/src/components/app-sidebar.tsx`)**:
+  * Direct alignment with modern AI assistant UI (brand logo badge, bold typography, collapsible with `<` toggle).
+  * Main Navigation: AI Agent (`/chat`), Drift Reports (`/reports`), Security Center (`/security`), Platform Intelligence (`/intelligence`), Verified Domains (`/domains`), Auth Profiles (`/auth-profiles`), Audit Trail (`/audit-logs`).
+  * Interactive **Chat History** Section: `+` New Chat launcher, real-time `Search conversations...` filter, list of saved localStorage conversations with delete action, and empty state (`No past conversations`).
+  * Bottom Utility Bar: Support (`mailto:support@insightapi.ai`), Settings (`/settings`), and Sign Out.
+  * Full support for **Collapsed Mode** with tooltips and centered action icons.
+* **Headerless Layout & Top-Right Floating Avatar (`client/src/components/UserAvatarMenu.tsx`)**:
+  * Removed top navbar across the workspace for distraction-free full-screen interaction.
+  * Floating top-right user avatar with online indicator dot.
+  * Smooth hover-triggered glassmorphism dropdown menu with user profile card, plan badge, direct links to Account, Billing, Security, Domains, Theme switcher, and Logout.
+
+---
+
+
+## 🧪 Verification & Test Results
+
+| Test Category | Command / Procedure | Result |
+| :--- | :--- | :---: |
+| **TypeScript Compilation** | `cmd /c "npx tsc --noEmit"` (Client) | **0 Errors** (Passed) |
+| **Next.js Production Build** | `npm.cmd run build` (Client) | **14/14 Routes Compiled** (Passed) |
+| **Adaptive Security Testing & Sandbox Suite** | `pytest services/agent-service/tests/test_security_reasoner.py` | **26/26 Tests Passed** |
+| **Production Readiness Tests** | `pytest services/agent-service/tests/test_production_readiness.py` | **5/5 Tests Passed** |
+| **Humanizer & Interaction Engine Tests** | `pytest services/agent-service/tests/test_humanizer.py` | **6/6 Tests Passed** |
+| **Form Submission Attribution Tests** | `pytest services/agent-service/tests/test_form_submission_attribution.py` | **5/5 Tests Passed** |
+| **Vision Fallback & SoM Unit Tests** | `pytest services/agent-service/tests/test_vision_fallback.py` | **6/6 Tests Passed** |
+| **Tenant Isolation & Audit Integration Tests** | `pytest services/agent-service/tests/test_tenant_isolation_and_audit.py` | **6/6 Tests Passed** |
+| **Playwright Test Generator Tests** | `pytest services/agent-service/tests/test_playwright_test_gen.py` | **6/6 Tests Passed** |
+| **Auto-Login & AuthProfile Tests** | `pytest services/agent-service/tests/test_auto_login.py` | **6/6 Tests Passed** |
+| **Domain Verification Unit Tests** | `pytest services/agent-service/tests/test_domain_verification.py` | **7/7 Tests Passed** |
+| **Pay-Per-Crawl Unit Tests** | `pytest services/agent-service/tests/test_pay_per_crawl.py` | **4/4 Tests Passed** |
+| **Review Gate Unit Tests** | `pytest services/agent-service/tests/test_review_gate.py` | **3/3 Tests Passed** |
+| **Comprehensive Feature Suite** | `pytest (collected across all test suites)` | **90/90 Tests Passed (100%)** |
+| **Markdown & Regex Unit Tests** | `node --experimental-strip-types scripts/verify-markdown.mjs` | **17/17 Tests Passed** |
+| **Database Migrations** | `alembic upgrade head (revisions 001 -> 005)` | **Applied & Verified** |
 | **Auth & Security** | Cookie verification, XSS sanitization, Token rotation | **Verified** |
-| **Docker Compose Mesh** | Multi-container composition (`client`, `gateway`, `core`, `agent`, `db`, `redis`, `nginx`, `ngrok`) | **Configured & Validated** |
-
-
-
-
-
+| **Docker Compose Mesh** | Multi-container composition (`client`, `gateway`, `core`, `agent`, `worker`, `db`, `redis`, `nginx`, `ngrok`) | **Configured & Validated** |
 
 ---
 
@@ -402,12 +526,40 @@ InsightAPI/
 │   │   ├── app/middleware/auth.py  # Cookie-based JWT auth middleware
 │   │   └── app/api/v1/endpoints/ws.py # WS reverse proxy with cookie forwarding
 │   └── agent-service/
-│       ├── app/routers/chat.py     # Streaming chatbot WS endpoint
-│       ├── app/services/chat_service.py # System prompt with Markdown formatting guidelines
-│       └── app/engine/             # AXTree, Explorer, Risk Evaluator, Network Observer
+│       ├── alembic/versions/       # Database migrations (001 -> 005)
+│       │   ├── 001_initial_schema.py
+│       │   ├── 002_llm_usage.py
+│       │   ├── 003_security_tables.py
+│       │   ├── 004_security_v2.py
+│       │   └── 005_active_testing_opt_in.py
+│       ├── app/
+│       │   ├── agents/
+│       │   │   ├── graph.py        # LangGraph workflow with SecurityReasonerNode
+│       │   │   └── nodes/
+│       │   │       └── security_reasoner.py # SecurityReasonerNode
+│       │   ├── api/v1/endpoints/
+│       │   │   ├── costs.py        # LLM cost analytics API
+│       │   │   ├── domains.py      # Domain verification & active testing opt-in
+│       │   │   └── security_patterns.py # Security review queue & approve-run API
+│       │   ├── core/
+│       │   │   ├── celery_app.py   # Celery distributed task app
+│       │   │   └── observability.py# Prometheus metrics & tracing
+│       │   ├── engine/
+│       │   │   └── sandbox/
+│       │   │       └── executor.py # Isolated SandboxExecutor with egress filters
+│       │   ├── models/
+│       │   │   ├── llm_usage.py
+│       │   │   ├── security_approval.py
+│       │   │   ├── security_finding.py
+│       │   │   └── security_test_pattern.py
+│       │   └── tasks/
+│       │       └── crawl_tasks.py  # Celery crawl task definition
+│       └── tests/
+│           └── test_security_reasoner.py # 26 unit & integration tests
 ├── nginx/
 │   └── nginx.conf                  # Nginx proxy with cookie forwarding & log token redaction
-├── docker-compose.yml              # Container definitions
-├── .env                            # Environment configuration (POSTGRES_HOST_PORT=5433)
-└── V1_IMPLEMENTATION.md            # This document
+├── docker-compose.yml              # Multi-container stack (including Celery worker)
+├── .env                            # Environment configuration
+└── V1_IMPLEMENTATION.md            # Master specification & tracking document
 ```
+

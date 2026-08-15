@@ -35,6 +35,7 @@ def _format_domain_response(record) -> dict:
         "verification_token": token,
         "verification_method": record.verification_method,
         "is_verified": record.is_verified,
+        "active_testing_opt_in": getattr(record, "active_testing_opt_in", False),
         "verified_at": record.verified_at.isoformat() if record.verified_at else None,
         "created_at": record.created_at.isoformat(),
         "instructions": {
@@ -170,3 +171,34 @@ async def delete_domain(
     if not deleted:
         raise HTTPException(status_code=404, detail="Domain not found.")
     return {"message": f"Domain '{clean_domain}' removed successfully."}
+
+
+class ActiveTestingOptInRequest(BaseModel):
+    opt_in: bool = Field(default=True, description="Enable or disable active security testing for this domain.")
+
+
+@router.post("/{domain}/active-testing")
+async def toggle_active_testing_opt_in(
+    domain: str,
+    body: ActiveTestingOptInRequest,
+    x_user_id: str = Header(..., alias="x-user-id"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Set active testing opt-in flag for a domain.
+    Security testing requires BOTH is_verified=True and active_testing_opt_in=True.
+    """
+    clean_domain = normalize_domain(domain)
+    repo = DomainRepository(db)
+    record = await repo.get_domain(user_id=x_user_id, domain=clean_domain)
+    if not record:
+        raise HTTPException(status_code=404, detail="Domain not found. Register domain first.")
+    if not record.is_verified:
+        raise HTTPException(
+            status_code=400,
+            detail="Domain must be verified before active security testing can be enabled.",
+        )
+
+    updated = await repo.set_active_testing_opt_in(user_id=x_user_id, domain=clean_domain, opt_in=body.opt_in)
+    return _format_domain_response(updated)
+

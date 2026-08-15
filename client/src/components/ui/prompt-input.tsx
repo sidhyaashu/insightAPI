@@ -32,6 +32,7 @@ export type PromptInputProps = Omit<ComponentProps<"form">, "onSubmit"> & {
   onSubmit: (message: PromptInputMessage, e: FormEvent) => void;
   onStop?: () => void;
   onOpenPasteUrl?: () => void;
+  onOpenCrawlModal?: () => void;
   onExportMarkdown?: () => void;
   disabled?: boolean;
   isStreaming?: boolean;
@@ -45,6 +46,7 @@ export const PromptInput = ({
   onSubmit,
   onStop,
   onOpenPasteUrl,
+  onOpenCrawlModal,
   onExportMarkdown,
   disabled = false,
   isStreaming = false,
@@ -197,11 +199,21 @@ export const PromptInput = ({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="start" className="w-64 p-1.5 shadow-2xl rounded-xl bg-card border border-border">
+              {onOpenCrawlModal && (
+                <DropdownMenuItem
+                  onClick={onOpenCrawlModal}
+                  className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg font-semibold text-primary"
+                >
+                  <SparklesIcon className="size-4 text-primary" />
+                  <span>Launch Agentic Web Crawl</span>
+                </DropdownMenuItem>
+              )}
+
               <DropdownMenuItem
                 onClick={() => setShowUrlInput(true)}
                 className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg"
               >
-                <GlobeIcon className="size-4 text-primary" />
+                <GlobeIcon className="size-4 text-muted-foreground" />
                 <span>Attach Target Web App URL</span>
               </DropdownMenuItem>
 

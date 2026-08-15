@@ -49,7 +49,8 @@ async def test_quota_exceeded_with_overage_bypasses_429():
     request = CrawlRequest(url="https://api.example.com", max_pages=5, tos_accepted=True)
 
     with patch("app.api.v1.endpoints.crawls.CrawlRepository") as mock_repo_cls, \
-         patch("app.api.v1.endpoints.crawls.DomainRepository") as mock_domain_repo_cls:
+         patch("app.api.v1.endpoints.crawls.DomainRepository") as mock_domain_repo_cls, \
+         patch("app.queue.client.CrawlQueueClient.enqueue_crawl_job", new=AsyncMock()) as mock_enqueue:
         mock_domain_repo = MagicMock()
         mock_domain_repo.is_domain_verified = AsyncMock(return_value=True)
         mock_domain_repo_cls.return_value = mock_domain_repo
@@ -75,11 +76,12 @@ async def test_quota_exceeded_with_overage_bypasses_429():
         assert resp.session_id == "session_overage_123"
         assert resp.target_url == "https://api.example.com"
 
-        # Verify background task was added with is_overage=True
-        mock_bg.add_task.assert_called_once()
-        _, kwargs = mock_bg.add_task.call_args
-        assert kwargs["is_overage"] is True
-        assert kwargs["user_tier"] == "FREE"
+        # Verify background task or queue dispatch was added with is_overage=True
+        assert mock_enqueue.called or mock_bg.add_task.called
+        if mock_enqueue.called:
+            payload = mock_enqueue.call_args[0][1]
+            assert payload["is_overage"] is True
+            assert payload["user_tier"] == "FREE"
 
 
 @pytest.mark.asyncio

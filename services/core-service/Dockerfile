@@ -24,10 +24,14 @@ RUN useradd --create-home appuser
 
 COPY --from=builder /install /usr/local
 COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini ./alembic.ini
+COPY start.sh ./start.sh
 
-RUN chown -R appuser:appuser /app
+RUN chmod +x /app/start.sh && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8001
 
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+# start.sh: alembic upgrade head && uvicorn
+CMD ["/app/start.sh"]

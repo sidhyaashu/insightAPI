@@ -13,6 +13,9 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useAppDispatch } from "@/store";
+import { setCredentials } from "@/features/auth/store/authSlice";
+import { authApi } from "@/features/auth/api/auth.api";
 import env from "@/lib/env";
 
 export function LoginForm({
@@ -20,8 +23,11 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"form">) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleGithubLogin = () => {
     window.location.href = `${env.API_BASE_URL}/auth/github/login`;
@@ -31,9 +37,21 @@ export function LoginForm({
     window.location.href = `${env.API_BASE_URL}/auth/google/login`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/chat");
+    setErrorMsg("");
+    setLoading(true);
+    try {
+      const tokens = await authApi.login({ email, password });
+      if (tokens.user && tokens.access_token) {
+        dispatch(setCredentials({ user: tokens.user, accessToken: tokens.access_token }));
+        router.push("/chat");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.detail || err.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

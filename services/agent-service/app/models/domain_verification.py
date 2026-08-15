@@ -17,6 +17,10 @@ class VerifiedDomain(Base):
     verification_token: Mapped[str] = mapped_column(String(128), nullable=False)
     verification_method: Mapped[str | None] = mapped_column(String(32), nullable=True)  # "dns_txt" | "well_known"
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    active_testing_opt_in: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False,
+        comment="Explicit user opt-in allowing active security testing probes on this domain."
+    )
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -37,6 +41,7 @@ class VerifiedDomain(Base):
             "verification_token": self.verification_token,
             "verification_method": self.verification_method,
             "is_verified": self.is_verified,
+            "active_testing_opt_in": self.active_testing_opt_in,
             "verified_at": self.verified_at.isoformat() if self.verified_at else None,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),

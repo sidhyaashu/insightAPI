@@ -199,7 +199,7 @@ async def run_background_crawl(
             )
 
     try:
-        engine = AgentEngine(headless=headless)
+        engine = AgentEngine(headless=headless, enable_security_testing=True)
         result = await engine.crawl(
             url,
             max_pages=max_pages,
@@ -207,6 +207,9 @@ async def run_background_crawl(
             goal=goal,
             parallel=parallel,
             max_agents=max_agents,
+            crawl_id=session_id,
+            user_id=user_id,
+            enable_security_testing=True,
         )
 
         captured_count = len(result.captured_endpoints)
@@ -267,6 +270,7 @@ async def run_background_crawl(
                 "postman_collection": postman_col,
                 "markdown_docs": markdown_docs,
                 "action_traces": result.action_traces,
+                "llm_metrics": result.llm_metrics,
             })
 
         # Update Postgres DB
@@ -282,6 +286,7 @@ async def run_background_crawl(
                     postman_collection=postman_col,
                     markdown_docs=markdown_docs,
                     action_traces=result.action_traces,
+                    llm_metrics=result.llm_metrics,
                 )
         except Exception as db_err:
             logger.warning(f"DB update failed for crawl {session_id}: {db_err}")
@@ -495,22 +500,37 @@ async def start_crawl(
         },
     )
 
-    background_tasks.add_task(
-        run_background_crawl,
-        session_id=session_id,
-        url=url_str,
-        max_pages=max_pages,
-        headless=request.headless if request.headless is not None else True,
-        user_id=x_user_id,
-        user_tier=x_user_tier,
-        session_state=request.session_state,
-        auth_profile_id=request.auth_profile_id,
-        goal=request.goal,
-        parallel=request.parallel or False,
-        max_agents=request.max_agents or 1,
-        require_review=request.require_review,
-        is_overage=is_overage_run,
-    )
+    crawl_payload = {
+        "session_id": session_id,
+        "url": url_str,
+        "max_pages": max_pages,
+        "headless": request.headless if request.headless is not None else True,
+        "user_id": x_user_id,
+        "user_tier": x_user_tier,
+        "session_state": request.session_state,
+        "auth_profile_id": request.auth_profile_id,
+        "goal": request.goal,
+        "parallel": request.parallel or False,
+        "max_agents": request.max_agents or 1,
+        "require_review": request.require_review,
+        "is_overage": is_overage_run,
+    }
+
+    # Dispatch to Celery worker (decoupled from web process) or fallback to local background task
+    dispatched_to_queue = False
+    try:
+        from app.tasks.crawl_tasks import run_crawl_task
+        run_crawl_task.delay(session_id=session_id, payload=crawl_payload)
+        dispatched_to_queue = True
+        logger.info(f"Crawl [{session_id}] dispatched to Celery worker queue.")
+    except Exception as celery_err:
+        logger.warning(
+            f"Celery dispatch failed for [{session_id}] ({celery_err}). "
+            "Using BackgroundTasks fallback — crawl tied to web process lifecycle."
+        )
+
+    if not dispatched_to_queue:
+        background_tasks.add_task(run_background_crawl, **crawl_payload)
 
     return CrawlResponse(
         session_id=session_id,

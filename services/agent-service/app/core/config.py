@@ -36,11 +36,25 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "insightapi"
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
+    DB_POOL_SIZE: int = 20
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_TIMEOUT: int = 30
+    DB_POOL_RECYCLE: int = 1800
 
     # Redis Settings
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     AGENT_SERVICE_REDIS_PREFIX: str = "insightapi:agent:"
+
+    # ── Celery Job Queue ─────────────────────────────────────────────────────
+    # Defaults to the same Redis instance used by the rest of the service.
+    # Override via CELERY_BROKER_URL / CELERY_RESULT_BACKEND in root .env.
+    CELERY_BROKER_URL: Optional[str] = None      # falls back to get_redis_url()
+    CELERY_RESULT_BACKEND: Optional[str] = None  # falls back to get_redis_url()
+
+    # ── Sentry Error Tracking ────────────────────────────────────────────────
+    SENTRY_DSN: Optional[str] = None
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.1  # 10% of requests traced
 
     # Chatbot Subscription Tier Daily Message Limits
     TIER_CHAT_LIMIT_FREE: int = 15
@@ -108,6 +122,11 @@ class Settings(BaseSettings):
     PROXY_URL: Optional[str] = None
     CHROME_EXTENSION_PATHS: list[str] = []
     FUZZING_ENABLED: bool = True
+
+    # ── Security Testing (Phase 4) ────────────────────────────────────────────
+    # Global kill-switch — must be True for SecurityReasonerNode to activate.
+    # Set to True in production only for tenants that have explicitly opted in.
+    SECURITY_TESTING_ENABLED: bool = False
 
     model_config = SettingsConfigDict(
         # Root .env is 4 levels up from this file's location:

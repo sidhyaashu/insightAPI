@@ -13,6 +13,7 @@ get_llm()        : Convenience factory used by all agent nodes.
 """
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -273,16 +274,20 @@ class LLMCostManager:
         self,
         token_budget: int = 0,   # 0 = unlimited
         planner_max_calls: int = 0,  # 0 = unlimited
+        crawl_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ):
         self._token_budget = token_budget
         self._planner_max_calls = planner_max_calls
+        self._crawl_id = crawl_id
+        self._user_id = user_id
 
         self._tokens_used: int = 0
         self._llm_calls_made: int = 0
         self._planner_calls_made: int = 0
         self._estimated_cost_usd: float = 0.0
 
-        # Cache: (cache_key) → (response_text, tokens_used)
+        # In-memory cache: (cache_key) → (response_text, tokens_used)
         self._cache: Dict[str, Tuple[str, int]] = {}
 
     # ── Budget checks ──────────────────────────────────────────────────────
@@ -311,23 +316,61 @@ class LLMCostManager:
 
     # ── Cache helpers ──────────────────────────────────────────────────────
 
+    _REDIS_CACHE_TTL = 86400  # 24 hours
+    _REDIS_CACHE_PREFIX = "insightapi:llm_cache:"
+
     @staticmethod
     def _make_cache_key(prompt: str) -> str:
         return hashlib.md5(prompt.encode("utf-8")).hexdigest()
 
     def get_cached(self, prompt: str) -> Optional[str]:
-        """Return cached LLM response if available."""
+        """Check in-memory cache first (fast path)."""
         key = self._make_cache_key(prompt)
         if key in self._cache:
             cached_response, tokens = self._cache[key]
-            logger.debug(f"LLMCostManager: Cache hit (saved ~{tokens} tokens).")
+            logger.debug(f"LLMCostManager: In-memory cache hit (saved ~{tokens} tokens).")
             return cached_response
         return None
 
+    async def get_cached_redis(self, prompt: str) -> Optional[str]:
+        """
+        Cross-session Redis cache lookup.
+        Checks Redis AFTER in-memory to avoid network latency for hot items.
+        Returns cached response string or None.
+        """
+        try:
+            from app.core.redis import get_redis_client
+            redis = await get_redis_client()
+            key = self._REDIS_CACHE_PREFIX + self._make_cache_key(prompt)
+            cached = await redis.get(key)
+            if cached:
+                # Populate local in-memory cache for subsequent calls in same session
+                data = json.loads(cached)
+                self._cache[self._make_cache_key(prompt)] = (data["response"], data["tokens"])
+                logger.debug(f"LLMCostManager: Redis cache hit (saved ~{data['tokens']} tokens).")
+                return data["response"]
+        except Exception as e:
+            logger.debug(f"LLMCostManager: Redis cache lookup failed (non-fatal): {e}")
+        return None
+
     def put_cache(self, prompt: str, response: str, tokens_used: int) -> None:
-        """Store LLM response in cache."""
+        """Store in in-memory cache."""
         key = self._make_cache_key(prompt)
         self._cache[key] = (response, tokens_used)
+
+    async def put_cache_redis(self, prompt: str, response: str, tokens_used: int) -> None:
+        """Store in Redis cross-session cache (fire-and-forget)."""
+        try:
+            from app.core.redis import get_redis_client
+            redis = await get_redis_client()
+            key = self._REDIS_CACHE_PREFIX + self._make_cache_key(prompt)
+            await redis.set(
+                key,
+                json.dumps({"response": response, "tokens": tokens_used}),
+                ex=self._REDIS_CACHE_TTL,
+            )
+        except Exception as e:
+            logger.debug(f"LLMCostManager: Redis cache write failed (non-fatal): {e}")
 
     # ── Usage recording ────────────────────────────────────────────────────
 
@@ -336,6 +379,9 @@ class LLMCostManager:
         tokens_used: int,
         model_name: str,
         is_planner_call: bool = False,
+        tier: str = "fast",
+        node_name: Optional[str] = None,
+        cached: bool = False,
     ) -> None:
         """
         Records token consumption after each LLM call.
@@ -345,18 +391,70 @@ class LLMCostManager:
         tokens_used     : Actual tokens consumed (prompt + completion).
         model_name      : Model name for pricing lookup.
         is_planner_call : True when called from PlannerNode (tracked separately).
+        tier            : ModelTier name for per-tier breakdowns.
+        node_name       : Agent node identifier for cost attribution.
+        cached          : True if this was a cache hit (no actual LLM call).
         """
         self._tokens_used += tokens_used
         self._llm_calls_made += 1
         if is_planner_call:
             self._planner_calls_made += 1
-        self._estimated_cost_usd += (tokens_used / 1000.0) * _model_price(model_name)
+        cost = (tokens_used / 1000.0) * _model_price(model_name)
+        self._estimated_cost_usd += cost
         logger.debug(
             f"LLMCostManager: +{tokens_used} tokens | "
             f"total={self._tokens_used} | "
             f"calls={self._llm_calls_made} | "
             f"est. cost=${self._estimated_cost_usd:.4f}"
         )
+        # Async DB persistence — schedule as fire-and-forget if we have context
+        if self._crawl_id and self._user_id and not cached:
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(
+                        self._persist_to_db(
+                            model_name=model_name,
+                            tier=tier,
+                            prompt_tokens=tokens_used // 2,
+                            completion_tokens=tokens_used - tokens_used // 2,
+                            cost_usd=cost,
+                            cached=cached,
+                            node_name=node_name,
+                        )
+                    )
+            except RuntimeError:
+                pass  # No event loop available (e.g., called from sync Celery context)
+
+    async def _persist_to_db(
+        self,
+        model_name: str,
+        tier: str,
+        prompt_tokens: int,
+        completion_tokens: int,
+        cost_usd: float,
+        cached: bool,
+        node_name: Optional[str],
+    ) -> None:
+        """Fire-and-forget DB persistence of one LLM call to llm_usage table."""
+        try:
+            from app.core.database import AsyncSessionLocal
+            from app.repositories.llm_usage_repo import LlmUsageRepository
+            async with AsyncSessionLocal() as db:
+                repo = LlmUsageRepository(db)
+                await repo.record(
+                    crawl_id=self._crawl_id,
+                    user_id=self._user_id,
+                    model_name=model_name,
+                    tier=tier,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    cost_usd=cost_usd,
+                    cached=cached,
+                    node_name=node_name,
+                )
+        except Exception as e:
+            logger.debug(f"LLMCostManager: DB persistence failed (non-fatal): {e}")
 
     # ── UI-facing metrics export ───────────────────────────────────────────
 
@@ -396,9 +494,23 @@ def get_llm(tier: ModelTier = ModelTier.FAST, temperature: float = 0.0):
     return ModelRouter.get_llm(tier=tier, temperature=temperature)
 
 
-def make_cost_manager() -> LLMCostManager:
-    """Creates a new ``LLMCostManager`` pre-configured from global settings."""
+def make_cost_manager(
+    crawl_id: Optional[str] = None,
+    user_id: Optional[str] = None,
+) -> LLMCostManager:
+    """Creates a new ``LLMCostManager`` pre-configured from global settings.
+
+    Parameters
+    ----------
+    crawl_id : str, optional
+        CrawlSession UUID. When provided, each ``record_usage()`` call also
+        persists a row to the ``llm_usage`` table for the ``/costs`` endpoint.
+    user_id : str, optional
+        User UUID for tenant scoping in ``llm_usage`` rows.
+    """
     return LLMCostManager(
         token_budget=settings.LLM_TOKEN_BUDGET_PER_CRAWL,
         planner_max_calls=settings.LLM_PLANNER_MAX_CALLS,
+        crawl_id=crawl_id,
+        user_id=user_id,
     )

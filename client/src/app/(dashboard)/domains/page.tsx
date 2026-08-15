@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   IconShieldCheck,
+  IconShieldLock,
   IconPlus,
   IconRefresh,
   IconCheck,
@@ -135,6 +136,19 @@ export default function DomainsManagementPage() {
     }
   };
 
+  const handleToggleActiveTesting = async (domain: string, currentVal: boolean) => {
+    const newVal = !currentVal;
+    try {
+      await domainsApi.setActiveTestingOptIn(domain, newVal);
+      toast.success(`Active security testing ${newVal ? "enabled" : "disabled"} for ${domain}.`);
+      setDomains((prev) =>
+        prev.map((d) => (d.domain === domain ? { ...d, active_testing_opt_in: newVal } : d))
+      );
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to update active testing status.");
+    }
+  };
+
   const verifiedCount = domains.filter((d) => d.is_verified).length;
   const pendingCount = domains.length - verifiedCount;
 
@@ -143,12 +157,9 @@ export default function DomainsManagementPage() {
       {/* Header Bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-border/50">
         <div>
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <IconShieldCheck className="size-6 text-primary" />
-            Verified Domains & Target Authorization
-          </h1>
+          <h1 className="text-xl font-bold text-foreground">Verified Domains & Compliance</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Verify domain ownership via DNS TXT records or well-known files to bypass per-crawl ToS prompts.
+            Verify domain ownership via DNS TXT records or well-known files to bypass per-crawl ToS prompts and authorize active security scans.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -219,7 +230,7 @@ export default function DomainsManagementPage() {
                     <IconWorld className="size-4" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-bold font-mono text-foreground">{dom.domain}</span>
                       {dom.is_verified ? (
                         <Badge
@@ -235,6 +246,22 @@ export default function DomainsManagementPage() {
                         >
                           Pending Verification
                         </Badge>
+                      )}
+
+                      {dom.is_verified && (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleActiveTesting(dom.domain, !!dom.active_testing_opt_in)}
+                          className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold transition-colors cursor-pointer border ${
+                            dom.active_testing_opt_in
+                              ? "bg-purple-500/15 border-purple-500/40 text-purple-400"
+                              : "bg-muted/40 border-border text-muted-foreground hover:text-foreground"
+                          }`}
+                          title="Click to toggle active security testing opt-in"
+                        >
+                          <IconShieldLock className="size-3" />
+                          <span>Active Testing: {dom.active_testing_opt_in ? "OPTED IN" : "OFF"}</span>
+                        </button>
                       )}
                     </div>
                     <div className="text-[11px] text-muted-foreground font-mono mt-0.5">

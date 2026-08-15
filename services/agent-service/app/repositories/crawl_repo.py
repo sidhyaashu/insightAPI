@@ -50,6 +50,7 @@ class CrawlRepository:
         markdown_docs: str | None = None,
         action_traces: list | None = None,
         error_message: str | None = None,
+        llm_metrics: dict | None = None,
     ) -> None:
         values: dict = {
             "status": status,
@@ -66,7 +67,36 @@ class CrawlRepository:
             values["action_traces"] = action_traces
         if error_message is not None:
             values["error_message"] = error_message
+        if llm_metrics is not None:
+            values["prompt_tokens"] = int(llm_metrics.get("prompt_tokens") or llm_metrics.get("tokens_used", 0) // 2)
+            values["completion_tokens"] = int(llm_metrics.get("completion_tokens") or llm_metrics.get("tokens_used", 0) // 2)
+            values["total_tokens"] = int(llm_metrics.get("total_tokens") or llm_metrics.get("tokens_used", 0))
+            values["cost_usd"] = float(llm_metrics.get("estimated_cost_usd") or 0.0)
+            values["llm_metrics_json"] = llm_metrics
 
+        await self.db.execute(
+            update(CrawlSession).where(CrawlSession.id == session_id).values(**values)
+        )
+        await self.db.commit()
+
+    async def update_llm_metrics(
+        self,
+        session_id: str,
+        prompt_tokens: int,
+        completion_tokens: int,
+        total_tokens: int,
+        cost_usd: float,
+        metrics_dict: dict | None = None,
+    ) -> None:
+        """Persists exact LLM token counts and USD cost metrics for a crawl."""
+        values: dict = {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "cost_usd": cost_usd,
+            "llm_metrics_json": metrics_dict or {},
+            "updated_at": datetime.now(timezone.utc),
+        }
         await self.db.execute(
             update(CrawlSession).where(CrawlSession.id == session_id).values(**values)
         )

@@ -66,6 +66,18 @@
 * **Log Redaction**: Ensure NGINX access log mapping redacts any query parameters containing sensitive tokens (`token=[REDACTED]`).
 * **URL Sanitization**: Always validate markdown link/image URLs with `isSafeUrl()` to block dangerous protocols (`javascript:`, `vbscript:`, unsafe `data:` URLs).
 
+### H. Active Security Testing, Isolated Sandboxing & Human Approval Guards
+* **Sandbox Egress & Runtime Isolation**:
+  * All active vulnerability test probes and mutated requests MUST execute through `SandboxExecutor` in `app/engine/sandbox/executor.py` with hard resource limits (10s default timeout, 512KB response caps) and strict egress verification against authorized target domains. Never execute active test probes in the shared passive crawler context.
+* **Dual-Requirement Domain Verification Gate**:
+  * Security testing (destructive or not) is strictly prohibited unless the target domain is BOTH verified (`is_verified == True`) AND has `active_testing_opt_in == True` explicitly enabled by the user. Hard-block with `403 Forbidden` otherwise.
+* **Conservative False-Negative Promotion Safeguards**:
+  * `is_destructive=True` test cases can NEVER be auto-promoted to `learned` regardless of repetitions.
+  * Zero-token cache replay for non-destructive patterns requires `occurrences >= 20` AND `distinct_target_count >= 15` across distinct domains AND `confidence >= 0.80`.
+  * Destructive tests ALWAYS generate a `SecurityApproval` record and require human authorization via `POST /api/v1/security-patterns/{approval_id}/approve-run` before execution.
+* **Granular LLM Cost Persistence**:
+  * Every LLM call and cache hit across all nodes (Planner, Analyzer, Security Reasoner) must be recorded in the `llm_usage` ledger.
+
 ---
 
 ## 3. Maintenance of Guidelines & Feature Tracking

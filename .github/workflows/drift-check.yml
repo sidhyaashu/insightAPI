@@ -1,124 +1,124 @@
-﻿name: API Drift Check
+﻿# name: API Drift Check
 
-# Runs on every PR to main/master.
-# Triggers a crawl against a staging URL, compares it to the pinned
-# main-branch snapshot, and fails the check if breaking changes are detected.
-#
-# Required secrets: INSIGHTAPI_API_KEY
-# Required variables (repo → Settings → Variables):
-#   INSIGHTAPI_URL     — base URL of the InsightAPI instance, e.g. https://api.myapp.com
-#   STAGING_URL        — URL of the staging environment to crawl
-#   PROJECT_ID         — your InsightAPI user/project ID
-#   MAIN_SNAPSHOT_ID   — crawl_id of the last blessed main-branch snapshot
-#                        Update this whenever you cut a new baseline.
+# # Runs on every PR to main/master.
+# # Triggers a crawl against a staging URL, compares it to the pinned
+# # main-branch snapshot, and fails the check if breaking changes are detected.
+# #
+# # Required secrets: INSIGHTAPI_API_KEY
+# # Required variables (repo → Settings → Variables):
+# #   INSIGHTAPI_URL     — base URL of the InsightAPI instance, e.g. https://api.myapp.com
+# #   STAGING_URL        — URL of the staging environment to crawl
+# #   PROJECT_ID         — your InsightAPI user/project ID
+# #   MAIN_SNAPSHOT_ID   — crawl_id of the last blessed main-branch snapshot
+# #                        Update this whenever you cut a new baseline.
 
-on:
-  pull_request:
-    branches: [main, master]
+# on:
+#   pull_request:
+#     branches: [main, master]
 
-jobs:
-  drift-check:
-    name: API Drift Check (InsightAPI)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+# jobs:
+#   drift-check:
+#     name: API Drift Check (InsightAPI)
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 30
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
 
-      # ── Step 1: Trigger a new crawl against the staging URL ────────────────
-      - name: Trigger staging crawl
-        id: crawl
-        env:
-          INSIGHTAPI_URL: ${{ vars.INSIGHTAPI_URL }}
-          INSIGHTAPI_API_KEY: ${{ secrets.INSIGHTAPI_API_KEY }}
-          STAGING_URL: ${{ vars.STAGING_URL }}
-        run: |
-          echo "Triggering crawl against $STAGING_URL..."
-          RESPONSE=$(curl -sf -X POST "$INSIGHTAPI_URL/api/v1/crawls/start" \
-            -H "Authorization: Bearer $INSIGHTAPI_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d "{\"url\":\"$STAGING_URL\",\"max_pages\":20,\"goal\":\"Document all API endpoints for drift comparison\"}")
+#       # ── Step 1: Trigger a new crawl against the staging URL ────────────────
+#       - name: Trigger staging crawl
+#         id: crawl
+#         env:
+#           INSIGHTAPI_URL: ${{ vars.INSIGHTAPI_URL }}
+#           INSIGHTAPI_API_KEY: ${{ secrets.INSIGHTAPI_API_KEY }}
+#           STAGING_URL: ${{ vars.STAGING_URL }}
+#         run: |
+#           echo "Triggering crawl against $STAGING_URL..."
+#           RESPONSE=$(curl -sf -X POST "$INSIGHTAPI_URL/api/v1/crawls/start" \
+#             -H "Authorization: Bearer $INSIGHTAPI_API_KEY" \
+#             -H "Content-Type: application/json" \
+#             -d "{\"url\":\"$STAGING_URL\",\"max_pages\":20,\"goal\":\"Document all API endpoints for drift comparison\"}")
           
-          SESSION_ID=$(echo "$RESPONSE" | jq -r '.session_id')
-          if [ "$SESSION_ID" = "null" ] || [ -z "$SESSION_ID" ]; then
-            echo "::error::Failed to start crawl. Response: $RESPONSE"
-            exit 1
-          fi
-          echo "session_id=$SESSION_ID" >> $GITHUB_OUTPUT
-          echo "Crawl started: $SESSION_ID"
+#           SESSION_ID=$(echo "$RESPONSE" | jq -r '.session_id')
+#           if [ "$SESSION_ID" = "null" ] || [ -z "$SESSION_ID" ]; then
+#             echo "::error::Failed to start crawl. Response: $RESPONSE"
+#             exit 1
+#           fi
+#           echo "session_id=$SESSION_ID" >> $GITHUB_OUTPUT
+#           echo "Crawl started: $SESSION_ID"
 
-      # ── Step 2: Poll until crawl completes (max 20 minutes) ────────────────
-      - name: Wait for crawl completion
-        id: wait
-        env:
-          INSIGHTAPI_URL: ${{ vars.INSIGHTAPI_URL }}
-          INSIGHTAPI_API_KEY: ${{ secrets.INSIGHTAPI_API_KEY }}
-          SESSION_ID: ${{ steps.crawl.outputs.session_id }}
-        run: |
-          echo "Polling crawl status for $SESSION_ID..."
-          MAX_POLLS=80
-          POLL=0
-          while [ $POLL -lt $MAX_POLLS ]; do
-            STATUS=$(curl -sf "$INSIGHTAPI_URL/api/v1/crawls/$SESSION_ID/status" \
-              -H "Authorization: Bearer $INSIGHTAPI_API_KEY" | jq -r '.status')
-            echo "Poll $POLL: status=$STATUS"
-            if [ "$STATUS" = "completed" ]; then
-              echo "Crawl completed successfully."
-              exit 0
-            elif [ "$STATUS" = "failed" ]; then
-              echo "::error::Crawl $SESSION_ID failed."
-              exit 1
-            fi
-            POLL=$(($POLL + 1))
-            sleep 15
-          done
-          echo "::error::Crawl timed out after $((MAX_POLLS * 15)) seconds."
-          exit 1
+#       # ── Step 2: Poll until crawl completes (max 20 minutes) ────────────────
+#       - name: Wait for crawl completion
+#         id: wait
+#         env:
+#           INSIGHTAPI_URL: ${{ vars.INSIGHTAPI_URL }}
+#           INSIGHTAPI_API_KEY: ${{ secrets.INSIGHTAPI_API_KEY }}
+#           SESSION_ID: ${{ steps.crawl.outputs.session_id }}
+#         run: |
+#           echo "Polling crawl status for $SESSION_ID..."
+#           MAX_POLLS=80
+#           POLL=0
+#           while [ $POLL -lt $MAX_POLLS ]; do
+#             STATUS=$(curl -sf "$INSIGHTAPI_URL/api/v1/crawls/$SESSION_ID/status" \
+#               -H "Authorization: Bearer $INSIGHTAPI_API_KEY" | jq -r '.status')
+#             echo "Poll $POLL: status=$STATUS"
+#             if [ "$STATUS" = "completed" ]; then
+#               echo "Crawl completed successfully."
+#               exit 0
+#             elif [ "$STATUS" = "failed" ]; then
+#               echo "::error::Crawl $SESSION_ID failed."
+#               exit 1
+#             fi
+#             POLL=$(($POLL + 1))
+#             sleep 15
+#           done
+#           echo "::error::Crawl timed out after $((MAX_POLLS * 15)) seconds."
+#           exit 1
 
-      # ── Step 3: Run drift comparison ───────────────────────────────────────
-      - name: Compare drift vs main-branch snapshot
-        id: drift
-        env:
-          INSIGHTAPI_URL: ${{ vars.INSIGHTAPI_URL }}
-          INSIGHTAPI_API_KEY: ${{ secrets.INSIGHTAPI_API_KEY }}
-          PROJECT_ID: ${{ vars.PROJECT_ID }}
-          MAIN_SNAPSHOT_ID: ${{ vars.MAIN_SNAPSHOT_ID }}
-          SESSION_ID: ${{ steps.crawl.outputs.session_id }}
-        run: |
-          echo "Comparing $SESSION_ID (PR) vs $MAIN_SNAPSHOT_ID (main)..."
-          DRIFT=$(curl -sf \
-            "$INSIGHTAPI_URL/api/v1/projects/$PROJECT_ID/drift?base=$MAIN_SNAPSHOT_ID&compare=$SESSION_ID" \
-            -H "Authorization: Bearer $INSIGHTAPI_API_KEY")
+#       # ── Step 3: Run drift comparison ───────────────────────────────────────
+#       - name: Compare drift vs main-branch snapshot
+#         id: drift
+#         env:
+#           INSIGHTAPI_URL: ${{ vars.INSIGHTAPI_URL }}
+#           INSIGHTAPI_API_KEY: ${{ secrets.INSIGHTAPI_API_KEY }}
+#           PROJECT_ID: ${{ vars.PROJECT_ID }}
+#           MAIN_SNAPSHOT_ID: ${{ vars.MAIN_SNAPSHOT_ID }}
+#           SESSION_ID: ${{ steps.crawl.outputs.session_id }}
+#         run: |
+#           echo "Comparing $SESSION_ID (PR) vs $MAIN_SNAPSHOT_ID (main)..."
+#           DRIFT=$(curl -sf \
+#             "$INSIGHTAPI_URL/api/v1/projects/$PROJECT_ID/drift?base=$MAIN_SNAPSHOT_ID&compare=$SESSION_ID" \
+#             -H "Authorization: Bearer $INSIGHTAPI_API_KEY")
           
-          HAS_BREAKING=$(echo "$DRIFT" | jq '.has_breaking_changes')
-          BREAKING_COUNT=$(echo "$DRIFT" | jq '.summary.breaking_count')
+#           HAS_BREAKING=$(echo "$DRIFT" | jq '.has_breaking_changes')
+#           BREAKING_COUNT=$(echo "$DRIFT" | jq '.summary.breaking_count')
           
-          echo "has_breaking=$HAS_BREAKING" >> $GITHUB_OUTPUT
-          echo "breaking_count=$BREAKING_COUNT" >> $GITHUB_OUTPUT
+#           echo "has_breaking=$HAS_BREAKING" >> $GITHUB_OUTPUT
+#           echo "breaking_count=$BREAKING_COUNT" >> $GITHUB_OUTPUT
           
-          # Pretty-print the full report to the job log
-          echo "--- Drift Report Summary ---"
-          echo "$DRIFT" | jq '{
-            summary: .summary,
-            breaking_changes: [.breaking_changes[] | {endpoint_key, change_type, field_path, old_value, new_value}],
-            added_endpoints: [.added_endpoints[] | .endpoint_key],
-            removed_endpoints: [.removed_endpoints[] | .endpoint_key]
-          }'
+#           # Pretty-print the full report to the job log
+#           echo "--- Drift Report Summary ---"
+#           echo "$DRIFT" | jq '{
+#             summary: .summary,
+#             breaking_changes: [.breaking_changes[] | {endpoint_key, change_type, field_path, old_value, new_value}],
+#             added_endpoints: [.added_endpoints[] | .endpoint_key],
+#             removed_endpoints: [.removed_endpoints[] | .endpoint_key]
+#           }'
 
-      # ── Step 4: Annotate PR with breaking change details ───────────────────
-      - name: Annotate breaking changes
-        if: steps.drift.outputs.has_breaking == 'true'
-        env:
-          BREAKING_COUNT: ${{ steps.drift.outputs.breaking_count }}
-        run: |
-          echo "::warning::Detected $BREAKING_COUNT breaking API change(s) in this PR."
-          echo "Review the drift report in the 'Compare drift' step above."
+#       # ── Step 4: Annotate PR with breaking change details ───────────────────
+#       - name: Annotate breaking changes
+#         if: steps.drift.outputs.has_breaking == 'true'
+#         env:
+#           BREAKING_COUNT: ${{ steps.drift.outputs.breaking_count }}
+#         run: |
+#           echo "::warning::Detected $BREAKING_COUNT breaking API change(s) in this PR."
+#           echo "Review the drift report in the 'Compare drift' step above."
 
-      # ── Step 5: Fail the check if breaking changes exist ──────────────────
-      - name: Fail on breaking changes
-        if: steps.drift.outputs.has_breaking == 'true'
-        run: |
-          echo "::error::Breaking API changes detected! This PR would break existing API consumers."
-          echo "::error::To override, address the breaking changes or update the main snapshot baseline."
-          exit 1
+#       # ── Step 5: Fail the check if breaking changes exist ──────────────────
+#       - name: Fail on breaking changes
+#         if: steps.drift.outputs.has_breaking == 'true'
+#         run: |
+#           echo "::error::Breaking API changes detected! This PR would break existing API consumers."
+#           echo "::error::To override, address the breaking changes or update the main snapshot baseline."
+#           exit 1

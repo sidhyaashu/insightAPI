@@ -78,10 +78,17 @@ async def reverse_proxy(request: Request, path: str):
     res_headers.pop("date", None)
     res_headers.pop("transfer-encoding", None)
     res_headers.pop("content-length", None)
+    res_headers.pop("set-cookie", None)
 
-    return Response(
+    response = Response(
         content=upstream_resp.content,
         status_code=upstream_resp.status_code,
         headers=res_headers,
         media_type=upstream_resp.headers.get("content-type"),
     )
+
+    # Forward all Set-Cookie headers individually to preserve both access_token and refresh_token
+    for cookie_header in upstream_resp.headers.get_list("set-cookie"):
+        response.raw_headers.append((b"set-cookie", cookie_header.encode("latin-1")))
+
+    return response

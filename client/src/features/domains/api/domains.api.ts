@@ -44,4 +44,12 @@ export const domainsApi = {
     const { data } = await apiClient.delete<{ message: string }>(`/v1/domains/${encodeURIComponent(domain)}`);
     return data;
   },
+
+  setActiveTestingOptIn: async (domain: string, optIn: boolean): Promise<{ domain: string; active_testing_opt_in: boolean }> => {
+    const { data } = await apiClient.post<{ domain: string; active_testing_opt_in: boolean }>(
+      `/v1/domains/${encodeURIComponent(domain)}/active-testing?opt_in=${optIn}`
+    );
+    return data;
+  },
 };
+

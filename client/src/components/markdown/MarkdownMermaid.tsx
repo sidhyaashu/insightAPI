@@ -2,14 +2,16 @@
 
 import React, { useEffect, useState, useId, memo } from "react";
 import { useTheme } from "next-themes";
-import { CheckIcon, CopyIcon, Code2Icon, EyeIcon, WorkflowIcon, AlertCircleIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, Code2Icon, EyeIcon, WorkflowIcon, AlertCircleIcon, PanelRightOpenIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MermaidProps } from "./types";
+import { useArtifact } from "@/components/chat/ArtifactContext";
 
 export const MarkdownMermaid = memo(({ chart, className }: MermaidProps) => {
   const uniqueId = useId().replace(/:/g, "_");
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const { openPanel } = useArtifact();
 
   const [svg, setSvg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -80,10 +82,11 @@ export const MarkdownMermaid = memo(({ chart, className }: MermaidProps) => {
       )}
     >
       {/* Header bar */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-muted/40 border-b border-border/50 text-xs select-none">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-muted/20 border-b border-border/40 text-xs select-none">
         <div className="flex items-center gap-2">
-          <WorkflowIcon className="size-4 text-primary" />
-          <span className="font-semibold text-foreground">Diagram</span>
+          <span className="font-semibold text-foreground tracking-tight text-[11px] uppercase text-muted-foreground">
+            Diagram
+          </span>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -136,6 +139,24 @@ export const MarkdownMermaid = memo(({ chart, className }: MermaidProps) => {
                 <span>Copy</span>
               </>
             )}
+          </button>
+
+          {/* Open diagram in side panel */}
+          <button
+            type="button"
+            onClick={() =>
+              openPanel({
+                id: `mermaid-${Date.now()}`,
+                type: "diagram",
+                title: "Diagram",
+                content: chart,
+              })
+            }
+            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary px-2 py-1 rounded-md hover:bg-muted/80 transition-colors cursor-pointer"
+            title="Open in side panel"
+          >
+            <PanelRightOpenIcon className="size-3" />
+            <span className="hidden sm:inline">Panel</span>
           </button>
         </div>
       </div>

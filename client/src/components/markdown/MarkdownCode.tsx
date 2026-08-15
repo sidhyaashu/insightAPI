@@ -34,12 +34,14 @@ import {
   DatabaseIcon,
   BracesIcon,
   WrapTextIcon,
+  PanelRightOpenIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CodeBlockProps } from "./types";
 import { parseHttpSnippet } from "./markdown-utils";
 import { MarkdownHttpBlock } from "./MarkdownHttpBlock";
 import { MarkdownMermaid } from "./MarkdownMermaid";
+import { useArtifact } from "@/components/chat/ArtifactContext";
 
 // Map aliases to Prism registered language identifiers
 const LANGUAGE_MAP: Record<string, string> = {
@@ -121,8 +123,11 @@ InlineCode.displayName = "InlineCode";
 export const CodeBlock = memo(({ language = "", code, className }: CodeBlockProps) => {
   const [copied, setCopied] = useState(false);
   const [wrapLines, setWrapLines] = useState(false);
+  const { openPanel } = useArtifact();
 
   const cleanLang = (language || "").toLowerCase().trim();
+  const lineCount = code.split("\n").length;
+  const isLargeBlock = lineCount >= 14;
 
   // If code is Mermaid diagram, delegate to MarkdownMermaid
   if (cleanLang === "mermaid") {
@@ -188,6 +193,27 @@ export const CodeBlock = memo(({ language = "", code, className }: CodeBlockProp
             <WrapTextIcon className="size-3" />
             <span className="hidden sm:inline font-sans text-[10px]">Wrap</span>
           </button>
+
+          {/* Open in panel — only for large blocks */}
+          {isLargeBlock && (
+            <button
+              type="button"
+              onClick={() =>
+                openPanel({
+                  id: `code-${Date.now()}`,
+                  type: "code",
+                  title: `${displayLang.toUpperCase()} · ${lineCount} lines`,
+                  content: code,
+                  language: cleanLang,
+                })
+              }
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-muted-foreground hover:text-primary transition-colors cursor-pointer hover:bg-slate-800 text-[11px]"
+              title="Open in side panel"
+            >
+              <PanelRightOpenIcon className="size-3" />
+              <span className="font-sans hidden sm:inline">Panel</span>
+            </button>
+          )}
 
           {/* Copy button */}
           <button

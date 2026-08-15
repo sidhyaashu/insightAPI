@@ -33,6 +33,13 @@ class CrawlSession(Base):
     # Replayable ordered sequence of executed actions & triggered network calls
     action_traces: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
+    # LLM Token & Cost Tracking
+    prompt_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    completion_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    total_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    cost_usd: Mapped[float] = mapped_column(default=0.0, nullable=False)
+    llm_metrics_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
@@ -53,8 +60,13 @@ class CrawlSession(Base):
             "goal": self.goal,
             "captured_count": self.captured_count,
             "action_traces": self.action_traces or [],
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "total_tokens": self.total_tokens,
+            "cost_usd": self.cost_usd,
+            "llm_metrics": self.llm_metrics_json or {},
             "error_message": self.error_message,
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
+            "created_at": self.created_at.isoformat() if self.created_at else datetime.now(timezone.utc).isoformat(),
+            "updated_at": self.updated_at.isoformat() if self.updated_at else datetime.now(timezone.utc).isoformat(),
         }
 

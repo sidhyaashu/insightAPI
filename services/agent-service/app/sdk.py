@@ -31,6 +31,7 @@ class CrawlResult:
         elapsed_time_seconds: float = 0.0,
         llm_metrics: Optional[Dict[str, Any]] = None,
         action_traces: Optional[List[Dict[str, Any]]] = None,
+        security_findings: Optional[List[Dict[str, Any]]] = None,
     ):
         self.target_url = target_url
         self.captured_endpoints = captured_endpoints
@@ -39,6 +40,7 @@ class CrawlResult:
         self.elapsed_time_seconds = elapsed_time_seconds
         self.llm_metrics: Dict[str, Any] = llm_metrics or {}
         self.action_traces: List[Dict[str, Any]] = action_traces or []
+        self.security_findings: List[Dict[str, Any]] = security_findings or []
         """UI-facing LLM cost metrics: tokens_used, llm_calls_made, estimated_cost_usd, etc."""
 
     @property
@@ -103,10 +105,14 @@ class AgentEngine:
         headless: bool = True,
         humanize_interactions: bool = True,
         fast_mode: bool = False,
+        enable_security_testing: bool = False,
+        allow_destructive_tests: bool = False,
     ):
         self.headless = headless
         self.humanize_interactions = humanize_interactions
         self.fast_mode = fast_mode
+        self.enable_security_testing = enable_security_testing
+        self.allow_destructive_tests = allow_destructive_tests
 
     async def crawl(
         self,
@@ -121,26 +127,12 @@ class AgentEngine:
         max_agents: int = 1,
         humanize_interactions: Optional[bool] = None,
         fast: bool = False,
+        crawl_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        enable_security_testing: Optional[bool] = None,
     ) -> CrawlResult:
-        """
-        Autonomously explores target URL, captures network traffic, and returns CrawlResult.
-
-        Args:
-            url: Target website URL.
-            max_pages: Maximum number of unique page states to explore.
-            rate_limit_ms: Minimum per-domain delay spacing in milliseconds (default: 500ms).
-            session_state: Optional Playwright storage_state dict (cookies + localStorage).
-            auth_profile: Optional AuthProfile model instance for automated login prior to exploration.
-            auth_profile_id: Optional AuthProfile database ID to load and execute automated login.
-            goal: Optional natural-language crawl objective (e.g. "Find all payment APIs").
-                  When set, the LLM Planner biases exploration toward elements likely to
-                  trigger APIs related to this goal.
-            parallel: When True, uses CrawlCoordinator to launch concurrent sub-agent workers.
-            max_agents: Number of parallel sub-agent workers to spawn when parallel=True.
-            humanize_interactions: Whether to use humanized Bezier mouse curves and typing cadence.
-            fast: When True, disables humanized pauses and typing jitter for fast trusted crawls.
-        """
         effective_humanize = False if (fast or self.fast_mode) else (self.humanize_interactions if humanize_interactions is None else humanize_interactions)
+        sec_testing = self.enable_security_testing if enable_security_testing is None else enable_security_testing
 
         if parallel and max_agents > 1:
             from app.agents.coordinator import CrawlCoordinator
@@ -175,13 +167,13 @@ class AgentEngine:
                 logger.error(f"Failed to execute automated login for profile: {auth_err}")
 
         start_time = time.time()
-        session_id = str(uuid.uuid4())
+        session_id = crawl_id or str(uuid.uuid4())
 
         log_step(logger, 1, "Initializing Engine Session", f"Target URL: {url} | Max Pages: {max_pages} | Rate Limit: {rate_limit_ms}ms | Headless: {self.headless} | Humanized: {effective_humanize} | Authenticated: {session_state is not None} | Goal: {goal or 'all APIs'}")
 
         # Initialize per-session LLM cost manager
         from app.agents.nodes.llm_client import make_cost_manager
-        cost_manager = make_cost_manager()
+        cost_manager = make_cost_manager(crawl_id=session_id, user_id=user_id)
         logger.info(f"LLMCostManager initialized | Budget: {settings.LLM_TOKEN_BUDGET_PER_CRAWL} tokens | Planner cap: {settings.LLM_PLANNER_MAX_CALLS} calls")
 
         browser_manager = BrowserManager(headless=self.headless, storage_state=session_state)
@@ -199,6 +191,21 @@ class AgentEngine:
             await browser_manager.navigate_safely(page, url, timeout_ms=30000)
             dom_snapshot = await DOMDistiller.extract_interactive_snapshot(page)
             logger.info(f"Initial AXTree DOM snapshot extracted: {len(dom_snapshot)} interactive elements found.")
+
+            # Publish initial navigation event
+            if crawl_id:
+                try:
+                    from app.api.v1.endpoints.crawls import publish_ws_event
+                    await publish_ws_event(crawl_id, {
+                        "type": "page_visited",
+                        "url": page.url,
+                        "title": await page.title(),
+                        "page_number": 1,
+                        "max_pages": max_pages,
+                        "interactive_count": len(dom_snapshot),
+                    })
+                except Exception:
+                    pass
 
             initial_state: CrawlState = {
                 "target_url": url,
@@ -224,6 +231,9 @@ class AgentEngine:
                 "page_ref": page,
                 "rate_limit_ms": rate_limit_ms,
                 "humanize_interactions": effective_humanize,
+                # Session identity for DB-writing nodes
+                "crawl_id": session_id,
+                "user_id": user_id,
                 # Intelligence-layer fields
                 "goal": goal,
                 "planner_reasoning": None,
@@ -231,10 +241,15 @@ class AgentEngine:
                 "endpoint_categories": [],
                 "cost_manager": cost_manager,
                 "llm_planner_call_count": 0,
+                # Security testing
+                "security_testing_enabled": sec_testing,
+                "allow_destructive_tests": self.allow_destructive_tests,
+                "security_findings": [],
             }
 
             log_step(logger, 4, "Starting Autonomous Exploration Loop", "Invoking LangGraph Agent Graph")
             graph = build_crawl_graph()
+
             timeout_sec = getattr(settings, "CRAWL_TIMEOUT_SECONDS", 120)
             try:
                 final_state = await asyncio.wait_for(graph.ainvoke(initial_state), timeout=timeout_sec)
@@ -277,6 +292,7 @@ class AgentEngine:
                 elapsed_time_seconds=elapsed_sec,
                 llm_metrics=cost_manager.get_metrics(),
                 action_traces=analyzed_state.get("action_traces", []),
+                security_findings=analyzed_state.get("security_findings", []),
             )
         finally:
             await browser_manager.stop()

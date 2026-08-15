@@ -7,6 +7,10 @@ engine = create_async_engine(
     settings.get_database_url(),
     echo=settings.DEBUG,
     future=True,
+    pool_size=getattr(settings, "DB_POOL_SIZE", 20),
+    max_overflow=getattr(settings, "DB_MAX_OVERFLOW", 10),
+    pool_timeout=getattr(settings, "DB_POOL_TIMEOUT", 30),
+    pool_recycle=getattr(settings, "DB_POOL_RECYCLE", 1800),
     pool_pre_ping=True,
 )
 

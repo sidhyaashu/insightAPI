@@ -78,6 +78,45 @@ class DomainRepository:
         verified_match = res.scalar_one_or_none()
         return verified_match is not None
 
+    async def is_domain_opted_in_for_active_testing(self, user_id: str, domain: str) -> bool:
+        """
+        Check if domain is verified AND has active_testing_opt_in explicitly set to True.
+        """
+        clean_domain = normalize_domain(domain)
+        if not clean_domain:
+            return False
+
+        parts = clean_domain.split(".")
+        candidates = [clean_domain]
+        if len(parts) > 2:
+            for i in range(1, len(parts) - 1):
+                candidates.append(".".join(parts[i:]))
+
+        stmt = select(VerifiedDomain).where(
+            VerifiedDomain.user_id == user_id,
+            VerifiedDomain.domain.in_(candidates),
+            VerifiedDomain.is_verified == True,
+            VerifiedDomain.active_testing_opt_in == True,
+        )
+        res = await self.session.execute(stmt)
+        return res.scalar_one_or_none() is not None
+
+    async def set_active_testing_opt_in(self, user_id: str, domain: str, opt_in: bool = True) -> VerifiedDomain | None:
+        """Update active_testing_opt_in flag for a domain."""
+        clean_domain = normalize_domain(domain)
+        stmt = select(VerifiedDomain).where(
+            VerifiedDomain.user_id == user_id,
+            VerifiedDomain.domain == clean_domain,
+        )
+        res = await self.session.execute(stmt)
+        record = res.scalar_one_or_none()
+        if record:
+            record.active_testing_opt_in = opt_in
+            record.updated_at = datetime.now(timezone.utc)
+            await self.session.commit()
+            await self.session.refresh(record)
+        return record
+
     async def mark_domain_verified(self, domain_id: str, method: str) -> VerifiedDomain | None:
         """Mark a domain record as successfully verified."""
         stmt = select(VerifiedDomain).where(VerifiedDomain.id == domain_id)

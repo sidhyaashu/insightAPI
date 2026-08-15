@@ -50,8 +50,8 @@ export const authApi = {
   },
 
   /** Silent token refresh using HttpOnly cookie */
-  refreshToken: async (): Promise<{ access_token: string }> => {
-    const response = await apiClient.post<{ access_token: string }>("/auth/refresh");
+  refreshToken: async (): Promise<AuthTokens> => {
+    const response = await apiClient.post<AuthTokens>("/auth/refresh");
     return response.data;
   },
 

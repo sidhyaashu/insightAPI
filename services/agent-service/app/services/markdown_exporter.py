@@ -1,10 +1,12 @@
+import json
 from typing import List, Dict, Any
 
 
 class MarkdownExporter:
     """
-    Exports captured API endpoints into formatted Markdown documentation files.
-    Includes AI-generated summaries, tags, and category labels when available.
+    Exports captured API endpoints into rich, formatted Markdown documentation files.
+    Includes AI-generated summaries, confidence metrics, observed examples,
+    and anti-automation/replayability notices.
     """
     @staticmethod
     def generate_markdown(
@@ -20,8 +22,8 @@ class MarkdownExporter:
             "",
             "## Summary of Discovered Endpoints",
             "",
-            "| Method | Endpoint Route | Status | Category | Auth Required |",
-            "|:---:|:---|:---:|:---|:---:|"
+            "| Method | Endpoint Route | Status | Category | Confidence | Obs | Replayability |",
+            "|:---:|:---|:---:|:---|:---:|:---:|:---:|"
         ]
 
         for ep in captured_endpoints:
@@ -30,8 +32,29 @@ class MarkdownExporter:
             status = ep.get("status", 200)
             graphql_op = ep.get("graphql_operation_name")
             category = ep.get("ai_endpoint_category", "—")
+            confidence = ep.get("confidence", 0.85)
+            example_count = ep.get("example_count", 1)
+
+            # Check replayability constraints
+            req_headers = {k.lower(): v for k, v in (ep.get("request_headers") or {}).items()}
+            examples = ep.get("examples") or []
+            req_payload_keys = set()
+            for ex in examples:
+                p = ex.get("request_payload")
+                if isinstance(p, dict):
+                    req_payload_keys.update(k.lower() for k in p.keys())
+            if ep.get("triggered_by", {}).get("field_names"):
+                req_payload_keys.update(f.lower() for f in ep["triggered_by"]["field_names"])
+
+            has_captcha = any("captcha" in k for k in req_payload_keys)
+            has_csrf = any(
+                any(c in k for c in ["csrf", "xsrf", "verificationtoken", "_token"])
+                for k in (req_payload_keys | set(req_headers.keys()))
+            )
+
+            replay_badge = "❌ CAPTCHA" if has_captcha else ("⚠️ CSRF" if has_csrf else "✅ Direct")
             display_route = f"{route} *(GraphQL: {graphql_op})*" if (graphql_op and "(" not in route) else route
-            lines.append(f"| `{method}` | `{display_route}` | `{status}` | {category} | — |")
+            lines.append(f"| `{method}` | `{display_route}` | `{status}` | {category} | `{confidence:.0%}` | `{example_count}` | {replay_badge} |")
 
         lines.extend([
             "",
@@ -49,7 +72,10 @@ class MarkdownExporter:
             ai_summary = ep.get("ai_summary", "")
             ai_tags = ep.get("ai_tags", [])
             ai_category = ep.get("ai_endpoint_category", "")
-            confidence = ep.get("confidence", 0)
+            confidence = ep.get("confidence", 0.85)
+            example_count = ep.get("example_count", 1)
+            examples = ep.get("examples", [])
+            schema = ep.get("schema")
 
             detail_title = f"### `{method}` {route}"
             if graphql_op and "(" not in route:
@@ -65,19 +91,52 @@ class MarkdownExporter:
 
             meta_parts = []
             if ai_category:
-                meta_parts.append(f"**Category:** {ai_category}")
+                meta_parts.append(f"**Category:** `{ai_category}`")
             if ai_tags:
                 meta_parts.append(f"**Tags:** {', '.join(f'`{t}`' for t in ai_tags)}")
+            meta_parts.append(f"**Confidence:** `{confidence:.0%}` (`x-confidence`)")
+            meta_parts.append(f"**Observations:** `{example_count}` (`x-example-count`)")
             if ep.get("is_vision_derived"):
                 meta_parts.append("**Source:** `Vision Fallback`")
             if ep.get("triggered_by"):
                 trig = ep["triggered_by"]
                 ctx = trig.get("form_context") or trig.get("selector") or "Form Submit"
                 meta_parts.append(f"**Triggered By:** `{ctx[:35]}`")
-            meta_parts.append(f"**Confidence:** `{confidence:.0%}`")
             if meta_parts:
                 lines.append(" · ".join(meta_parts))
                 lines.append("")
+
+            # Detect anti-automation and replayability alerts
+            req_headers = {k.lower(): v for k, v in (ep.get("request_headers") or {}).items()}
+            req_payload_keys = set()
+            for ex in examples:
+                p = ex.get("request_payload")
+                if isinstance(p, dict):
+                    req_payload_keys.update(k.lower() for k in p.keys())
+            if ep.get("triggered_by", {}).get("field_names"):
+                req_payload_keys.update(f.lower() for f in ep["triggered_by"]["field_names"])
+
+            has_captcha = any("captcha" in k for k in req_payload_keys)
+            has_csrf = any(
+                any(c in k for c in ["csrf", "xsrf", "verificationtoken", "_token"])
+                for k in (req_payload_keys | set(req_headers.keys()))
+            )
+            has_viewstate = any("viewstate" in k for k in req_payload_keys)
+
+            if has_captcha:
+                lines.extend([
+                    "> [!WARNING]",
+                    "> **Anti-Automation Constraint — CAPTCHA Protected**",
+                    "> This endpoint is protected by a visual or cryptographic CAPTCHA challenge. Direct automated replays or API integrations require a CAPTCHA solver or browser session bypass before invocation.",
+                    ""
+                ])
+            elif has_csrf or has_viewstate:
+                lines.extend([
+                    "> [!NOTE]",
+                    "> **Session-Bound CSRF / ViewState Token Required**",
+                    "> This endpoint expects a single-use session verification token (`CSRF` / `ASP.NET ViewState`). Automated calls must extract the token from the initial page load or form prior to posting.",
+                    ""
+                ])
 
             lines.extend([
                 f"* **Target URL**: `{url}`",
@@ -85,12 +144,25 @@ class MarkdownExporter:
             ])
 
             if ep.get("related_calls"):
-                lines.append(f"* **Related Calls ({len(ep['related_calls'])})**:")
+                lines.append(f"* **Cascading Sub-APIs Triggered ({len(ep['related_calls'])})**:")
                 for rc in ep["related_calls"]:
                     rc_method = rc.get("method", "GET")
                     rc_route = rc.get("template_route", "/")
                     rc_status = rc.get("status", 200)
                     lines.append(f"  * `{rc_method} {rc_route}` (HTTP {rc_status})")
+
+            # Observed Real Response Examples (Verbatim Captured Data)
+            if examples:
+                first_ex = examples[0]
+                resp_body = first_ex.get("response_body")
+                if resp_body is not None:
+                    lines.extend([
+                        "",
+                        "#### Captured Response Payload (Observed Wire Data)",
+                        "```json",
+                        json.dumps(resp_body, indent=2) if isinstance(resp_body, (dict, list)) else str(resp_body),
+                        "```"
+                    ])
 
             lines.extend([
                 "",
@@ -105,3 +177,4 @@ class MarkdownExporter:
             ])
 
         return "\n".join(lines)
+

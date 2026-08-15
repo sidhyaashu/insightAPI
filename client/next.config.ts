@@ -15,6 +15,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    const gatewayUrl = process.env.GATEWAY_URL || "http://gateway:8080";
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${gatewayUrl}/api/:path*`,
+      },
+      {
+        source: "/ws/:path*",
+        destination: `${gatewayUrl}/ws/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -11,18 +11,26 @@ from datetime import datetime, timezone
 from app.models.user import User
 from app.models.subscription import Subscription
 
+import uuid
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Ensure database schema is created on startup."""
-    try:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        logger.info(" Core Service: Database schema initialized successfully.")
-    except Exception as e:
-        logger.error(f" Core Service: Database initialization error: {e}")
+    """Ensure database schema is initialized safely on startup."""
+    if settings.DEBUG or getattr(settings, "APP_ENV", "development") in ("development", "test", "local"):
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info(" Core Service: Database schema initialized successfully (dev mode).")
+        except Exception as e:
+            logger.error(f" Core Service: Database initialization error: {e}")
+    else:
+        logger.info(" Core Service: Running in production mode. Database managed via Alembic migrations.")
     yield
 
 
@@ -32,6 +40,18 @@ app = FastAPI(
     docs_url="/docs" if settings.DEBUG else None,
     lifespan=lifespan,
 )
+
+async def correlation_id_middleware(request: Request, call_next) -> Response:
+    corr_id = (
+        request.headers.get("X-Correlation-ID")
+        or request.headers.get("X-Request-ID")
+        or str(uuid.uuid4())
+    )
+    response = await call_next(request)
+    response.headers["X-Correlation-ID"] = corr_id
+    return response
+
+app.add_middleware(BaseHTTPMiddleware, dispatch=correlation_id_middleware)
 
 app.add_middleware(
     CORSMiddleware,

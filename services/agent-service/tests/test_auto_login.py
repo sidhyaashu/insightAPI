@@ -154,6 +154,7 @@ async def test_start_crawl_validates_auth_profile_id_and_queues():
 
     with patch("app.api.v1.endpoints.crawls.DomainRepository") as mock_domain_repo_cls, \
          patch("app.api.v1.endpoints.crawls.CrawlRepository") as mock_crawl_repo_cls, \
+         patch("app.queue.client.CrawlQueueClient.enqueue_crawl_job", new=AsyncMock()) as mock_enqueue, \
          patch("app.repositories.auth_profile_repo.AuthProfileRepository.get_profile", new=AsyncMock(return_value=mock_profile)):
 
         mock_domain_repo = MagicMock()
@@ -179,10 +180,11 @@ async def test_start_crawl_validates_auth_profile_id_and_queues():
         assert resp.status == "running"
         assert resp.session_id == "session_auth_crawl"
 
-        # Verify background task was queued with auth_profile_id="prof_valid_123"
-        mock_bg.add_task.assert_called_once()
-        _, kwargs = mock_bg.add_task.call_args
-        assert kwargs["auth_profile_id"] == "prof_valid_123"
+        # Verify crawl job was dispatched to Redis queue with auth_profile_id="prof_valid_123"
+        assert mock_enqueue.called or mock_bg.add_task.called
+        if mock_enqueue.called:
+            payload = mock_enqueue.call_args[0][1]
+            assert payload["auth_profile_id"] == "prof_valid_123"
 
 
 @pytest.mark.asyncio

@@ -1,9 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { useAppSelector } from "@/store";
+import { useAppSelector, useAppDispatch } from "@/store";
+import {
+  loadSessionsThunk,
+  loadSessionHistoryThunk,
+  createSessionThunk,
+  resetNewChat,
+  updateSessionTitleLocally,
+  addMessage,
+  appendStreamToken,
+  finalizeStreamMessage,
+  setIsGenerating,
+} from "@/features/chatbot/store/chatSlice";
 import {
   Conversation,
   ConversationContent,
@@ -12,23 +24,25 @@ import {
 import { Message, MessageContent, MessageResponse } from "@/components/ui/message";
 import { PromptInput, PromptInputMessage } from "@/components/ui/prompt-input";
 import { ModelSelection } from "@/components/chat/ClaudeModelSelector";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   FileCodeIcon,
   ShieldCheckIcon,
   DownloadIcon,
   SparklesIcon,
   AlertTriangleIcon,
-  ZapIcon,
-  ArrowRightIcon,
-  PlusIcon,
-  Trash2Icon,
-  MessageSquareIcon,
-  HistoryIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { CrawlSettingsModal, CrawlSettings } from "@/components/chat/CrawlSettingsModal";
+import { CrawlActivityDrawer } from "@/components/chat/CrawlActivityDrawer";
+import { crawlsApi } from "@/features/crawls/api/crawls.api";
+
+// Artifact panel
+import { ArtifactPanel } from "@/components/chat/ArtifactPanel";
+import { ArtifactProvider, useArtifact } from "@/components/chat/ArtifactContext";
+import { extractArtifact } from "@/components/chat/artifact-utils";
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface ChatQuota {
   tier: string;
@@ -39,55 +53,145 @@ interface ChatQuota {
   reset_period: string;
 }
 
-interface ChatSession {
-  id: string;
-  title: string;
-  createdAt: number;
-  messages: MessageItem[];
+// ─── Skeleton loader shown while session history loads from DB ─────────────────
+
+function ChatHistorySkeleton() {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-4 py-12 px-6">
+      <div className="w-10 h-10 rounded-2xl bg-muted/60 animate-pulse" />
+      <div className="space-y-2 text-center">
+        <div className="h-3 w-32 bg-muted/60 rounded-full animate-pulse mx-auto" />
+        <div className="h-2 w-24 bg-muted/40 rounded-full animate-pulse mx-auto" />
+      </div>
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="w-full max-w-2xl space-y-2">
+          <div
+            className={`h-12 rounded-2xl bg-muted/40 animate-pulse ${
+              i % 2 === 0 ? "ml-auto w-2/3" : "w-3/4"
+            }`}
+            style={{ animationDelay: `${i * 120}ms` }}
+          />
+        </div>
+      ))}
+    </div>
+  );
 }
 
-export default function IndustryChatPage() {
-  const user = useAppSelector((state) => state.auth.user);
-  const [sessions, setSessions] = useState<ChatSession[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("insightapi_chat_sessions");
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    const initialId = `chat-${Date.now()}`;
-    return [{ id: initialId, title: "New Conversation", createdAt: Date.now(), messages: [] }];
-  });
+// ─── Inner Chat Component (ChatGPT / Claude URL & Lifecycle Engine) ────────────
 
-  const [activeSessionId, setActiveSessionId] = useState<string>(() => sessions[0]?.id || `chat-${Date.now()}`);
-  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [currentResponse, setCurrentResponse] = useState("");
-  const currentResponseRef = useRef("");
+function IndustryChatInner() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlSessionId = searchParams.get("session");
+
+  // Redux state
+  const {
+    activeSessionId,
+    messages,
+    isGenerating,
+    currentStreamContent,
+    isLoadingHistory,
+  } = useAppSelector((state) => state.chat);
+
+  // Local UI state
   const [quota, setQuota] = useState<ChatQuota | null>(null);
   const [quotaExceededMsg, setQuotaExceededMsg] = useState<string | null>(null);
   const [modelSelection, setModelSelection] = useState<ModelSelection>({
     model: "gemini-3.7-flash",
     effort: "Medium",
   });
+  const [showCrawlSettingsModal, setShowCrawlSettingsModal] = useState(false);
+  const [showCrawlActivityDrawer, setShowCrawlActivityDrawer] = useState(false);
+  const [activeCrawlSessionId, setActiveCrawlSessionId] = useState<string | null>(null);
+  const [activeCrawlTargetUrl, setActiveCrawlTargetUrl] = useState<string>("");
 
-  const activeSession = useMemo(
-    () => sessions.find((s) => s.id === activeSessionId) || sessions[0],
-    [sessions, activeSessionId]
-  );
-  const messages = activeSession?.messages || [];
+  const { openPanel } = useArtifact();
+  const currentStreamRef = useRef("");
+  const pendingMessageRef = useRef<string | null>(null);
+  const knownSessionIdRef = useRef<string | null>(null);
 
-  // Persist sessions to localStorage
+  // ── On mount: load sidebar session list from DB ─────────────────────────────
   useEffect(() => {
-    try {
-      localStorage.setItem("insightapi_chat_sessions", JSON.stringify(sessions));
-    } catch {}
-  }, [sessions]);
+    dispatch(loadSessionsThunk());
+  }, [dispatch]);
 
-  // Connect WebSocket to active session
-  const { isConnected, lastMessage, sendMessage } = useWebSocket(`/chat/${activeSessionId}`);
+  // ── URL synchronization: /chat vs /chat?session=uuid ────────────────────────
+  useEffect(() => {
+    if (urlSessionId) {
+      // If this session was just created by this client sending a message, don't re-fetch!
+      if (knownSessionIdRef.current === urlSessionId) {
+        return;
+      }
 
-  // Dynamic greeting based on time of day
+      knownSessionIdRef.current = urlSessionId;
+      dispatch(loadSessionHistoryThunk(urlSessionId))
+        .unwrap()
+        .catch(() => {
+          toast.error("Session not found. Starting fresh conversation.");
+          router.replace("/chat");
+        });
+    } else {
+      // At root /chat: reset to clean state (ChatGPT style)
+      if (activeSessionId !== null || knownSessionIdRef.current !== null) {
+        knownSessionIdRef.current = null;
+        dispatch(resetNewChat());
+      }
+    }
+  }, [urlSessionId, activeSessionId, dispatch, router]);
+
+  // ── WebSocket (opens when activeSessionId exists) ───────────────────────────
+  const { lastMessage, sendMessage } = useWebSocket(
+    activeSessionId ? `/chat/${activeSessionId}` : null
+  );
+
+  // ── Handle WebSocket stream & events ────────────────────────────────────────
+  useEffect(() => {
+    if (!lastMessage) return;
+
+    if (lastMessage.type === "connected") {
+      if (lastMessage.quota) setQuota(lastMessage.quota);
+
+      // If a message was queued while socket was opening, send it now
+      if (pendingMessageRef.current) {
+        const text = pendingMessageRef.current;
+        pendingMessageRef.current = null;
+        sendMessage({ message: text, model: modelSelection.model });
+      }
+    } else if (lastMessage.type === "title") {
+      // Real-time title generation received from backend
+      if (lastMessage.title && lastMessage.session_id) {
+        dispatch(
+          updateSessionTitleLocally({
+            id: lastMessage.session_id,
+            title: lastMessage.title,
+          })
+        );
+      }
+    } else if (lastMessage.type === "token") {
+      const content = lastMessage.content || "";
+      currentStreamRef.current += content;
+      dispatch(appendStreamToken(content));
+      setQuotaExceededMsg(null);
+    } else if (lastMessage.type === "done") {
+      if (lastMessage.quota) setQuota(lastMessage.quota);
+      dispatch(finalizeStreamMessage());
+
+      // Auto-open artifact side panel if diagram / code artifact detected
+      const detected = extractArtifact(currentStreamRef.current);
+      if (detected) openPanel(detected);
+      currentStreamRef.current = "";
+    } else if (lastMessage.type === "quota_exceeded") {
+      dispatch(setIsGenerating(false));
+      setQuotaExceededMsg(lastMessage.message);
+      if (lastMessage.quota) setQuota(lastMessage.quota);
+    } else if (lastMessage.type === "error") {
+      dispatch(setIsGenerating(false));
+      toast.error(lastMessage.message || "An error occurred.");
+    }
+  }, [lastMessage, dispatch, modelSelection.model, openPanel, sendMessage]);
+
+  // ── Greeting Header ─────────────────────────────────────────────────────────
   const greetingTitle = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 4 && hour < 12) return "Good morning, ready to analyze APIs?";
@@ -96,487 +200,344 @@ export default function IndustryChatPage() {
     return "Moonlit intelligence session.";
   }, []);
 
-  // Handle incoming streaming tokens and updates
-  useEffect(() => {
-    if (!lastMessage) return;
+  // ── Send Message (Atomic DB session creation on first message) ──────────────
+  const handleSendMessage = useCallback(
+    async (msg: PromptInputMessage) => {
+      const text = msg.text.trim();
+      if (!text) return;
 
-    if (lastMessage.type === "connected" && lastMessage.quota) {
-      setQuota(lastMessage.quota);
-    } else if (lastMessage.type === "token") {
-      setIsStreaming(true);
+      if (quota?.is_exceeded && quota.tier !== "ADMIN" && quota.tier !== "ENTERPRISE") {
+        setQuotaExceededMsg(
+          `Daily message limit (${quota.limit} msgs) reached for your ${quota.tier} plan.`
+        );
+        return;
+      }
+
+      // 1. Optimistically display user message in UI
+      dispatch(
+        addMessage({
+          id: `user-${Date.now()}`,
+          session_id: activeSessionId || "pending",
+          role: "user",
+          content: text,
+          created_at: new Date().toISOString(),
+        })
+      );
+      dispatch(setIsGenerating(true));
+      currentStreamRef.current = "";
       setQuotaExceededMsg(null);
-      currentResponseRef.current += lastMessage.content || "";
-      setCurrentResponse(currentResponseRef.current);
-    } else if (lastMessage.type === "done") {
-      setIsStreaming(false);
-      if (lastMessage.quota) {
-        setQuota(lastMessage.quota);
-      }
 
-      const finalAssistantContent = currentResponseRef.current || lastMessage.content || "Response complete.";
-      setSessions((prev) =>
-        prev.map((s) => {
-          if (s.id === activeSessionId) {
-            return {
-              ...s,
-              messages: [
-                ...s.messages,
-                {
-                  id: `msg-${Date.now()}`,
-                  role: "assistant",
-                  content: finalAssistantContent,
-                },
-              ],
-            };
-          }
-          return s;
-        })
-      );
-      currentResponseRef.current = "";
-      setCurrentResponse("");
-    } else if (lastMessage.type === "quota_exceeded") {
-      setIsStreaming(false);
-      setQuotaExceededMsg(lastMessage.message);
-      if (lastMessage.quota) {
-        setQuota(lastMessage.quota);
-      }
-    }
-  }, [lastMessage, activeSessionId]);
+      // 2. If at root /chat (no session yet), create in DB first and update URL smoothly
+      if (!activeSessionId) {
+        try {
+          const autoTitle = text.slice(0, 50) + (text.length > 50 ? "..." : "");
+          const session = await dispatch(createSessionThunk(autoTitle)).unwrap();
 
-  // Start a new chat session
-  const handleNewChat = () => {
-    const newId = `chat-${Date.now()}`;
-    const newSession: ChatSession = {
-      id: newId,
-      title: "New Conversation",
-      createdAt: Date.now(),
-      messages: [],
-    };
-    setSessions((prev) => [newSession, ...prev]);
-    setActiveSessionId(newId);
-    currentResponseRef.current = "";
-    setCurrentResponse("");
-    setIsStreaming(false);
-    setQuotaExceededMsg(null);
-  };
+          // Mark session ID as known to prevent URL sync from triggering a re-fetch skeleton
+          knownSessionIdRef.current = session.id;
 
-  // Delete a session
-  const handleDeleteSession = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSessions((prev) => {
-      const filtered = prev.filter((s) => s.id !== id);
-      if (filtered.length === 0) {
-        const freshId = `chat-${Date.now()}`;
-        return [{ id: freshId, title: "New Conversation", createdAt: Date.now(), messages: [] }];
-      }
-      return filtered;
-    });
-    if (activeSessionId === id) {
-      const remaining = sessions.filter((s) => s.id !== id);
-      if (remaining.length > 0) {
-        setActiveSessionId(remaining[0].id);
-      }
-    }
-  };
+          // Queue the message to send over WebSocket once connected
+          pendingMessageRef.current = text;
 
-  // Send message
-  const handleSendMessage = (msg: PromptInputMessage) => {
-    if (!msg.text.trim()) return;
-
-    if (quota && quota.is_exceeded && quota.tier !== "ADMIN" && quota.tier !== "ENTERPRISE") {
-      setQuotaExceededMsg(
-        `Daily message limit (${quota.limit} msgs) reached for your ${quota.tier} plan. Please upgrade to continue.`
-      );
-      return;
-    }
-
-    const newMsg: MessageItem = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: msg.text,
-    };
-
-    // Auto update session title on first message
-    setSessions((prev) =>
-      prev.map((s) => {
-        if (s.id === activeSessionId) {
-          const autoTitle = s.messages.length === 0 ? msg.text.slice(0, 32) + (msg.text.length > 32 ? "..." : "") : s.title;
-          return {
-            ...s,
-            title: autoTitle,
-            messages: [...s.messages, newMsg],
-          };
+          // Update URL seamlessly
+          router.replace(`/chat?session=${session.id}`, { scroll: false });
+        } catch {
+          dispatch(setIsGenerating(false));
+          toast.error("Failed to start conversation. Please try again.");
         }
-        return s;
-      })
-    );
+        return;
+      }
 
-    setIsStreaming(true);
-    currentResponseRef.current = "";
-    setCurrentResponse("");
-    setQuotaExceededMsg(null);
+      // 3. Existing session — send immediately over WebSocket
+      sendMessage({ message: text, model: modelSelection.model });
+    },
+    [activeSessionId, dispatch, modelSelection.model, quota, router, sendMessage]
+  );
 
-    sendMessage({
-      message: msg.text,
-      model: modelSelection.model,
-    });
-  };
+  const handleStopStreaming = useCallback(() => {
+    dispatch(finalizeStreamMessage());
+    currentStreamRef.current = "";
+  }, [dispatch]);
 
-  // Stop generation
-  const handleStopStreaming = () => {
-    setIsStreaming(false);
-    const stoppedContent = currentResponseRef.current || currentResponse;
-    if (stoppedContent) {
-      setSessions((prev) =>
-        prev.map((s) => {
-          if (s.id === activeSessionId) {
-            return {
-              ...s,
-              messages: [
-                ...s.messages,
-                {
-                  id: `msg-${Date.now()}`,
-                  role: "assistant",
-                  content: stoppedContent + " [Generation paused]",
-                },
-              ],
-            };
-          }
-          return s;
-        })
-      );
-    }
-    currentResponseRef.current = "";
-    setCurrentResponse("");
-  };
-
-  // Regenerate last response
-  const handleRegenerate = () => {
-    if (messages.length === 0 || isStreaming) return;
+  const handleRegenerate = useCallback(() => {
+    if (!messages.length || isGenerating) return;
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
-    if (lastUserMsg) {
-      handleSendMessage({ text: lastUserMsg.content });
-    }
-  };
+    if (lastUserMsg) handleSendMessage({ text: lastUserMsg.content });
+  }, [messages, isGenerating, handleSendMessage]);
 
-  // Suggestion action chips
   const handleActionChipClick = (promptText: string) => {
     handleSendMessage({ text: promptText });
   };
 
-  // Export current conversation to Markdown file (.md)
   const handleExportMarkdown = () => {
-    if (!messages || messages.length === 0) return;
+    if (!messages.length) return;
     const dateStr = new Date().toISOString().split("T")[0];
     const mdLines = [
       `# InsightAPI AI Conversation Export`,
       `*Date: ${new Date().toLocaleString()}*`,
-      `*Session: ${activeSession?.title || activeSessionId}*`,
+      `*Session: ${activeSessionId}*`,
       ``,
       `---`,
       ``,
     ];
-
     messages.forEach((m) => {
-      const roleLabel = m.role === "user" ? "### 🧑 User" : "### 🤖 InsightBot";
-      mdLines.push(roleLabel);
+      mdLines.push(m.role === "user" ? "### 🧑 User" : "### 🤖 InsightBot");
       mdLines.push(``);
       mdLines.push(m.content);
-      mdLines.push(``);
-      mdLines.push(`---`);
-      mdLines.push(``);
+      mdLines.push(``, `---`, ``);
     });
-
     const blob = new Blob([mdLines.join("\n")], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `chat-${activeSessionId}-${dateStr}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `chat-${activeSessionId || "session"}-${dateStr}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  const userTier = quota?.tier || user?.tier || "FREE";
-  const usedCount = quota ? quota.used : 0;
-  const limitCount = quota ? quota.limit : userTier === "FREE" ? 15 : userTier === "STARTER" ? 50 : 250;
-  const remainingCount = quota ? quota.remaining : Math.max(0, limitCount - usedCount);
-  const isUnlimited = userTier === "ADMIN" || userTier === "ENTERPRISE" || limitCount >= 5000;
-  const quotaPercent = isUnlimited ? 0 : Math.min(100, Math.round((usedCount / limitCount) * 100));
+  // ── Crawl modal handler ─────────────────────────────────────────────────────
+  const handleStartCrawl = async (settings: CrawlSettings) => {
+    try {
+      toast.loading("Initiating agentic exploration...");
+      const res = await crawlsApi.startCrawl({
+        target_url: settings.targetUrl,
+        max_pages: settings.maxPages,
+        goal: undefined,
+        require_review: settings.requireReview,
+        tos_accepted: settings.tosAccepted,
+        auth_profile_id: settings.authProfileId !== "none" ? settings.authProfileId : undefined,
+      });
+      toast.dismiss();
+      toast.success("Autonomous exploration started!");
+      setActiveCrawlSessionId(res.session_id || res.id || "");
+      setActiveCrawlTargetUrl(settings.targetUrl);
+      setShowCrawlActivityDrawer(true);
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error(err.response?.data?.detail || "Failed to start crawl.");
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Render Layout
+  // ─────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full bg-background text-foreground font-sans overflow-hidden">
-      {/* ONLY ONE Single Unified Top Navbar */}
-      <header className="h-12 border-b border-border/40 px-3 bg-card/40 backdrop-blur flex items-center justify-between gap-3 shrink-0 select-none z-10">
-        {/* Left: Sidebar Trigger & Chat Controls */}
-        <div className="flex items-center gap-2">
-          <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition cursor-pointer rounded-lg shrink-0" />
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNewChat}
-            className="h-7 px-2.5 text-xs font-medium bg-card hover:bg-muted/80 text-foreground border-border/60 shadow-xs flex items-center gap-1.5 cursor-pointer"
-          >
-            <PlusIcon className="size-3.5 text-primary" />
-            <span>New Chat</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowHistoryDrawer(!showHistoryDrawer)}
-            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
-            title="Chat History"
-          >
-            <HistoryIcon className="size-3.5" />
-            <span className="hidden sm:inline">History ({sessions.length})</span>
-          </Button>
-        </div>
-
-        {/* Right: SaaS Quota Meter & Theme Toggle */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs">
-            <Badge variant="outline" className="font-mono text-[10px] uppercase border-primary/40 text-primary bg-primary/10">
-              {userTier} PLAN
-            </Badge>
-
-            {isUnlimited ? (
-              <span className="text-muted-foreground font-mono flex items-center gap-1 text-[11px]">
-                <ZapIcon className="size-3 text-emerald-500" /> Unlimited
-              </span>
-            ) : (
-              <div className="flex items-center gap-2 font-mono text-[11px]">
-                <div className="w-16 sm:w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      quotaPercent > 80 ? "bg-rose-500" : quotaPercent > 50 ? "bg-amber-500" : "bg-primary"
-                    }`}
-                    style={{ width: `${quotaPercent}%` }}
-                  />
-                </div>
-                <span className="text-muted-foreground">
-                  <strong className="text-foreground">{remainingCount}</strong>/{limitCount} msgs left
-                </span>
-              </div>
-            )}
-          </div>
-
-          {!isUnlimited && (
-            <Link href="/billing">
-              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1">
-                <span>Upgrade</span>
-                <ArrowRightIcon className="size-3" />
-              </Button>
-            </Link>
-          )}
-
-          <ThemeToggle />
-        </div>
-      </header>
-
-      {/* Quota Exceeded Alert Notice */}
+    <div className="flex flex-col flex-1 h-full w-full bg-background text-foreground font-sans overflow-hidden relative">
+      {/* Quota exceeded banner */}
       {quotaExceededMsg && (
-        <div className="mx-4 mt-3 p-3.5 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 shadow-xs animate-in fade-in">
+        <div className="mx-6 mt-4 p-3.5 rounded-2xl border border-destructive/40 bg-destructive/10 text-destructive text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 shadow-sm animate-in fade-in z-20">
           <div className="flex items-center gap-2">
-            <AlertTriangleIcon className="size-4 shrink-0 text-destructive" />
+            <AlertTriangleIcon className="size-4 shrink-0" />
             <span>{quotaExceededMsg}</span>
           </div>
           <Link href="/billing">
-            <Button size="sm" className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs shrink-0 font-medium">
+            <Button
+              size="sm"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs shrink-0"
+            >
               Upgrade Subscription
             </Button>
           </Link>
         </div>
       )}
 
-      {/* Main Chat Workspace Layout */}
-      <div className="flex flex-1 w-full min-h-0 overflow-hidden relative">
-        {/* Sessions History Drawer */}
-        {showHistoryDrawer && (
-          <aside className="w-64 border-r border-border/60 bg-muted/10 p-3 flex flex-col gap-2 shrink-0 z-20 transition-all animate-in slide-in-from-left duration-200">
-            <div className="flex items-center justify-between pb-2 border-b border-border/40 text-xs font-semibold text-foreground">
-              <span>Saved Conversations</span>
-              <button
-                type="button"
-                onClick={() => setShowHistoryDrawer(false)}
-                className="text-muted-foreground hover:text-foreground cursor-pointer px-1"
-              >
-                ✕
-              </button>
-            </div>
+      {/* ── Two-column layout: [Chat Area] [Artifact Side Panel] ──────────── */}
+      <div className="flex flex-1 w-full min-h-0 overflow-hidden">
+        {/* ── Main Chat Column ─────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {isLoadingHistory ? (
+            <ChatHistorySkeleton />
+          ) : messages.length === 0 ? (
+            /* ── Hero Welcome Screen (ChatGPT / Claude Style) ──────────── */
+            <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-3xl mx-auto w-full overflow-y-auto no-scrollbar">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <span className="text-3xl sm:text-4xl text-primary select-none">✳</span>
+                <h1 className="text-2xl sm:text-3xl font-serif tracking-tight text-foreground font-normal text-center">
+                  {greetingTitle}
+                </h1>
+              </div>
 
-            <div className="flex-1 overflow-y-auto space-y-1 pr-1">
-              {sessions.map((s) => (
-                <div
-                  key={s.id}
-                  onClick={() => {
-                    setActiveSessionId(s.id);
-                    setShowHistoryDrawer(false);
-                  }}
-                  className={`group flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-colors ${
-                    activeSessionId === s.id
-                      ? "bg-primary/10 text-primary font-semibold border border-primary/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
+              <div className="w-full mb-6">
+                <PromptInput
+                  onSubmit={handleSendMessage}
+                  onStop={handleStopStreaming}
+                  onOpenCrawlModal={() => setShowCrawlSettingsModal(true)}
+                  onExportMarkdown={handleExportMarkdown}
+                  modelSelection={modelSelection}
+                  onModelSelectionChange={setModelSelection}
+                  disabled={isGenerating}
+                  isStreaming={isGenerating}
+                />
+              </div>
+
+              {/* Starter Suggestion Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-2xl">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleActionChipClick(
+                      "Explain how OpenAPI 3.1 schema generation and parameter normalization work"
+                    )
+                  }
+                  className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
                 >
-                  <div className="flex items-center gap-2 truncate min-w-0">
-                    <MessageSquareIcon className="size-3.5 shrink-0 text-muted-foreground group-hover:text-primary" />
-                    <span className="truncate">{s.title}</span>
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0 mt-0.5">
+                    <FileCodeIcon className="size-4" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeleteSession(s.id, e)}
-                    className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity p-1 cursor-pointer"
-                    title="Delete conversation"
-                  >
-                    <Trash2Icon className="size-3" />
-                  </button>
-                </div>
-              ))}
+                  <div className="space-y-0.5">
+                    <span className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">
+                      OpenAPI 3.1 &amp; Schema Inference
+                    </span>
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                      Infer route parameters (/users/&#123;id&#125;) and generate valid Swagger schemas.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleActionChipClick(
+                      "How do Two-Tier Risk Guardrails prevent destructive API actions like delete or payments?"
+                    )
+                  }
+                  className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
+                >
+                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0 mt-0.5">
+                    <ShieldCheckIcon className="size-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="font-semibold text-xs text-foreground group-hover:text-emerald-500 transition-colors">
+                      Two-Tier Action Guardrails
+                    </span>
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                      Prevent dangerous clicks on deletion, billing, and account changes.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleActionChipClick(
+                      "How do I import and execute Postman Collections v2.1 in Postman or Newman CI/CD?"
+                    )
+                  }
+                  className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
+                >
+                  <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 shrink-0 mt-0.5">
+                    <DownloadIcon className="size-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="font-semibold text-xs text-foreground group-hover:text-blue-500 transition-colors">
+                      Postman v2.1 &amp; CI/CD Export
+                    </span>
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                      Export collections directly into Newman automation test suites.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleActionChipClick(
+                      "What is AXTree Accessibility DOM Distillation and how does it reduce token consumption?"
+                    )
+                  }
+                  className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
+                >
+                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20 shrink-0 mt-0.5">
+                    <SparklesIcon className="size-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="font-semibold text-xs text-foreground group-hover:text-purple-500 transition-colors">
+                      AXTree DOM Architecture
+                    </span>
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                      Distill 100k+ HTML nodes into compact 500-token semantic trees.
+                    </p>
+                  </div>
+                </button>
+              </div>
             </div>
-          </aside>
-        )}
+          ) : (
+            /* ── Active Conversation Stream ──────────────────────────── */
+            <div className="flex-1 flex flex-col h-full w-full min-h-0">
+              <Conversation className="flex-1 py-3 overflow-y-auto">
+                <ConversationContent>
+                  {(messages as MessageItem[]).map((m) => (
+                    <Message key={m.id} from={m.role}>
+                      <MessageContent from={m.role}>
+                        <MessageResponse
+                          content={m.content}
+                          onRegenerate={m.role === "assistant" ? handleRegenerate : undefined}
+                        />
+                      </MessageContent>
+                    </Message>
+                  ))}
 
-        {/* State A: Centered Claude Hero View (No Messages in Active Session) */}
-        {messages.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-3xl mx-auto w-full overflow-y-auto no-scrollbar">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <span className="text-3xl sm:text-4xl text-primary select-none">✳</span>
-              <h1 className="text-2xl sm:text-3xl font-serif tracking-tight text-foreground font-normal text-center">
-                {greetingTitle}
-              </h1>
+                  {isGenerating && (
+                    <Message from="assistant">
+                      <MessageContent from="assistant">
+                        <MessageResponse
+                          content={currentStreamContent}
+                          isStreaming={isGenerating}
+                        />
+                      </MessageContent>
+                    </Message>
+                  )}
+                </ConversationContent>
+              </Conversation>
+
+              {/* Bottom Centered Prompt Input */}
+              <div className="w-full px-4 pt-2 pb-3 shrink-0">
+                <div className="max-w-4xl mx-auto w-full">
+                  <PromptInput
+                    onSubmit={handleSendMessage}
+                    onStop={handleStopStreaming}
+                    onOpenCrawlModal={() => setShowCrawlSettingsModal(true)}
+                    onExportMarkdown={handleExportMarkdown}
+                    modelSelection={modelSelection}
+                    onModelSelectionChange={setModelSelection}
+                    disabled={isGenerating}
+                    isStreaming={isGenerating}
+                  />
+                </div>
+              </div>
             </div>
+          )}
+        </div>
 
-            <div className="w-full mb-6">
-              <PromptInput
-                onSubmit={handleSendMessage}
-                onStop={handleStopStreaming}
-                onExportMarkdown={handleExportMarkdown}
-                modelSelection={modelSelection}
-                onModelSelectionChange={setModelSelection}
-                disabled={isStreaming}
-                isStreaming={isStreaming}
-              />
-            </div>
-
-            {/* Structured Suggestion Action Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-2xl">
-              <button
-                type="button"
-                onClick={() => handleActionChipClick("Explain how OpenAPI 3.1 schema generation and parameter normalization work")}
-                className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
-              >
-                <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0 mt-0.5">
-                  <FileCodeIcon className="size-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">
-                    OpenAPI 3.1 & Schema Inference
-                  </span>
-                  <p className="text-[11px] text-muted-foreground leading-snug">
-                    Infer route parameters (/users/&#123;id&#125;) and generate valid Swagger schemas.
-                  </p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleActionChipClick("How do Two-Tier Risk Guardrails prevent destructive API actions like delete or payments?")}
-                className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
-              >
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0 mt-0.5">
-                  <ShieldCheckIcon className="size-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-xs text-foreground group-hover:text-emerald-500 transition-colors">
-                    Two-Tier Action Guardrails
-                  </span>
-                  <p className="text-[11px] text-muted-foreground leading-snug">
-                    Prevent dangerous clicks on deletion, billing, and account changes.
-                  </p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleActionChipClick("How do I import and execute Postman Collections v2.1 in Postman or Newman CI/CD?")}
-                className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
-              >
-                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 shrink-0 mt-0.5">
-                  <DownloadIcon className="size-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-xs text-foreground group-hover:text-blue-500 transition-colors">
-                    Postman v2.1 & CI/CD Export
-                  </span>
-                  <p className="text-[11px] text-muted-foreground leading-snug">
-                    Export collections directly into Newman automation test suites.
-                  </p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleActionChipClick("What is AXTree Accessibility DOM Distillation and how does it reduce token consumption?")}
-                className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
-              >
-                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20 shrink-0 mt-0.5">
-                  <SparklesIcon className="size-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-xs text-foreground group-hover:text-purple-500 transition-colors">
-                    AXTree DOM Architecture
-                  </span>
-                  <p className="text-[11px] text-muted-foreground leading-snug">
-                    Distill 100k+ HTML nodes into compact 500-token semantic trees.
-                  </p>
-                </div>
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* State B: Active Conversation Stream View (Clean without duplicate sub-headers) */
-          <div className="flex-1 flex flex-col h-full max-w-4xl mx-auto w-full px-4 py-3 min-h-0">
-            <Conversation className="flex-1 py-3 overflow-y-auto">
-              <ConversationContent>
-                {messages.map((m) => (
-                  <Message key={m.id} from={m.role}>
-                    <MessageContent from={m.role}>
-                      <MessageResponse
-                        content={m.content}
-                        onRegenerate={m.role === "assistant" ? handleRegenerate : undefined}
-                      />
-                    </MessageContent>
-                  </Message>
-                ))}
-
-                {isStreaming && (
-                  <Message from="assistant">
-                    <MessageContent from="assistant">
-                      <MessageResponse content={currentResponse} isStreaming={isStreaming} />
-                    </MessageContent>
-                  </Message>
-                )}
-              </ConversationContent>
-            </Conversation>
-
-            {/* Prompt Input at bottom */}
-            <div className="pt-2 pb-1 shrink-0">
-              <PromptInput
-                onSubmit={handleSendMessage}
-                onStop={handleStopStreaming}
-                onExportMarkdown={handleExportMarkdown}
-                modelSelection={modelSelection}
-                onModelSelectionChange={setModelSelection}
-                disabled={isStreaming}
-                isStreaming={isStreaming}
-              />
-            </div>
-          </div>
-        )}
+        {/* ── Right Artifact Side Panel ─────────────────────────────────── */}
+        <ArtifactPanel />
       </div>
+
+      {/* ── Modals ─────────────────────────────────────────────────────────── */}
+      <CrawlSettingsModal
+        open={showCrawlSettingsModal}
+        onOpenChange={setShowCrawlSettingsModal}
+        onSave={handleStartCrawl}
+      />
+      <CrawlActivityDrawer
+        open={showCrawlActivityDrawer}
+        onOpenChange={setShowCrawlActivityDrawer}
+        sessionId={activeCrawlSessionId}
+        targetUrl={activeCrawlTargetUrl}
+      />
     </div>
+  );
+}
+
+// ─── Page Wrapper ──────────────────────────────────────────────────────────────
+
+export default function IndustryChatPage() {
+  return (
+    <ArtifactProvider>
+      <IndustryChatInner />
+    </ArtifactProvider>
   );
 }

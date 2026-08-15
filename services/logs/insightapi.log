@@ -905,3 +905,245 @@ KeyError: 'visited_urls'
 [2026-08-15 00:36:22] [WARNING] [app.api.v1.endpoints.crawls:287] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
 [2026-08-15 00:36:22] [INFO] [app.api.v1.endpoints.crawls:300] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
 [2026-08-15 00:36:26] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-15 01:03:45] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 01:03:46] [INFO] [queue.client:43] - Enqueued crawl job [crawl-job-999] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:03:46] [INFO] [queue.worker:49] - Worker test-worker: Starting execution of crawl job [crawl-job-999]
+[2026-08-15 01:03:46] [INFO] [queue.worker:55] - Worker test-worker: Successfully completed crawl job [crawl-job-999]
+[2026-08-15 01:03:59] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 01:04:00] [INFO] [queue.client:43] - Enqueued crawl job [crawl-job-999] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:04:00] [INFO] [queue.worker:49] - Worker test-worker: Starting execution of crawl job [crawl-job-999]
+[2026-08-15 01:04:00] [INFO] [queue.worker:55] - Worker test-worker: Successfully completed crawl job [crawl-job-999]
+[2026-08-15 01:04:08] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 01:04:10] [INFO] [queue.client:43] - Enqueued crawl job [crawl-job-999] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:04:10] [INFO] [queue.worker:49] - Worker test-worker: Starting execution of crawl job [crawl-job-999]
+[2026-08-15 01:04:10] [INFO] [queue.worker:55] - Worker test-worker: Successfully completed crawl job [crawl-job-999]
+[2026-08-15 01:04:12] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 01:04:13] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:04:13] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 01:04:13] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:04:13] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:04:13] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 01:04:14] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:04:14] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 01:04:14] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:04:14] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:04:14] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 01:04:15] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:04:15] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 01:04:15] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:04:15] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:04:15] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 01:04:15] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 01:04:15] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 01:04:15] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 01:04:15] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 01:04:15] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 01:04:15] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 01:04:16] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:04:16] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 01:04:16] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:04:16] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:04:16] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 01:04:16] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:04:16] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:04:16] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:04:16] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 01:04:16] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:04:16] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 01:04:16] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:04:16] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:04:17] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 01:04:17] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 01:04:17] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 01:04:17] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 01:04:17] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 01:04:17] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 01:04:17] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 01:04:17] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 01:04:17] [INFO] [queue.client:43] - Enqueued crawl job [session_auth_crawl] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:04:17] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_auth_crawl] dispatched to Redis Job Queue worker.
+[2026-08-15 01:04:17] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 01:04:17] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 01:04:17] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 01:04:17] [WARNING] [app.api.v1.endpoints.crawls:524] - Could not dispatch crawl to Redis queue (Event loop is closed). Using BackgroundTasks fallback.
+[2026-08-15 01:04:17] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 01:04:17] [INFO] [queue.client:43] - Enqueued crawl job [session_verified_direct] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:04:17] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_verified_direct] dispatched to Redis Job Queue worker.
+[2026-08-15 01:04:17] [INFO] [app.api.v1.endpoints.crawls:427] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 01:04:17] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 01:04:17] [WARNING] [app.api.v1.endpoints.crawls:524] - Could not dispatch crawl to Redis queue (Event loop is closed). Using BackgroundTasks fallback.
+[2026-08-15 01:04:17] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 01:04:17] [INFO] [queue.client:43] - Enqueued crawl job [session_payg_456] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:04:17] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_payg_456] dispatched to Redis Job Queue worker.
+[2026-08-15 01:04:17] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 01:04:17] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 01:04:17] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 01:04:17] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 01:04:17] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 01:04:17] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 01:04:17] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Event loop is closed
+[2026-08-15 01:04:21] [WARNING] [app.api.v1.endpoints.crawls:289] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 01:04:21] [INFO] [app.api.v1.endpoints.crawls:302] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 01:05:03] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 01:05:04] [INFO] [queue.client:43] - Enqueued crawl job [crawl-job-999] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:05:04] [INFO] [queue.worker:49] - Worker test-worker: Starting execution of crawl job [crawl-job-999]
+[2026-08-15 01:05:04] [INFO] [queue.worker:55] - Worker test-worker: Successfully completed crawl job [crawl-job-999]
+[2026-08-15 01:05:06] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 01:05:07] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:07] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 01:05:07] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:07] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:07] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 01:05:08] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:08] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 01:05:08] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:08] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:08] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 01:05:09] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:09] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 01:05:09] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:09] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:09] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 01:05:09] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 01:05:09] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 01:05:09] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 01:05:09] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 01:05:09] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 01:05:09] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 01:05:10] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:10] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 01:05:10] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:10] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:10] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 01:05:10] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:05:10] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:05:10] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:05:10] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 01:05:11] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:11] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 01:05:11] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:11] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:11] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 01:05:11] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 01:05:11] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 01:05:11] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 01:05:11] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 01:05:11] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 01:05:11] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 01:05:11] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 01:05:11] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_auth_crawl] dispatched to Redis Job Queue worker.
+[2026-08-15 01:05:11] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 01:05:11] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 01:05:11] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 01:05:11] [INFO] [queue.client:43] - Enqueued crawl job [session_tos_pass] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:05:11] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_tos_pass] dispatched to Redis Job Queue worker.
+[2026-08-15 01:05:11] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 01:05:11] [WARNING] [app.api.v1.endpoints.crawls:524] - Could not dispatch crawl to Redis queue (Event loop is closed). Using BackgroundTasks fallback.
+[2026-08-15 01:05:11] [INFO] [app.api.v1.endpoints.crawls:427] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 01:05:11] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 01:05:11] [INFO] [queue.client:43] - Enqueued crawl job [session_overage_123] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:05:11] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_overage_123] dispatched to Redis Job Queue worker.
+[2026-08-15 01:05:11] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 01:05:11] [WARNING] [app.api.v1.endpoints.crawls:524] - Could not dispatch crawl to Redis queue (Event loop is closed). Using BackgroundTasks fallback.
+[2026-08-15 01:05:11] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 01:05:11] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 01:05:11] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 01:05:11] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 01:05:11] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 01:05:11] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 01:05:15] [WARNING] [app.api.v1.endpoints.crawls:289] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 01:05:15] [INFO] [app.api.v1.endpoints.crawls:302] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 01:05:35] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 01:05:36] [INFO] [queue.client:43] - Enqueued crawl job [crawl-job-999] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:05:36] [INFO] [queue.worker:49] - Worker test-worker: Starting execution of crawl job [crawl-job-999]
+[2026-08-15 01:05:36] [INFO] [queue.worker:55] - Worker test-worker: Successfully completed crawl job [crawl-job-999]
+[2026-08-15 01:05:39] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-15 01:05:40] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:40] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-15 01:05:40] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:40] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:40] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-15 01:05:41] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:41] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-15 01:05:41] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:41] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:41] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-15 01:05:41] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:41] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-15 01:05:41] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:41] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:42] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 01:05:42] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-15 01:05:42] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-15 01:05:42] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-15 01:05:42] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-15 01:05:42] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-15 01:05:42] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:43] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.example.com/results
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-15 01:05:43] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-15 01:05:43] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-15 01:05:43] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-15 01:05:43] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-15 01:05:43] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-15 01:05:43] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-15 01:05:43] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-15 01:05:43] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-15 01:05:43] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_auth_crawl] dispatched to Redis Job Queue worker.
+[2026-08-15 01:05:43] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-15 01:05:43] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-15 01:05:43] [INFO] [queue.client:43] - Enqueued crawl job [session_tos_pass] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:05:43] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_tos_pass] dispatched to Redis Job Queue worker.
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-15 01:05:43] [WARNING] [app.api.v1.endpoints.crawls:524] - Could not dispatch crawl to Redis queue (Event loop is closed). Using BackgroundTasks fallback.
+[2026-08-15 01:05:43] [INFO] [app.api.v1.endpoints.crawls:427] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-15 01:05:43] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_overage_123] dispatched to Redis Job Queue worker.
+[2026-08-15 01:05:43] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-15 01:05:43] [INFO] [queue.client:43] - Enqueued crawl job [session_payg_456] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 01:05:43] [INFO] [app.api.v1.endpoints.crawls:522] - Crawl [session_payg_456] dispatched to Redis Job Queue worker.
+[2026-08-15 01:05:43] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 01:05:43] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 01:05:43] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-15 01:05:43] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Event loop is closed
+[2026-08-15 01:05:48] [WARNING] [app.api.v1.endpoints.crawls:289] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-15 01:05:48] [INFO] [app.api.v1.endpoints.crawls:302] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-15 02:17:41] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 02:17:43] [INFO] [queue.client:43] - Enqueued crawl job [crawl-job-999] to Redis queue 'insightapi:queue:crawls'
+[2026-08-15 02:17:43] [INFO] [queue.worker:49] - Worker test-worker: Starting execution of crawl job [crawl-job-999]
+[2026-08-15 02:17:43] [INFO] [queue.worker:55] - Worker test-worker: Successfully completed crawl job [crawl-job-999]
+[2026-08-15 02:29:45] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-15 02:29:48] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-15 02:29:48] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-15 02:29:48] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-15 02:29:48] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-15 02:29:52] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 02:29:58] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.8753448422350996 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-15 02:30:18] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 2.637674518218805 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-15 02:30:25] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 4.7628525992768855 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-15 02:30:34] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 4f06f58f-31f1-4223-beb5-3106d20d91b9. Total memory size: 1
+[2026-08-15 02:30:35] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 02:30:41] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 90fed924-941a-48b4-bbcb-85d52c57d724. Total memory size: 2
+[2026-08-15 02:30:42] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 02:30:46] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 2 endpoints for session ae9ed47f-6445-41a1-80d8-fdad12914707. Total memory size: 4
+[2026-08-15 02:30:48] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-15 02:30:48] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.7435898728711596 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 5, model: gemini-3.7-flash\nPlease retry in 11.120652257s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '5'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '11s'}]}}.
+[2026-08-15 02:30:50] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 2.218439674090912 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 5, model: gemini-3.7-flash\nPlease retry in 9.092392957s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '5'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '9s'}]}}.
+[2026-08-15 02:30:53] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 4.458899092228386 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 5, model: gemini-3.7-flash\nPlease retry in 6.572827612s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '5'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '6s'}]}}.
+[2026-08-15 02:31:01] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 8.613304278275862 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-15 02:49:43] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]

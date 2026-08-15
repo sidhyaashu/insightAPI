@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store";
 import { AppSidebar } from "@/components/app-sidebar";
+import { UserAvatarMenu } from "@/components/UserAvatarMenu";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -30,13 +31,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "17.5rem",
-          "--sidebar-width-icon": "3.25rem",
+          "--sidebar-width": "17rem",
+          "--sidebar-width-icon": "4rem",
         } as React.CSSProperties
       }
     >
       <AppSidebar />
-      <SidebarInset className="bg-background flex flex-col h-screen overflow-hidden">
+      <SidebarInset className="bg-background flex flex-col h-screen overflow-hidden relative">
         {/* Main Content Area */}
         <main className="flex flex-1 flex-col min-h-0 w-full overflow-hidden bg-background">
           {children}

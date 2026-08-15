@@ -75,7 +75,7 @@ async def register(payload: RegisterPayload, response: Response):
             secure=settings.APP_ENV == "production",
             samesite="lax",
             max_age=7 * 24 * 3600,
-            path="/api/auth/refresh",
+            path="/",
         )
 
         return {
@@ -117,7 +117,7 @@ async def login(payload: LoginPayload, response: Response):
             secure=settings.APP_ENV == "production",
             samesite="lax",
             max_age=7 * 24 * 3600,
-            path="/api/auth/refresh",
+            path="/",
         )
 
         return {
@@ -249,7 +249,7 @@ async def oauth_callback(
                 secure=settings.APP_ENV == "production",
                 samesite="lax",
                 max_age=7 * 24 * 3600,
-                path="/api/auth/refresh",
+                path="/",
             )
 
             return {
@@ -320,7 +320,7 @@ async def refresh_token(request: Request, response: Response):
                 secure=settings.APP_ENV == "production",
                 samesite="lax",
                 max_age=7 * 24 * 3600,
-                path="/api/auth/refresh",
+                path="/",
             )
 
             return {
@@ -358,6 +358,6 @@ async def logout(request: Request, response: Response):
     )
     response.delete_cookie(
         key="refresh_token",
-        path="/api/auth/refresh",
+        path="/",
     )
     return {"message": "Logged out successfully"}

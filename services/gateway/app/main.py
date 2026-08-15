@@ -22,6 +22,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+import uuid
+from starlette.requests import Request
+from starlette.responses import Response
+
+async def correlation_id_middleware(request: Request, call_next) -> Response:
+    corr_id = (
+        request.headers.get("X-Correlation-ID")
+        or request.headers.get("X-Request-ID")
+        or str(uuid.uuid4())
+    )
+    response = await call_next(request)
+    response.headers["X-Correlation-ID"] = corr_id
+    return response
+
+app.add_middleware(BaseHTTPMiddleware, dispatch=correlation_id_middleware)
+
 # JWT auth middleware — validates tokens and injects x-user-id / x-user-tier
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
 

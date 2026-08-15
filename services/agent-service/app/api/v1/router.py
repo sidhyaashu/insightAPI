@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import crawls, reports, search, drift, review, domains, auth_profiles, audit_logs
+from app.api.v1.endpoints import crawls, reports, search, drift, review, domains, auth_profiles, audit_logs, costs, security_patterns
 
 api_router = APIRouter()
 
@@ -11,6 +11,9 @@ api_router.include_router(review.router, prefix="/crawls", tags=["Review"])
 api_router.include_router(domains.router, prefix="/domains", tags=["Domains"])
 api_router.include_router(auth_profiles.router, prefix="/auth-profiles", tags=["Auth Profiles"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit Logs"])
+api_router.include_router(costs.router, prefix="/costs", tags=["LLM Costs"])
+api_router.include_router(security_patterns.router, prefix="/security-patterns", tags=["Security Testing"])
+
 
 
 
