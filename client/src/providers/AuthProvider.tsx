@@ -25,6 +25,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
             }
           }
           if (user) {
+            const adminEmails = ["ashutoshsidhya69@gmail.com", "sidhyaasutosh@gmail.com"];
+            if (user.email && adminEmails.includes(user.email.toLowerCase())) {
+              user = { ...user, tier: "ADMIN", role: "admin", is_verified: true };
+            }
             dispatch(setCredentials({ user, accessToken: tokenRes.access_token }));
           } else {
             dispatch(clearCredentials());

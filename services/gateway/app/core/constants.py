@@ -26,3 +26,11 @@ PUBLIC_PATHS = {
 
 # Rate limit requests per minute per IP for public endpoints
 PUBLIC_RATE_LIMIT_PER_MINUTE = 60
+
+# Admin emails automatically elevated to ADMIN tier
+ADMIN_EMAILS = {"ashutoshsidhya69@gmail.com", "sidhyaasutosh@gmail.com"}
+
+def is_admin_email(email: str | None) -> bool:
+    if not email:
+        return False
+    return email.strip().lower() in {e.lower() for e in ADMIN_EMAILS}

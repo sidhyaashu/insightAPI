@@ -199,6 +199,8 @@ async def google_login():
         f"&response_type=code"
         f"&scope=openid email profile"
         f"&redirect_uri={settings.OAUTH_REDIRECT_URI}"
+        f"&prompt=select_account"
+        f"&access_type=offline"
     )
     return RedirectResponse(url)
 
@@ -230,7 +232,7 @@ async def oauth_callback(
                 avatar_url=profile.get("avatar_url"),
             )
 
-            tokens = await token_svc.issue_token_pair(user.id, user.tier)
+            tokens = await token_svc.issue_token_pair(user.id, user.tier, user.role)
 
             response.set_cookie(
                 key="access_token",
@@ -301,7 +303,7 @@ async def refresh_token(request: Request, response: Response):
             if not user or not user.is_active:
                 raise HTTPException(status_code=401, detail="User not found or inactive")
 
-            tokens = await token_svc.rotate_tokens(refresh_token, user.tier)
+            tokens = await token_svc.rotate_tokens(refresh_token, user.tier, user.role)
 
             response.set_cookie(
                 key="access_token",

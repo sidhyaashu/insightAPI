@@ -13,9 +13,9 @@ class TokenService:
     def __init__(self, session_repo: SessionRepository):
         self.session_repo = session_repo
 
-    async def issue_token_pair(self, user_id: str, tier: str) -> dict:
+    async def issue_token_pair(self, user_id: str, tier: str, role: str = "user") -> dict:
         """Issue access + refresh token pair and cache session in Redis."""
-        access_token = create_access_token(user_id, tier)
+        access_token = create_access_token(user_id, tier, role)
         refresh_token, refresh_jti = create_refresh_token(user_id)
 
         await self.session_repo.store_refresh_token(user_id, refresh_jti)
@@ -27,7 +27,7 @@ class TokenService:
             "token_type": "bearer",
         }
 
-    async def rotate_tokens(self, refresh_token: str, user_tier: str) -> dict:
+    async def rotate_tokens(self, refresh_token: str, user_tier: str, user_role: str = "user") -> dict:
         """
         Validate the incoming refresh token, revoke it, and issue a fresh pair.
         Implements refresh token rotation — each refresh token is single-use.
@@ -50,7 +50,7 @@ class TokenService:
 
         # Single-use: revoke old token before issuing new pair
         await self.session_repo.revoke_refresh_token(user_id, jti)
-        return await self.issue_token_pair(user_id, user_tier)
+        return await self.issue_token_pair(user_id, user_tier, user_role)
 
     async def revoke_session(self, refresh_token: str) -> None:
         """Revoke a specific refresh token (logout)."""

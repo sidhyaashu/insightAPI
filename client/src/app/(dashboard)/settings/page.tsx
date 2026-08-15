@@ -453,7 +453,7 @@ export default function SettingsPage() {
         </div>
 
         {/* ── Right Settings Content Area ──────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 max-w-4xl">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 max-w-4xl pb-28">
           {/* Active Category Heading */}
           <div className="space-y-1 border-b border-border/30 pb-3">
             <h1 className="text-xl font-bold tracking-tight text-foreground">

@@ -105,9 +105,9 @@ const PanelMermaidCanvas = memo(({ chart }: { chart: string }) => {
   }
 
   return (
-    <div className="flex-1 overflow-auto p-8 flex items-center justify-center bg-transparent">
+    <div className="flex-1 overflow-auto px-6 py-8 flex flex-col items-center justify-start min-h-full bg-transparent">
       <div
-        className="w-full max-w-full flex justify-center [&>svg]:max-w-full [&>svg]:h-auto [&>svg]:drop-shadow-sm"
+        className="w-full max-w-full flex justify-center py-2 [&>svg]:max-w-full [&>svg]:h-auto [&>svg]:drop-shadow-sm"
         dangerouslySetInnerHTML={{ __html: svg || "" }}
       />
     </div>

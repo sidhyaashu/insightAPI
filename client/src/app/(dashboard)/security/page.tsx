@@ -98,67 +98,71 @@ export default function SecurityCenterPage() {
   const cachedFindings = findings.filter((f) => f.ran_via_cache);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full font-sans">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full font-sans pb-28">
       {/* Top Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-border/50">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
-              <IconShieldLock className="size-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">API Security Intelligence Center</h1>
-              <p className="text-xs text-muted-foreground">
-                Adaptive memory-driven vulnerability testing, isolated sandbox execution & human-in-the-loop approvals.
-              </p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+            <IconShieldLock className="size-6" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              API Security Intelligence Center
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Adaptive memory-driven vulnerability testing, isolated sandbox execution & human-in-the-loop approvals.
+            </p>
           </div>
         </div>
 
-        <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="text-xs gap-1.5">
+        <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="text-xs gap-1.5 h-8">
           <IconRefresh className={`size-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
         </Button>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Confirmed Vulnerabilities</div>
-          <div className="text-2xl font-bold font-mono text-foreground flex items-center gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Confirmed Vulnerabilities</div>
+          <div className="text-2xl font-extrabold font-mono text-foreground flex items-center gap-2">
             {findings.length}
             {criticalFindings.length > 0 && (
-              <Badge className="bg-rose-500 text-white text-[10px] px-1.5 py-0 font-bold">
+              <Badge className="bg-rose-500 text-white text-[10px] px-1.5 py-0 font-bold shadow-xs">
                 {criticalFindings.length} Critical
               </Badge>
             )}
           </div>
+          <div className="text-[11px] text-muted-foreground mt-1">Discovered security findings</div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Pending Human Approvals</div>
-          <div className="text-2xl font-bold font-mono text-amber-400 flex items-center gap-2">
+        <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 shadow-xs">
+          <div className="text-[11px] text-amber-400 font-mono uppercase mb-1">Pending Human Approvals</div>
+          <div className="text-2xl font-extrabold font-mono text-amber-400 flex items-center gap-2">
             {approvals.length}
             {approvals.length > 0 && (
-              <Badge variant="outline" className="border-amber-500/40 text-amber-400 bg-amber-500/10 text-[10px] animate-pulse">
+              <Badge variant="outline" className="border-amber-500/40 text-amber-400 bg-amber-500/10 text-[10px] animate-pulse font-bold">
                 Action Required
               </Badge>
             )}
           </div>
+          <div className="text-[11px] text-muted-foreground mt-1">Destructive test proposals</div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Learned Test Patterns</div>
-          <div className="text-2xl font-bold font-mono text-primary">
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Learned Test Patterns</div>
+          <div className="text-2xl font-extrabold font-mono text-primary">
             {patterns.filter((p) => p.status === "learned").length}
           </div>
+          <div className="text-[11px] text-muted-foreground mt-1">Knowledge graph signatures</div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Zero-Token Cache Replays</div>
-          <div className="text-2xl font-bold font-mono text-emerald-500 flex items-center gap-1.5">
-            <IconBolt className="size-5" />
+        <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 shadow-xs">
+          <div className="text-[11px] text-emerald-400 font-mono uppercase mb-1">Zero-Token Cache Replays</div>
+          <div className="text-2xl font-extrabold font-mono text-emerald-400 flex items-center gap-1.5">
+            <IconBolt className="size-5 text-emerald-400" />
             {cachedFindings.length} findings
           </div>
+          <div className="text-[11px] text-muted-foreground mt-1">Instant memory execution</div>
         </div>
       </div>
 

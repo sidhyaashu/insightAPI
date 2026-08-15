@@ -63,6 +63,28 @@ class Settings(BaseSettings):
     TIER_CHAT_LIMIT_ENTERPRISE: int = 10000
     TIER_CHAT_LIMIT_ADMIN: int = 10000
 
+    # ── Admin Email Allowlist ────────────────────────────────────────────────
+    # Comma-separated list of email addresses that are always elevated to the
+    # ADMIN tier, regardless of what the JWT token carries.
+    # Override in .env: ADMIN_EMAILS=alice@example.com,bob@example.com
+    ADMIN_EMAILS: str = "ashutoshsidhya69@gmail.com"
+
+    @property
+    def admin_emails_set(self) -> frozenset[str]:
+        """Normalised (lowercase, stripped) set of admin email addresses."""
+        return frozenset(
+            e.strip().lower()
+            for e in self.ADMIN_EMAILS.split(",")
+            if e.strip()
+        )
+
+    def is_admin_email(self, email: str | None) -> bool:
+        """Return True if the given email is in the admin allowlist."""
+        if not email:
+            return False
+        return email.strip().lower() in self.admin_emails_set
+
+
     def get_tier_chat_limit(self, tier: str) -> int:
         normalized = (tier or "FREE").upper()
         mapping = {

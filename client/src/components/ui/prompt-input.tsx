@@ -144,7 +144,7 @@ export const PromptInput = ({
     <form
       onSubmit={handleSubmit}
       className={cn(
-        "relative flex flex-col w-full rounded-2xl border border-border/80 bg-card p-3 shadow-xl transition-all focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/20",
+        "relative flex flex-col w-full rounded-3xl border border-border/60 bg-muted/25 hover:bg-muted/35 focus-within:bg-card focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 p-3 shadow-lg transition-all backdrop-blur-md",
         className
       )}
       {...props}
@@ -267,7 +267,7 @@ export const PromptInput = ({
               type="button"
               onClick={onStop}
               size="icon"
-              className="h-8 w-8 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground transition-all shrink-0 cursor-pointer shadow-md animate-pulse"
+              className="size-8 rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground transition-all shrink-0 cursor-pointer shadow-md animate-pulse"
               title="Stop streaming response (Esc)"
             >
               <SquareIcon className="size-3.5 fill-current" />
@@ -278,7 +278,7 @@ export const PromptInput = ({
               size="icon"
               disabled={!text.trim() || disabled}
               className={cn(
-                "h-8 w-8 rounded-xl bg-primary text-primary-foreground transition-all shrink-0 cursor-pointer shadow-xs",
+                "size-8 rounded-full bg-primary text-primary-foreground transition-all shrink-0 cursor-pointer shadow-xs",
                 (!text.trim() || disabled) && "opacity-40 cursor-not-allowed bg-muted text-muted-foreground"
               )}
               title="Send message (Enter)"

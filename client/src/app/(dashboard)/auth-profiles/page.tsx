@@ -265,43 +265,54 @@ export default function AuthProfilesPage() {
   const passedCount = profiles.filter((p) => p.last_test_status === "success").length;
 
   return (
-    <div className="flex flex-col min-h-0 flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full font-sans">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full font-sans pb-28">
       {/* Header Bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-border/50">
-        <div>
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <IconShieldLock className="size-6 text-primary" />
-            Authenticated Crawl Profiles
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Store encrypted target credentials for automated login during crawls — eliminates manual session.json capture.
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+            <IconShieldLock className="size-6" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Authenticated Crawl Profiles
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Store encrypted target credentials for automated login during crawls — eliminates manual session.json capture.
+            </p>
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadProfiles} className="gap-1.5 text-xs">
-            <IconRefresh className="size-3.5" />
-            Refresh
+          <Button variant="outline" size="sm" onClick={loadProfiles} className="gap-1.5 text-xs h-8">
+            <IconRefresh className="size-3.5" /> Refresh
           </Button>
-          <Button size="sm" onClick={openCreateModal} className="gap-1.5 text-xs bg-primary text-primary-foreground">
-            <IconPlus className="size-3.5" />
-            New Auth Profile
+          <Button size="sm" onClick={openCreateModal} className="gap-1.5 text-xs bg-primary text-primary-foreground font-semibold h-8 shadow-xs">
+            <IconPlus className="size-3.5" /> New Auth Profile
           </Button>
         </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Total Auth Profiles</div>
-          <div className="text-2xl font-bold font-mono text-foreground">{profiles.length}</div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Total Auth Profiles</div>
+          <div className="text-2xl font-extrabold font-mono text-foreground">{profiles.length}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Configured credentials</div>
         </div>
-        <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 shadow-xs">
-          <div className="text-xs text-blue-400 font-mono mb-1">Form Logins</div>
-          <div className="text-2xl font-bold font-mono text-blue-400">{formCount}</div>
+        <div className="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 shadow-xs">
+          <div className="text-[11px] text-blue-400 font-mono uppercase mb-1">Form Logins</div>
+          <div className="text-2xl font-extrabold font-mono text-blue-400">{formCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">User &amp; password forms</div>
         </div>
-        <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 shadow-xs">
-          <div className="text-xs text-emerald-500 font-mono mb-1">Live Verified Tests</div>
-          <div className="text-2xl font-bold font-mono text-emerald-500">{passedCount}</div>
+        <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/5 shadow-xs">
+          <div className="text-[11px] text-purple-400 font-mono uppercase mb-1">OAuth &amp; SAML SSO</div>
+          <div className="text-2xl font-extrabold font-mono text-purple-400">{oauthCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Federated providers</div>
+        </div>
+        <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 shadow-xs">
+          <div className="text-[11px] text-emerald-500 font-mono uppercase mb-1">Live Verified Tests</div>
+          <div className="text-2xl font-extrabold font-mono text-emerald-400">{passedCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Active session captures</div>
         </div>
       </div>
 

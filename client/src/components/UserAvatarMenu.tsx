@@ -29,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function UserAvatarMenu() {
+export function UserAvatarMenu({ className }: { className?: string }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
@@ -75,14 +75,13 @@ export function UserAvatarMenu() {
 
   return (
     <div
-      className="fixed top-3.5 right-5 z-50"
+      className={className || "relative"}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger
-          className="relative flex size-9 items-center justify-center rounded-full bg-card hover:bg-muted/80 border border-border/80 text-foreground font-bold text-xs shadow-md transition-transform hover:scale-105 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 group"
-          title={user?.name || user?.email || "Account"}
+          className="relative flex size-8 sm:size-9 items-center justify-center rounded-full bg-card hover:bg-muted/80 border border-border/80 text-foreground font-bold text-xs shadow-xs transition-transform hover:scale-105 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 group"
         >
           {user?.avatar_url ? (
             <img
@@ -119,26 +118,37 @@ export function UserAvatarMenu() {
                 </div>
                 <div className="flex flex-col min-w-0 space-y-0.5">
                   <span className="text-xs font-bold leading-tight text-foreground truncate">
-                    {user?.name || "Asutosh Sidhya"}
+                    {user?.name || user?.email?.split("@")[0] || "Account"}
                   </span>
                   <span className="text-[11px] leading-tight text-muted-foreground truncate font-mono">
-                    {user?.email || "sidhyaasutosh@gmail.com"}
+                    {user?.email || ""}
                   </span>
                   <div className="pt-1 flex items-center gap-1.5">
-                    <Badge
-                      variant="outline"
-                      className="text-[9px] font-mono px-1.5 py-0 border-primary/40 text-primary bg-primary/10 font-semibold"
-                    >
-                      {user?.tier || "FREE"}
-                    </Badge>
-                    <Link
-                      href="/billing"
-                      onClick={() => setOpen(false)}
-                      className="text-[10px] text-primary hover:underline font-semibold ml-1 flex items-center gap-0.5"
-                    >
-                      <IconSparkles className="size-3" />
-                      <span>Upgrade</span>
-                    </Link>
+                    {user?.tier === "ADMIN" ? (
+                      <Badge
+                        variant="outline"
+                        className="text-[9px] font-mono px-1.5 py-0 border-amber-500/40 text-amber-400 bg-amber-500/10 font-bold tracking-wider"
+                      >
+                        ADMIN
+                      </Badge>
+                    ) : (
+                      <>
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] font-mono px-1.5 py-0 border-primary/40 text-primary bg-primary/10 font-semibold"
+                        >
+                          {user?.tier || "FREE"}
+                        </Badge>
+                        <Link
+                          href="/billing"
+                          onClick={() => setOpen(false)}
+                          className="text-[10px] text-primary hover:underline font-semibold ml-1 flex items-center gap-0.5 cursor-pointer"
+                        >
+                          <IconSparkles className="size-3" />
+                          <span>Upgrade</span>
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

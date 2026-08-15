@@ -78,6 +78,10 @@
 * **Granular LLM Cost Persistence**:
   * Every LLM call and cache hit across all nodes (Planner, Analyzer, Security Reasoner) must be recorded in the `llm_usage` ledger.
 
+### I. Dashboard Layout, Navigation & Fluid Scrolling
+* **Global Frosted Header**: `(dashboard)/layout.tsx` must maintain a persistent top header with `<SidebarTrigger />`, active section breadcrumb (`Category / Title`), active user tier indicator, `<ThemeToggle />`, and `<UserAvatarMenu />`.
+* **Guaranteed Vertical Scrolling**: `<main className="flex flex-1 flex-col min-h-0 w-full overflow-y-auto bg-background">` guarantees that all dashboard views have fluid vertical scrolling. All secondary content views (`/audit-logs`, `/auth-profiles`, `/billing`, `/domains`, `/intelligence`, `/reports`, `/security`, `/settings`, `/tos`) must include bottom padding (`pb-28`) so bottom controls and table items are never clipped.
+
 ---
 
 ## 3. Maintenance of Guidelines & Feature Tracking

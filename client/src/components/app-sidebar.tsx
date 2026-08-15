@@ -14,8 +14,6 @@ import {
   IconHeadset,
   IconSettings,
   IconLogout,
-  IconChevronLeft,
-  IconChevronRight,
   IconSearch,
   IconTrash,
   IconMessage,
@@ -34,7 +32,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Tooltip,
@@ -49,7 +46,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const searchParams = useSearchParams();
   const currentUrlSession = searchParams.get("session");
   const dispatch = useAppDispatch();
-  const { toggleSidebar } = useSidebar();
 
   // Sessions from Redux (DB source of truth)
   const { sessions, activeSessionId } = useAppSelector((state) => state.chat);
@@ -115,10 +111,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       className="border-r border-border/40 bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out select-none"
       {...props}
     >
-      {/* ── Header: Logo + Collapse (Expanded) / Expand Toggle (Collapsed) ── */}
+      {/* ── Header: Logo (Expanded: Logo + Title / Collapsed: Logo Avatar only) ── */}
       <SidebarHeader className="p-3 border-b border-border/30 group-data-[collapsible=icon]:p-2">
-        {/* Expanded Header: Logo + Title on left, Collapse button on right */}
-        <div className="flex items-center justify-between gap-2 w-full group-data-[collapsible=icon]:hidden">
+        {/* Expanded Header: Logo + Title */}
+        <div className="flex items-center gap-2.5 w-full group-data-[collapsible=icon]:hidden">
           <Link
             href="/chat"
             onClick={handleNewChat}
@@ -138,32 +134,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </span>
             </div>
           </Link>
-
-          {/* Collapse Button */}
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            className="size-7 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer shrink-0"
-            title="Collapse sidebar"
-          >
-            <IconChevronLeft className="size-4" />
-          </button>
         </div>
 
-        {/* Collapsed Header: Avatar is HIDDEN, ONLY the Expand button is shown here */}
+        {/* Collapsed Header: Only Logo Avatar, no text */}
         <div className="hidden group-data-[collapsible=icon]:flex justify-center w-full">
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="size-8 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+              <Link
+                href="/chat"
+                onClick={handleNewChat}
+                className="flex aspect-square size-8 items-center justify-center rounded-xl bg-white text-black dark:bg-white dark:text-black shadow-md shrink-0 font-extrabold text-sm tracking-tight border border-border/20 hover:opacity-90 transition-opacity"
               >
-                <IconChevronRight className="size-4.5" />
-              </button>
+                <span className="bg-gradient-to-tr from-blue-600 to-indigo-600 bg-clip-text text-transparent font-sans font-black text-sm">
+                  IA
+                </span>
+              </Link>
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium text-xs">
-              Expand sidebar
+              {env.APP_NAME || "InsightAPI AI"}
             </TooltipContent>
           </Tooltip>
         </div>

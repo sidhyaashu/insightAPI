@@ -50,48 +50,50 @@ export default function PlatformIntelligencePage() {
   const inReviewCount = patterns.filter((p) => p.status === "needs_review").length;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full font-sans">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full font-sans pb-28">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-border/50">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
             <IconBrain className="size-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Platform Intelligence & Memory Engine</h1>
-            <p className="text-xs text-muted-foreground">
-              Cross-target pattern memory, zero-token cache replay analytics & cumulative LLM cost reduction.
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Platform Intelligence & Memory Engine
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Cross-target pattern memory, zero-token cache replay analytics & cumulative LLM cost reduction ledger.
             </p>
           </div>
         </div>
 
-        <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="text-xs gap-1.5">
+        <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="text-xs gap-1.5 h-8">
           <IconRefresh className={`size-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
         </Button>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Memory Replay Rate</div>
-          <div className="text-2xl font-bold font-mono text-emerald-400 flex items-center gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 shadow-xs">
+          <div className="text-[11px] text-emerald-400 font-mono uppercase mb-1">Memory Replay Rate</div>
+          <div className="text-2xl font-extrabold font-mono text-emerald-400 flex items-center gap-2">
             <IconBolt className="size-5 text-emerald-400" />
             {summary ? `${summary.cache_hit_rate_pct.toFixed(1)}%` : "0.0%"}
           </div>
           <div className="text-[11px] text-muted-foreground mt-1">Zero-token executions</div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Tokens Processed</div>
-          <div className="text-2xl font-bold font-mono text-foreground">
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Tokens Processed</div>
+          <div className="text-2xl font-extrabold font-mono text-foreground">
             {summary ? summary.total_tokens.toLocaleString() : 0}
           </div>
           <div className="text-[11px] text-muted-foreground mt-1">Across all agent nodes</div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Total LLM Invocations</div>
-          <div className="text-2xl font-bold font-mono text-primary">
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Total LLM Invocations</div>
+          <div className="text-2xl font-extrabold font-mono text-primary">
             {summary ? summary.total_calls.toLocaleString() : 0}
           </div>
           <div className="text-[11px] text-muted-foreground mt-1">
@@ -99,9 +101,9 @@ export default function PlatformIntelligencePage() {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Total AI Spend</div>
-          <div className="text-2xl font-bold font-mono text-foreground flex items-center gap-1.5">
+        <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 shadow-xs">
+          <div className="text-[11px] text-amber-400 font-mono uppercase mb-1">Total AI Spend</div>
+          <div className="text-2xl font-extrabold font-mono text-amber-400 flex items-center gap-1.5">
             <IconCoins className="size-5 text-amber-500" />
             ${summary ? summary.total_spend_usd.toFixed(4) : "0.0000"}
           </div>
@@ -110,26 +112,26 @@ export default function PlatformIntelligencePage() {
       </div>
 
       {/* Model Tier & Node Spend Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="border border-border/60 rounded-2xl bg-card shadow-xs overflow-hidden">
           <div className="p-4 border-b border-border/40 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
               <IconChartBar className="size-4 text-primary" /> Per-Node LLM Spend & Token Ledger
             </h2>
           </div>
 
           <div className="p-4 space-y-3 font-mono text-xs">
             {breakdown.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No usage recorded yet.</div>
+              <div className="p-12 text-center text-muted-foreground">No usage recorded yet.</div>
             ) : (
               breakdown.map((item, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-muted/30 border border-border/40 flex items-center justify-between gap-3">
+                <div key={idx} className="p-3.5 rounded-xl bg-muted/20 border border-border/40 flex items-center justify-between gap-3">
                   <div className="space-y-0.5">
                     <div className="font-bold text-foreground">{item.node_name}</div>
                     <div className="text-[10px] text-muted-foreground">Model: {item.model}</div>
                   </div>
                   <div className="text-right space-y-0.5">
-                    <div className="font-bold text-foreground">${item.total_cost_usd.toFixed(4)}</div>
+                    <div className="font-extrabold text-foreground">${item.total_cost_usd.toFixed(4)}</div>
                     <div className="text-[10px] text-muted-foreground">{item.total_tokens.toLocaleString()} tokens</div>
                   </div>
                 </div>
@@ -141,11 +143,11 @@ export default function PlatformIntelligencePage() {
         {/* Pattern Generalization Status */}
         <div className="border border-border/60 rounded-2xl bg-card shadow-xs overflow-hidden">
           <div className="p-4 border-b border-border/40 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
               <IconRoute className="size-4 text-primary" /> Knowledge Promotion Funnel
             </h2>
             <div className="flex items-center gap-2">
-              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]">
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] font-bold">
                 {learnedCount} Learned
               </Badge>
               <Badge variant="outline" className="text-[10px]">
@@ -165,7 +167,7 @@ export default function PlatformIntelligencePage() {
               </p>
             </div>
 
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2.5 pt-2">
               <div className="flex justify-between text-muted-foreground text-[11px]">
                 <span>Active Knowledge Base Size</span>
                 <span className="font-bold text-foreground">{patterns.length} generalized patterns</span>

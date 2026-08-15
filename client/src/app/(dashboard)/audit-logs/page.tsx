@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   IconFileText,
   IconRefresh,
@@ -84,41 +84,105 @@ export default function AuditLogsPage() {
     toast.success("Exported audit log CSV!");
   };
 
+  const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null);
+
+  const stats = useMemo(() => {
+    const crawlEvents = logs.filter((l) => l.action.startsWith("crawl")).length;
+    const authEvents = logs.filter((l) => l.action.startsWith("auth") || l.action.startsWith("user")).length;
+    const exportEvents = logs.filter((l) => l.action.startsWith("export") || l.action.startsWith("report")).length;
+    return { crawlEvents, authEvents, exportEvents };
+  }, [logs]);
+
+  const getActionBadge = (action: string) => {
+    if (action.startsWith("crawl")) {
+      return (
+        <Badge variant="outline" className="text-[10px] font-mono font-bold border-emerald-500/40 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 uppercase">
+          {action}
+        </Badge>
+      );
+    }
+    if (action.startsWith("auth")) {
+      return (
+        <Badge variant="outline" className="text-[10px] font-mono font-bold border-purple-500/40 text-purple-400 bg-purple-500/10 px-2 py-0.5 uppercase">
+          {action}
+        </Badge>
+      );
+    }
+    if (action.startsWith("export") || action.startsWith("report")) {
+      return (
+        <Badge variant="outline" className="text-[10px] font-mono font-bold border-blue-500/40 text-blue-400 bg-blue-500/10 px-2 py-0.5 uppercase">
+          {action}
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-[10px] font-mono font-bold border-amber-500/40 text-amber-400 bg-amber-500/10 px-2 py-0.5 uppercase">
+        {action}
+      </Badge>
+    );
+  };
+
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full font-sans">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full font-sans pb-28">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-border/50">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
             <IconShieldLock className="size-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Enterprise Security Audit Trail</h1>
-            <p className="text-xs text-muted-foreground">
-              Immutable SOC2 & ISO 27001 audit ledger tracking administrative, authentication, and crawl actions.
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Enterprise Security Audit Trail
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Immutable SOC2 Type II & ISO 27001 audit ledger tracking administrative actions, automated scans, and token exports.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportCSV} className="text-xs gap-1.5">
+          <Button variant="outline" size="sm" onClick={handleExportCSV} className="text-xs gap-1.5 h-8">
             <IconDownload className="size-3.5" /> Export CSV
           </Button>
-          <Button variant="outline" size="sm" onClick={loadLogs} disabled={loading} className="text-xs gap-1.5">
+          <Button variant="outline" size="sm" onClick={loadLogs} disabled={loading} className="text-xs gap-1.5 h-8">
             <IconRefresh className={`size-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
           </Button>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Total Audit Records</div>
+          <div className="text-2xl font-extrabold font-mono text-foreground">{total}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Logged event operations</div>
+        </div>
+        <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 shadow-xs">
+          <div className="text-[11px] text-emerald-500 font-mono uppercase mb-1">Crawl Executions</div>
+          <div className="text-2xl font-extrabold font-mono text-emerald-400">{stats.crawlEvents}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Agent exploration events</div>
+        </div>
+        <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/5 shadow-xs">
+          <div className="text-[11px] text-purple-400 font-mono uppercase mb-1">Auth & Profile Events</div>
+          <div className="text-2xl font-extrabold font-mono text-purple-400">{stats.authEvents}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Credential verifications</div>
+        </div>
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Compliance Policy</div>
+          <div className="text-2xl font-extrabold font-mono text-primary">365 Days</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Retention lock active</div>
+        </div>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="flex items-center gap-3 flex-wrap bg-card p-3 rounded-2xl border border-border/60 shadow-xs">
+        <div className="relative flex-1 min-w-[220px]">
           <IconSearch className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search by action, target ID, IP, or user..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 text-xs"
+            className="pl-9 text-xs h-8 bg-muted/20 border-border/60"
           />
         </div>
 
@@ -139,9 +203,9 @@ export default function AuditLogsPage() {
 
       {/* Audit Logs Table */}
       <div className="border border-border/60 rounded-2xl bg-card shadow-xs overflow-hidden">
-        <div className="p-3 border-b border-border/40 bg-muted/20 flex items-center justify-between text-xs font-mono text-muted-foreground">
+        <div className="p-3.5 border-b border-border/40 bg-muted/20 flex items-center justify-between text-xs font-mono text-muted-foreground">
           <span>Showing {filteredLogs.length} of {total} events</span>
-          <span>Retention: 365 Days (Enterprise)</span>
+          <span>SOC2 Type II Immutable Log</span>
         </div>
 
         {loading ? (
@@ -155,34 +219,76 @@ export default function AuditLogsPage() {
         ) : (
           <div className="divide-y divide-border/40 font-mono text-xs">
             {filteredLogs.map((log) => (
-              <div key={log.id} className="p-4 hover:bg-muted/10 transition-colors flex items-center justify-between gap-4 flex-wrap">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px] uppercase font-bold border-primary/30 text-primary bg-primary/5 px-1.5 py-0">
-                      {log.action}
-                    </Badge>
-                    <span className="text-foreground font-bold">{log.target_id || "system"}</span>
+              <div
+                key={log.id}
+                className="p-4 hover:bg-muted/20 transition-colors flex items-center justify-between gap-4 flex-wrap"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    {getActionBadge(log.action)}
+                    <span className="text-foreground font-bold truncate max-w-sm">{log.target_id || "system"}</span>
                     {log.ip_address && (
-                      <span className="text-muted-foreground text-[11px]">({log.ip_address})</span>
+                      <span className="text-muted-foreground text-[11px] bg-muted/40 px-1.5 py-0.5 rounded border border-border/40">
+                        {log.ip_address}
+                      </span>
                     )}
                   </div>
                   <div className="text-[11px] text-muted-foreground flex items-center gap-3">
-                    <span>Actor: {log.user_id.slice(0, 8)}…</span>
+                    <span>Actor: <strong className="text-foreground">{log.user_id.slice(0, 8)}…</strong></span>
                     <span>&bull;</span>
                     <span>{new Date(log.created_at).toLocaleString()}</span>
                   </div>
                 </div>
 
-                {log.metadata && Object.keys(log.metadata).length > 0 && (
-                  <div className="bg-muted/40 p-2 rounded-lg border border-border/40 text-[10px] text-muted-foreground max-w-sm truncate">
-                    {JSON.stringify(log.metadata)}
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  {log.metadata && Object.keys(log.metadata).length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedLog(log)}
+                      className="text-[11px] h-7 gap-1 font-mono text-muted-foreground hover:text-foreground"
+                    >
+                      <IconFileText className="size-3" /> Metadata JSON
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Metadata Detail Dialog */}
+      {selectedLog && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="max-w-xl w-full p-6 rounded-2xl bg-card border border-border shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
+                  <IconShieldLock className="size-4 text-primary" />
+                  Audit Event Metadata
+                </h3>
+                <p className="text-xs font-mono text-muted-foreground">
+                  Action: {selectedLog.action} &bull; ID: {selectedLog.id}
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedLog(null)} className="h-7 w-7 p-0">
+                ✕
+              </Button>
+            </div>
+
+            <pre className="p-4 rounded-xl bg-[#111318] text-emerald-400 font-mono text-xs overflow-x-auto max-h-80 leading-relaxed border border-border/60">
+              {JSON.stringify(selectedLog.metadata, null, 2)}
+            </pre>
+
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => setSelectedLog(null)} className="text-xs">
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

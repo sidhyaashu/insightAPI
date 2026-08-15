@@ -496,6 +496,7 @@ class SecurityReasonerNode:
                         test_strategy=test_case,
                         target_domain=target_domain,
                         allow_destructive=False,
+                        crawl_id=crawl_id,   # enables sandbox_action WS events in UI
                     )
                     if test_response.get("blocked"):
                         continue

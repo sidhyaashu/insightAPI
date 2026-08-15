@@ -107,43 +107,52 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-8 font-sans p-4 sm:p-6 pb-20">
+    <div className="max-w-6xl mx-auto flex flex-col gap-8 font-sans p-4 sm:p-8 pb-28">
       <div>
-        <h1 className="text-xl font-bold tracking-tight mb-1">Billing & Subscription Tier</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground mb-1">
+          Subscription Tiers & Metered Billing
+        </h1>
         <p className="text-xs text-muted-foreground">
-          Manage your SaaS tier, pay-per-crawl metered billing, and Stripe subscription preferences.
+          Manage your SaaS plan quota, pay-per-crawl overage settings, and automated Stripe billing cycle.
         </p>
       </div>
 
       {/* Current Subscription Box */}
-      <div className="border border-border/60 p-6 rounded-2xl bg-card shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-border/40 pb-3">
-          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <CreditCardIcon className="size-4 text-muted-foreground" /> Current Subscription Overview
-          </h2>
-          <Button variant="outline" size="sm" onClick={handleManageBilling} className="text-xs">
-            Manage Billing <ExternalLinkIcon className="size-3 ml-1" />
+      <div className="border border-border/60 p-6 rounded-2xl bg-card shadow-xs space-y-5">
+        <div className="flex items-center justify-between border-b border-border/40 pb-3.5 flex-wrap gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
+              <CreditCardIcon className="size-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-foreground">Current Active Subscription</h2>
+              <p className="text-[11px] text-muted-foreground">Managed via Stripe Customer Portal</p>
+            </div>
+          </div>
+
+          <Button variant="outline" size="sm" onClick={handleManageBilling} className="text-xs gap-1.5 h-8">
+            Manage Stripe Billing <ExternalLinkIcon className="size-3.5" />
           </Button>
         </div>
 
         {isSubLoading ? (
-          <div className="py-2 text-xs text-muted-foreground font-mono animate-pulse">
+          <div className="py-4 text-xs text-muted-foreground font-mono animate-pulse">
             Loading subscription status...
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-            <div>
-              <span className="text-muted-foreground block mb-1">Active Tier</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/40">
+              <span className="text-muted-foreground block mb-1 text-[11px] font-mono">Active Tier</span>
               <Badge
                 variant="outline"
-                className="font-mono text-xs px-2.5 py-0.5 border-primary/40 text-primary bg-primary/10"
+                className="font-mono text-xs px-2.5 py-0.5 border-primary/40 text-primary bg-primary/10 font-bold"
               >
                 {tier}
               </Badge>
             </div>
-            <div>
-              <span className="text-muted-foreground block mb-1">Daily Crawl Quota</span>
-              <span className="font-semibold text-foreground font-mono">
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/40">
+              <span className="text-muted-foreground block mb-1 text-[11px] font-mono">Daily Crawl Quota</span>
+              <span className="font-extrabold text-foreground font-mono text-sm">
                 {tier === "ADMIN" || tier === "ENTERPRISE"
                   ? "Unlimited"
                   : tier === "PRO"
@@ -153,23 +162,25 @@ export default function BillingPage() {
                   : "1 crawl / day"}
               </span>
             </div>
-            <div>
-              <span className="text-muted-foreground block mb-1">Current Period End</span>
-              <span className="font-mono text-foreground">
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/40">
+              <span className="text-muted-foreground block mb-1 text-[11px] font-mono">Billing Cycle End</span>
+              <span className="font-mono text-foreground font-semibold">
                 {subData?.current_period_end
                   ? new Date(subData.current_period_end).toLocaleDateString()
-                  : "N/A"}
+                  : "N/A (Free Tier)"}
               </span>
             </div>
-            <div>
-              <span className="text-muted-foreground block mb-1">Renewal Policy</span>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/40">
+              <span className="text-muted-foreground block mb-1 text-[11px] font-mono">Renewal Policy</span>
               <span className="font-mono text-foreground">
                 {subData?.cancel_at_period_end ? (
                   <span className="text-amber-500 font-semibold flex items-center gap-1">
                     <AlertTriangleIcon className="size-3" /> Cancels at period end
                   </span>
                 ) : (
-                  "Auto-renews monthly"
+                  <span className="text-emerald-500 font-semibold flex items-center gap-1">
+                    <CheckIcon className="size-3" /> Auto-renews monthly
+                  </span>
                 )}
               </span>
             </div>
@@ -179,18 +190,20 @@ export default function BillingPage() {
 
       {/* Pay-Per-Crawl Overage Protection Card */}
       <div className="border border-border/60 p-6 rounded-2xl bg-card shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-border/40 pb-3 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <CoinsIcon className="size-4 text-primary" />
+        <div className="flex items-center justify-between border-b border-border/40 pb-3 flex-wrap gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <CoinsIcon className="size-4" />
+            </div>
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Pay-Per-Crawl Overage Protection</h2>
+              <h2 className="text-sm font-bold text-foreground">Pay-Per-Crawl Overage Protection</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Automatically bill $1.50 per additional crawl when your daily plan limit is reached.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-muted-foreground">
+            <span className="text-xs font-mono text-muted-foreground font-medium">
               {allowOverage ? "Overage Allowed" : "Hard Limit (Off)"}
             </span>
             <Switch
@@ -201,10 +214,10 @@ export default function BillingPage() {
           </div>
         </div>
 
-        <div className="text-xs text-muted-foreground space-y-1 bg-muted/20 p-3.5 rounded-xl border border-border/40">
+        <div className="text-xs text-muted-foreground space-y-1.5 bg-muted/20 p-4 rounded-xl border border-border/40 leading-relaxed">
           <p className="font-semibold text-foreground flex items-center gap-1.5">
-            <ShieldCheckIcon className="size-3.5 text-emerald-400" />
-            Zero surprise bills policy
+            <ShieldCheckIcon className="size-4 text-emerald-400" />
+            Zero-surprise-bills safeguard active
           </p>
           <p>
             When enabled, API crawl requests that exceed your daily tier quota bypass the 429 rate-limit
@@ -215,130 +228,134 @@ export default function BillingPage() {
       </div>
 
       {/* Upgrade Options Grid */}
-      <div>
-        <h2 className="text-base font-bold tracking-tight mb-3">Available Plans & Pricing</h2>
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight text-foreground">Available Plans & Subscription Tiers</h2>
+          <p className="text-xs text-muted-foreground">Select the right compute allocation and agent capacity for your team.</p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Pay-as-you-go Plan */}
-          <div className="border border-border/60 p-5 rounded-2xl bg-card flex flex-col justify-between shadow-xs">
+          <div className="border border-border/60 p-6 rounded-2xl bg-card flex flex-col justify-between shadow-xs hover:border-border/80 transition-all">
             <div>
-              <h3 className="font-bold text-base mb-1 font-mono">Pay-as-you-go</h3>
-              <p className="text-2xl font-extrabold mb-4 font-mono">
+              <h3 className="font-bold text-base mb-1 font-mono text-foreground">Pay-as-you-go</h3>
+              <p className="text-2xl font-extrabold mb-4 font-mono text-foreground">
                 $1.50 <span className="text-xs font-normal text-muted-foreground">/ crawl</span>
               </p>
               <ul className="text-xs flex flex-col gap-2.5 text-muted-foreground mb-6">
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> Metered billing per crawl
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> Metered billing per crawl
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> No monthly commitment
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> No monthly commitment
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> OpenAPI 3.1 & Postman
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> OpenAPI 3.1 & Postman
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> Full Safety Guardrails
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> Full Safety Guardrails
                 </li>
               </ul>
             </div>
             <Button
               variant={allowOverage ? "secondary" : "outline"}
               onClick={() => handleToggleOverage(!allowOverage)}
-              className="w-full text-xs font-medium"
+              className="w-full text-xs font-semibold h-9"
             >
               {allowOverage ? "Enabled (Active)" : "Enable Pay-as-you-go"}
             </Button>
           </div>
 
           {/* Starter Plan */}
-          <div className="border border-border/60 p-5 rounded-2xl bg-card flex flex-col justify-between shadow-xs">
+          <div className="border border-border/60 p-6 rounded-2xl bg-card flex flex-col justify-between shadow-xs hover:border-border/80 transition-all">
             <div>
-              <h3 className="font-bold text-base mb-1 font-mono">Starter</h3>
-              <p className="text-2xl font-extrabold mb-4 font-mono">
+              <h3 className="font-bold text-base mb-1 font-mono text-foreground">Starter</h3>
+              <p className="text-2xl font-extrabold mb-4 font-mono text-foreground">
                 $29 <span className="text-xs font-normal text-muted-foreground">/ month</span>
               </p>
               <ul className="text-xs flex flex-col gap-2.5 text-muted-foreground mb-6">
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> 20 crawls per day
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> 20 crawls per day
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> Max 50 pages / domain
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> Max 50 pages / domain
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> 50 AI queries per day
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> 50 AI queries per day
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> Standard Email Support
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> Standard Email Support
                 </li>
               </ul>
             </div>
             <Button
               onClick={() => handleUpgrade("STARTER")}
               disabled={tier === "STARTER"}
-              className="w-full text-xs font-medium"
+              className="w-full text-xs font-semibold h-9"
             >
               {tier === "STARTER" ? "Current Plan" : "Upgrade to Starter"}
             </Button>
           </div>
 
           {/* Pro Plan */}
-          <div className="border border-primary/60 p-5 rounded-2xl bg-card flex flex-col justify-between relative shadow-sm">
-            <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 font-mono font-bold">
+          <div className="border-2 border-primary p-6 rounded-2xl bg-card flex flex-col justify-between relative shadow-md">
+            <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground text-[10px] px-2.5 py-0.5 font-mono font-bold shadow-xs">
               MOST POPULAR
             </Badge>
             <div>
               <div className="flex items-center gap-1.5 mb-1">
                 <SparklesIcon className="size-4 text-primary" />
-                <h3 className="font-bold text-base font-mono">Pro</h3>
+                <h3 className="font-bold text-base font-mono text-foreground">Pro</h3>
               </div>
-              <p className="text-2xl font-extrabold mb-4 font-mono">
+              <p className="text-2xl font-extrabold mb-4 font-mono text-foreground">
                 $99 <span className="text-xs font-normal text-muted-foreground">/ month</span>
               </p>
               <ul className="text-xs flex flex-col gap-2.5 text-muted-foreground mb-6">
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> 100 crawls per day
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> 100 crawls per day
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> 3 Parallel Sub-Agents
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> 3 Parallel Sub-Agents
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> Unlimited AI Queries
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> Unlimited AI Queries
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> API Drift Detection
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> API Drift Detection
                 </li>
               </ul>
             </div>
             <Button
               onClick={() => handleUpgrade("PRO")}
               disabled={tier === "PRO"}
-              className="w-full text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="w-full text-xs font-semibold h-9 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
             >
               {tier === "PRO" ? "Current Plan" : "Upgrade to Pro"}
             </Button>
           </div>
 
           {/* Enterprise Plan */}
-          <div className="border border-border/60 p-5 rounded-2xl bg-card flex flex-col justify-between shadow-xs">
+          <div className="border border-border/60 p-6 rounded-2xl bg-card flex flex-col justify-between shadow-xs hover:border-border/80 transition-all">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
                 <ZapIcon className="size-4 text-amber-500" />
-                <h3 className="font-bold text-base font-mono">Enterprise</h3>
+                <h3 className="font-bold text-base font-mono text-foreground">Enterprise</h3>
               </div>
-              <p className="text-2xl font-extrabold mb-4 font-mono">
+              <p className="text-2xl font-extrabold mb-4 font-mono text-foreground">
                 $499 <span className="text-xs font-normal text-muted-foreground">/ month</span>
               </p>
               <ul className="text-xs flex flex-col gap-2.5 text-muted-foreground mb-6">
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> Unlimited crawls & pages
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> Unlimited crawls & pages
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> 10 Parallel Exploration Agents
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> 10 Parallel Exploration Agents
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> Self-Hosted Docker deployment
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> Self-Hosted Docker deployment
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckIcon className="size-3.5 text-emerald-500" /> 24/7 SLA Support
+                <li className="flex items-center gap-2">
+                  <CheckIcon className="size-3.5 text-emerald-500 shrink-0" /> 24/7 SLA Support
                 </li>
               </ul>
             </div>
@@ -346,7 +363,7 @@ export default function BillingPage() {
               onClick={() => handleUpgrade("ENTERPRISE")}
               disabled={tier === "ENTERPRISE"}
               variant="outline"
-              className="w-full text-xs font-medium"
+              className="w-full text-xs font-semibold h-9"
             >
               {tier === "ENTERPRISE" ? "Current Plan" : "Contact Enterprise"}
             </Button>

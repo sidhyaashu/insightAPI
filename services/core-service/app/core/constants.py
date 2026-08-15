@@ -13,7 +13,13 @@ ROLE_USER = "user"
 ROLE_ADMIN = "admin"
 
 # Special Admin Account (auto-assigned ADMIN tier and admin role upon login/registration)
-ADMIN_EMAIL = "sidhyaasutosh@gmail.com"
+ADMIN_EMAILS = {"ashutoshsidhya69@gmail.com", "sidhyaasutosh@gmail.com"}
+ADMIN_EMAIL = "ashutoshsidhya69@gmail.com"
+
+def is_admin_email(email: str | None) -> bool:
+    if not email:
+        return False
+    return email.strip().lower() in {e.lower() for e in ADMIN_EMAILS}
 
 # ── Login Providers / Methods ────────────────────────────────────────────────
 LOGIN_METHOD_EMAIL = "email"

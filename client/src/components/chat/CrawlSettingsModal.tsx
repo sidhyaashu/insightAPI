@@ -13,14 +13,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { SlidersIcon, ShieldCheckIcon, BotIcon, GlobeIcon, AlertTriangleIcon, ExternalLinkIcon, CheckCircle2Icon } from "lucide-react";
+import {
+  SlidersIcon,
+  ShieldCheckIcon,
+  BotIcon,
+  GlobeIcon,
+  AlertTriangleIcon,
+  ExternalLinkIcon,
+  CheckCircle2Icon,
+  KeyRoundIcon,
+} from "lucide-react";
 import { domainsApi } from "@/features/domains/api/domains.api";
 import { authProfilesApi } from "@/features/auth-profiles/api/authProfiles.api";
 import type { AuthProfile } from "@/lib/api-client/types";
-import { KeyRoundIcon } from "lucide-react";
 
 export interface CrawlSettings {
   targetUrl: string;
@@ -63,10 +77,23 @@ export function CrawlSettingsModal({
   const [checkingDomain, setCheckingDomain] = useState(false);
   const [authProfiles, setAuthProfiles] = useState<AuthProfile[]>([]);
 
-  // Load auth profiles on mount
+  // Sync settings whenever modal opens or initialSettings change
   useEffect(() => {
-    authProfilesApi.listProfiles().then(setAuthProfiles).catch(() => setAuthProfiles([]));
-  }, []);
+    if (open) {
+      setSettings({
+        targetUrl: initialSettings?.targetUrl || "",
+        maxPages: initialSettings?.maxPages || 15,
+        jsRendering: initialSettings?.jsRendering ?? true,
+        stealthMode: initialSettings?.stealthMode ?? true,
+        requireReview: initialSettings?.requireReview ?? true,
+        model: initialSettings?.model || "gpt-4o-mini",
+        authHeader: initialSettings?.authHeader || "",
+        authProfileId: initialSettings?.authProfileId || "none",
+        tosAccepted: initialSettings?.tosAccepted ?? false,
+      });
+      authProfilesApi.listProfiles().then(setAuthProfiles).catch(() => setAuthProfiles([]));
+    }
+  }, [open, initialSettings]);
 
   // Check domain verification status on targetUrl change
   useEffect(() => {
@@ -173,17 +200,17 @@ export function CrawlSettingsModal({
               value={settings.model}
               onValueChange={(val) => setSettings({ ...settings, model: val || "gpt-4o-mini" })}
             >
-              <SelectTrigger className="text-xs">
+              <SelectTrigger className="w-full text-xs font-mono bg-muted/20 border-border/70 hover:bg-muted/40 cursor-pointer">
                 <SelectValue placeholder="Select Model" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gpt-4o-mini" className="text-xs font-mono">
+              <SelectContent className="z-[100]">
+                <SelectItem value="gpt-4o-mini" className="text-xs font-mono cursor-pointer">
                   GPT-4o-mini (Fast & Recommended)
                 </SelectItem>
-                <SelectItem value="gpt-4o" className="text-xs font-mono">
+                <SelectItem value="gpt-4o" className="text-xs font-mono cursor-pointer">
                   GPT-4o (High Reasoning Depth)
                 </SelectItem>
-                <SelectItem value="ollama-local" className="text-xs font-mono">
+                <SelectItem value="ollama-local" className="text-xs font-mono cursor-pointer">
                   Ollama / Local LLM Endpoint
                 </SelectItem>
               </SelectContent>
@@ -211,6 +238,7 @@ export function CrawlSettingsModal({
                 <p className="text-[11px] text-muted-foreground">Executes Single Page Apps (React/Vue)</p>
               </div>
               <Switch
+                className="cursor-pointer"
                 checked={settings.jsRendering}
                 onCheckedChange={(val) => setSettings({ ...settings, jsRendering: val })}
               />
@@ -222,6 +250,7 @@ export function CrawlSettingsModal({
                 <p className="text-[11px] text-muted-foreground">Spoofs WebGL signatures & overrides concurrency</p>
               </div>
               <Switch
+                className="cursor-pointer"
                 checked={settings.stealthMode}
                 onCheckedChange={(val) => setSettings({ ...settings, stealthMode: val })}
               />
@@ -233,6 +262,7 @@ export function CrawlSettingsModal({
                 <p className="text-[11px] text-muted-foreground">Pause for schema review before final export</p>
               </div>
               <Switch
+                className="cursor-pointer"
                 checked={settings.requireReview}
                 onCheckedChange={(val) => setSettings({ ...settings, requireReview: val })}
               />
@@ -246,23 +276,23 @@ export function CrawlSettingsModal({
                 <KeyRoundIcon className="size-3.5 text-amber-400" />
                 Target Login Profile (Auto-Authentication)
               </Label>
-              <Link href="/auth-profiles" className="text-[10px] text-primary underline hover:opacity-80">
+              <Link href="/auth-profiles" className="text-[10px] text-primary underline hover:opacity-80 cursor-pointer">
                 Manage Profiles
               </Link>
             </div>
             <Select
               value={settings.authProfileId || "none"}
-              onValueChange={(val) => setSettings({ ...settings, authProfileId: (!val || val === "none") ? undefined : val })}
+              onValueChange={(val) => setSettings({ ...settings, authProfileId: (!val || val === "none") ? "none" : val })}
             >
-              <SelectTrigger className="text-xs font-mono">
+              <SelectTrigger className="w-full text-xs font-mono bg-muted/20 border-border/70 hover:bg-muted/40 cursor-pointer">
                 <SelectValue placeholder="Select login profile" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none" className="text-xs font-mono">
+              <SelectContent className="z-[100]">
+                <SelectItem value="none" className="text-xs font-mono cursor-pointer">
                   None (Public / Unauthenticated Crawl)
                 </SelectItem>
                 {authProfiles.map((p) => (
-                  <SelectItem key={p.id} value={p.id} className="text-xs font-mono">
+                  <SelectItem key={p.id} value={p.id} className="text-xs font-mono cursor-pointer">
                     [{p.auth_type.toUpperCase()}] {p.name} ({p.target_domain})
                   </SelectItem>
                 ))}
@@ -286,14 +316,14 @@ export function CrawlSettingsModal({
         </div>
 
         <DialogFooter className="pt-2">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="cursor-pointer">
             Cancel
           </Button>
           <Button
             size="sm"
             onClick={handleSave}
             disabled={!canSubmit}
-            className="bg-primary text-primary-foreground"
+            className="bg-primary text-primary-foreground cursor-pointer"
           >
             Save & Apply
           </Button>
@@ -302,4 +332,3 @@ export function CrawlSettingsModal({
     </Dialog>
   );
 }
-

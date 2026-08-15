@@ -141,9 +141,16 @@ const chatSlice = createSlice({
         // Prepend to list so it appears at the top
         state.sessions = [newSession, ...state.sessions.filter((s) => s.id !== newSession.id)];
         state.activeSessionId = newSession.id;
-        state.messages = [];
-        state.currentStreamContent = "";
-        state.isGenerating = false;
+        // Preserve optimistic messages if already queued in state
+        if (state.messages.length > 0) {
+          state.messages = state.messages.map((m) =>
+            m.session_id === "pending" || !m.session_id ? { ...m, session_id: newSession.id } : m
+          );
+        } else {
+          state.messages = [];
+          state.currentStreamContent = "";
+          state.isGenerating = false;
+        }
       })
       .addCase(createSessionThunk.rejected, (state, action) => {
         state.isCreatingSession = false;

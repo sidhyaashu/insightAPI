@@ -129,11 +129,6 @@ export const CodeBlock = memo(({ language = "", code, className }: CodeBlockProp
   const lineCount = code.split("\n").length;
   const isLargeBlock = lineCount >= 14;
 
-  // If code is Mermaid diagram, delegate to MarkdownMermaid
-  if (cleanLang === "mermaid") {
-    return <MarkdownMermaid chart={code} className={className} />;
-  }
-
   // Check if this is an HTTP API snippet
   const httpSnippet = parseHttpSnippet(code, cleanLang);
   if (httpSnippet) {

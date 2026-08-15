@@ -9,6 +9,9 @@ import {
   RotateCwIcon,
   PanelRightOpenIcon,
   SparklesIcon,
+  GlobeIcon,
+  ThumbsUpIcon,
+  ThumbsDownIcon,
 } from "lucide-react";
 import type { HTMLAttributes } from "react";
 import { MarkdownRenderer } from "@/components/markdown/MarkdownRenderer";
@@ -24,7 +27,7 @@ export type MessageProps = HTMLAttributes<HTMLDivElement> & {
 export const Message = ({ className, from, children, ...props }: MessageProps) => (
   <div
     className={cn(
-      "group flex w-full py-1.5 transition-all",
+      "group/msg flex w-full py-1.5 transition-all",
       from === "user" ? "justify-end" : "justify-start",
       className
     )}
@@ -57,8 +60,8 @@ export const MessageContent = ({
     className={cn(
       "text-sm leading-relaxed transition-colors",
       from === "user"
-        ? "bg-muted/80 text-foreground border border-border/60 rounded-3xl px-4 py-2.5 shadow-xs break-words"
-        : "w-full text-foreground bg-transparent border-0 px-0 sm:px-1 py-1 break-words shadow-none",
+        ? "flex flex-col items-end"
+        : "w-full text-foreground bg-transparent border-0 px-0 py-1 break-words shadow-none",
       className
     )}
     {...props}
@@ -66,6 +69,72 @@ export const MessageContent = ({
     {children}
   </div>
 );
+
+/**
+ * Clean, compact User Message bubble (ChatGPT style).
+ * Fitted to content with no bottom whitespace, and hover action controls.
+ */
+export const UserMessage = memo(({ content }: { content: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  // Parse optional "Target URL: https://..." prefix
+  const { targetUrl, promptText } = useMemo(() => {
+    const match = content.match(/^Target URL:\s*([^\n]+)\n*([\s\S]*)$/i);
+    if (match) {
+      return { targetUrl: match[1].trim(), promptText: match[2].trim() };
+    }
+    return { targetUrl: null, promptText: content };
+  }, [content]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="group/user flex flex-col items-end max-w-full min-w-0">
+      {/* Attached Target URL Pill */}
+      {targetUrl && (
+        <a
+          href={targetUrl.startsWith("http") ? targetUrl : `https://${targetUrl}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-1 mb-1.5 rounded-full bg-muted/60 hover:bg-muted/90 border border-border/50 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <GlobeIcon className="size-3 text-primary shrink-0" />
+          <span className="truncate max-w-[280px]">{targetUrl}</span>
+        </a>
+      )}
+
+      {/* User Bubble (ChatGPT Style) */}
+      <div className="rounded-3xl bg-muted/90 text-foreground border border-border/60 px-4 py-2.5 text-sm leading-relaxed break-words shadow-xs w-fit text-left">
+        {promptText || content}
+      </div>
+
+      {/* Clean hover action icon outside the bubble */}
+      <div className="opacity-0 group-hover/user:opacity-100 transition-opacity flex items-center gap-1 mt-1 px-1">
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer text-xs flex items-center gap-1"
+          title="Copy message"
+        >
+          {copied ? (
+            <>
+              <CheckIcon className="size-3 text-emerald-500" />
+              <span className="text-[10px] text-emerald-500 font-medium">Copied</span>
+            </>
+          ) : (
+            <CopyIcon className="size-3" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+});
+
+UserMessage.displayName = "UserMessage";
 
 export type MessageResponseProps = {
   content: string;
@@ -80,6 +149,7 @@ export type MessageResponseProps = {
 export const MessageResponse = memo(
   ({ content, isStreaming, onRegenerate }: MessageResponseProps) => {
     const [copied, setCopied] = useState(false);
+    const [liked, setLiked] = useState<boolean | null>(null);
     const { openPanel } = useArtifact();
 
     // Parse <think>...</think> reasoning blocks if present
@@ -129,25 +199,26 @@ export const MessageResponse = memo(
     // If streaming and not a single token received yet
     if (isStreaming && !content) {
       return (
-        <div className="flex items-center gap-2.5 text-xs text-muted-foreground/80 py-2 animate-in fade-in select-none">
-          <SparklesIcon className="size-4 text-primary animate-spin" />
-          <span className="font-medium animate-pulse text-foreground/90">
-            Thinking &amp; analyzing...
-          </span>
+        <div className="w-full">
+          <ReasoningBlock reasoning="" isStreaming={true} />
         </div>
       );
     }
 
     return (
-      <div className="relative group/msg w-full space-y-2 font-sans min-w-0">
-        {/* Reasoning / Thought Collapsible Box (Claude / ChatGPT style) */}
+      <div className="relative w-full space-y-2 font-sans min-w-0">
+        {/* Dynamic Reasoning / Thought Collapsible Box (Claude / ChatGPT style) */}
         {(reasoning || isThinkingNow) && (
           <ReasoningBlock reasoning={reasoning} isStreaming={isThinkingNow} />
         )}
 
         {/* Main Response Markdown */}
         {mainContent && (
-          <MarkdownRenderer content={mainContent} isStreaming={isStreaming && !isThinkingNow} />
+          <MarkdownRenderer
+            content={mainContent}
+            isStreaming={isStreaming && !isThinkingNow}
+            suppressInlineArtifacts={!!artifact}
+          />
         )}
 
         {/* Inline Artifact Tile (Claude.ai style) */}
@@ -155,39 +226,62 @@ export const MessageResponse = memo(
           <ArtifactCard artifact={artifact} />
         )}
 
-        {/* Message action buttons */}
+        {/* Assistant Message action buttons (ChatGPT style) */}
         {!isStreaming && (mainContent || content) && (
-          <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity flex items-center gap-1.5 pt-2 border-t border-border/30">
+          <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity flex items-center gap-1 pt-1.5">
+            {/* Copy Button */}
             <Button
               variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer flex items-center gap-1"
+              size="icon"
+              className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer"
               onClick={handleCopyMessage}
-              title="Copy full response"
+              title="Copy message"
             >
               {copied ? (
-                <>
-                  <CheckIcon className="size-3 text-emerald-500" />
-                  <span className="text-emerald-500">Copied</span>
-                </>
+                <CheckIcon className="size-3.5 text-emerald-500" />
               ) : (
-                <>
-                  <CopyIcon className="size-3" />
-                  <span>Copy</span>
-                </>
+                <CopyIcon className="size-3.5" />
               )}
             </Button>
 
+            {/* Like */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer",
+                liked === true && "text-primary bg-primary/10"
+              )}
+              onClick={() => setLiked(liked === true ? null : true)}
+              title="Good response"
+            >
+              <ThumbsUpIcon className="size-3.5" />
+            </Button>
+
+            {/* Dislike */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer",
+                liked === false && "text-destructive bg-destructive/10"
+              )}
+              onClick={() => setLiked(liked === false ? null : false)}
+              title="Poor response"
+            >
+              <ThumbsDownIcon className="size-3.5" />
+            </Button>
+
+            {/* Regenerate */}
             {onRegenerate && (
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer flex items-center gap-1"
+                size="icon"
+                className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer"
                 onClick={onRegenerate}
                 title="Regenerate response"
               >
-                <RotateCwIcon className="size-3" />
-                <span>Retry</span>
+                <RotateCwIcon className="size-3.5" />
               </Button>
             )}
 
@@ -200,7 +294,7 @@ export const MessageResponse = memo(
                 onClick={handleOpenPanel}
                 title="Open in side panel"
               >
-                <PanelRightOpenIcon className="size-3" />
+                <PanelRightOpenIcon className="size-3.5" />
                 <span>Open in panel</span>
               </Button>
             )}

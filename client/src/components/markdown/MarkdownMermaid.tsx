@@ -6,12 +6,24 @@ import { CheckIcon, CopyIcon, Code2Icon, EyeIcon, WorkflowIcon, AlertCircleIcon,
 import { cn } from "@/lib/utils";
 import type { MermaidProps } from "./types";
 import { useArtifact } from "@/components/chat/ArtifactContext";
+import { ArtifactCard } from "@/components/chat/ArtifactCard";
+import { extractArtifact } from "@/components/chat/artifact-utils";
 
-export const MarkdownMermaid = memo(({ chart, className }: MermaidProps) => {
+export const MarkdownMermaid = memo(({ chart, className, suppressPanel }: MermaidProps & { suppressPanel?: boolean }) => {
   const uniqueId = useId().replace(/:/g, "_");
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const { openPanel } = useArtifact();
+  const { openPanel, artifact: activeArtifact, isPanelOpen } = useArtifact();
+
+  // When suppressPanel=true, the mermaid content is already displayed in the
+  // ArtifactPanel. Render a compact ArtifactCard tile instead of duplicating
+  // the diagram inline — matching Claude.ai's "one location per artifact" rule.
+  if (suppressPanel) {
+    const artifact = extractArtifact("```mermaid\n" + chart + "\n```");
+    if (artifact) {
+      return <ArtifactCard artifact={artifact} className={className} />;
+    }
+  }
 
   const [svg, setSvg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

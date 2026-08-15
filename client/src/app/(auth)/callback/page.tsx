@@ -2,6 +2,7 @@
 
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { IconSparkles } from "@tabler/icons-react";
 import { useAppDispatch } from "@/store";
 import { setCredentials } from "@/features/auth/store/authSlice";
 import { authApi } from "@/features/auth/api/auth.api";
@@ -31,7 +32,7 @@ function CallbackContent() {
         }
       } catch (err: any) {
         console.error("OAuth Exchange Error:", err);
-        router.replace(`/login?error=${encodeURIComponent(err.message || "auth_failed")}`);
+        router.replace(`/login?error=${encodeURIComponent(err.response?.data?.detail || err.message || "auth_failed")}`);
       }
     }
 
@@ -39,10 +40,13 @@ function CallbackContent() {
   }, [searchParams, dispatch, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Completing authentication...</h3>
-        <p className="text-sm text-muted-foreground">Exchanging OAuth credentials with gateway</p>
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 font-sans select-none">
+      <div className="w-full max-w-sm border border-border/80 p-8 rounded-2xl shadow-xl bg-card text-center space-y-4">
+        <div className="size-10 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto" />
+        <div className="space-y-1">
+          <h3 className="text-base font-bold text-foreground">Completing Authentication...</h3>
+          <p className="text-xs text-muted-foreground">Exchanging OAuth credentials with security gateway.</p>
+        </div>
       </div>
     </div>
   );
@@ -50,11 +54,13 @@ function CallbackContent() {
 
 export default function AuthCallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Loading authentication...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <p className="text-xs font-mono text-muted-foreground">Loading authentication session...</p>
+        </div>
+      }
+    >
       <CallbackContent />
     </Suspense>
   );

@@ -497,6 +497,11 @@ InsightAPI/
 ├── client/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── chat/              # Chat Components (CrawlReasoningMessage, ArtifactPanel)
+│   │   │   │   ├── CrawlReasoningMessage.tsx
+│   │   │   │   ├── CrawlActivityContext.tsx
+│   │   │   │   ├── ArtifactPanel.tsx
+│   │   │   │   └── ArtifactContext.tsx
 │   │   │   ├── markdown/          # Master Markdown Rendering Engine (17 modular files)
 │   │   │   │   ├── MarkdownRenderer.tsx
 │   │   │   │   ├── MarkdownCode.tsx
@@ -506,13 +511,26 @@ InsightAPI/
 │   │   │   │   ├── MarkdownMath.tsx
 │   │   │   │   ├── MarkdownMermaid.tsx
 │   │   │   │   └── ...
+│   │   │   ├── UserAvatarMenu.tsx  # User profile & quick navigation dropdown
+│   │   │   ├── ThemeToggle.tsx     # Dark / Light theme switcher
 │   │   │   └── ui/
-│   │   │       ├── message.tsx     # Message bubbles (no avatar icons, responsive layout)
+│   │   │       ├── message.tsx     # Message bubbles (with inline artifact card suppression)
 │   │   │       └── conversation.tsx
 │   │   ├── app/
 │   │   │   ├── (dashboard)/
-│   │   │   │   ├── chat/page.tsx   # AI Chatbot workspace
-│   │   │   │   └── billing/page.tsx# Stripe billing dashboard
+│   │   │   │   ├── layout.tsx      # Dashboard layout with frosted glass header & fluid scrolling
+│   │   │   │   ├── chat/page.tsx   # AI Chatbot workspace with inline reasoning
+│   │   │   │   ├── audit-logs/page.tsx # SOC2 Audit Trail with KPI cards & JSON modal
+│   │   │   │   ├── auth-profiles/page.tsx # AES-256 encrypted credential manager
+│   │   │   │   ├── billing/page.tsx# Stripe billing dashboard with plan cards
+│   │   │   │   ├── domains/page.tsx# Verified domains & active security testing opt-in
+│   │   │   │   ├── intelligence/page.tsx # Platform intelligence & memory engine
+│   │   │   │   ├── reports/page.tsx# Crawl reports & API intelligence overview
+│   │   │   │   ├── reports/[id]/page.tsx # Report detail & test suite generator
+│   │   │   │   ├── reports/[id]/drift/page.tsx # API schema drift detection diff
+│   │   │   │   ├── security/page.tsx # Security center & human approval queue
+│   │   │   │   ├── settings/page.tsx# VS Code-style workspace settings
+│   │   │   │   └── tos/page.tsx    # Legal agreement & acceptable use policy
 │   │   │   └── globals.css         # KaTeX CSS & Prism syntax themes
 │   │   └── lib/api-client/
 │   │       ├── websocket.ts        # Clean WS connection without URL tokens

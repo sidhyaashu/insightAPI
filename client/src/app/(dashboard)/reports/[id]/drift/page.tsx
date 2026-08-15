@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -251,9 +251,9 @@ function SectionHeader({
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Main Page Inner ───────────────────────────────────────────────────────────
 
-export default function DriftReportPage() {
+function DriftReportInner() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -325,9 +325,9 @@ export default function DriftReportPage() {
   const shortId = (id: string) => `${id.slice(0, 8)}…`;
 
   return (
-    <div className="flex flex-col min-h-0 flex-1 overflow-y-auto">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full font-sans pb-28">
       {/* ── Hero bar ────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 py-4">
+      <div className="border-b border-border/50 pb-4">
         <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={() => router.back()}
@@ -501,5 +501,20 @@ export default function DriftReportPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DriftReportPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 text-muted-foreground min-h-[60vh]">
+          <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <span className="text-xs font-mono">Loading drift report...</span>
+        </div>
+      }
+    >
+      <DriftReportInner />
+    </Suspense>
   );
 }

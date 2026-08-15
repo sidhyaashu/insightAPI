@@ -151,42 +151,57 @@ export default function DomainsManagementPage() {
 
   const verifiedCount = domains.filter((d) => d.is_verified).length;
   const pendingCount = domains.length - verifiedCount;
+  const activeTestingCount = domains.filter((d) => d.is_verified && d.active_testing_opt_in).length;
 
   return (
-    <div className="flex flex-col min-h-0 flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full font-sans">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full font-sans pb-28">
       {/* Header Bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-border/50">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Verified Domains & Compliance</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Verify domain ownership via DNS TXT records or well-known files to bypass per-crawl ToS prompts and authorize active security scans.
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+            <IconWorld className="size-6" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Verified Domains & Legal Compliance
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Verify domain ownership via DNS TXT records or well-known files to bypass per-crawl ToS prompts and authorize active security scans.
+            </p>
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadDomains} className="gap-1.5 text-xs">
-            <IconRefresh className="size-3.5" />
-            Refresh
+          <Button variant="outline" size="sm" onClick={loadDomains} className="gap-1.5 text-xs h-8">
+            <IconRefresh className="size-3.5" /> Refresh
           </Button>
-          <Button size="sm" onClick={() => setAddModalOpen(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground">
-            <IconPlus className="size-3.5" />
-            Add New Domain
+          <Button size="sm" onClick={() => setAddModalOpen(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground font-semibold h-8 shadow-xs">
+            <IconPlus className="size-3.5" /> Add New Domain
           </Button>
         </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs">
-          <div className="text-xs text-muted-foreground font-mono mb-1">Total Domains</div>
-          <div className="text-2xl font-bold font-mono text-foreground">{domains.length}</div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Total Targets</div>
+          <div className="text-2xl font-extrabold font-mono text-foreground">{domains.length}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Registered API apex domains</div>
         </div>
-        <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 shadow-xs">
-          <div className="text-xs text-emerald-500 font-mono mb-1">Verified (Instant Crawl)</div>
-          <div className="text-2xl font-bold font-mono text-emerald-500">{verifiedCount}</div>
+        <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 shadow-xs">
+          <div className="text-[11px] text-emerald-500 font-mono uppercase mb-1">Verified (Instant Crawl)</div>
+          <div className="text-2xl font-extrabold font-mono text-emerald-400">{verifiedCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Challenge passed</div>
         </div>
-        <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 shadow-xs">
-          <div className="text-xs text-amber-500 font-mono mb-1">Pending Challenge</div>
-          <div className="text-2xl font-bold font-mono text-amber-500">{pendingCount}</div>
+        <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 shadow-xs">
+          <div className="text-[11px] text-amber-500 font-mono uppercase mb-1">Pending Challenge</div>
+          <div className="text-2xl font-extrabold font-mono text-amber-400">{pendingCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Awaiting DNS propagation</div>
+        </div>
+        <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/5 shadow-xs">
+          <div className="text-[11px] text-purple-400 font-mono uppercase mb-1">Active Security Opt-In</div>
+          <div className="text-2xl font-extrabold font-mono text-purple-400">{activeTestingCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Authorized for sandbox probes</div>
         </div>
       </div>
 

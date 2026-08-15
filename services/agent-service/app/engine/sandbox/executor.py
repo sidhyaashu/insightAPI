@@ -20,6 +20,7 @@ Design & Security Invariants:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import ipaddress
 import json
 import logging
@@ -99,6 +100,7 @@ class SandboxExecutor:
         target_domain: Optional[str] = None,
         allow_destructive: bool = False,
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
+        crawl_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Execute a security test probe against an endpoint shape.
@@ -159,6 +161,20 @@ class SandboxExecutor:
                 "error": f"Egress Policy Violation: {egress_err}",
                 "blocked": True,
             }
+
+        # ── sandbox_action WS event — makes the probe visible in the inline
+        # CrawlReasoningMessage stream in the UI (left-side reasoning, Claude style)
+        if crawl_id:
+            with contextlib.suppress(Exception):
+                from app.api.v1.endpoints.crawls import publish_ws_event
+                asyncio.create_task(publish_ws_event(crawl_id, {
+                    "type": "sandbox_action",
+                    "action": "http_probe",
+                    "method": method,
+                    "url": url,
+                    "strategy": strategy,
+                    "vuln_class": test_strategy.get("vuln_class", "other"),
+                }))
 
         headers = {
             "Accept": "application/json, text/plain, */*",

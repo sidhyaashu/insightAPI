@@ -62,7 +62,12 @@ def _resolve_user(
     x_user_id: str | None,
     x_user_tier: str | None,
 ) -> tuple[str, str]:
-    """Return (user_id, user_tier) from JWT token or header fallbacks."""
+    """Return (user_id, user_tier) from JWT token or header fallbacks.
+
+    Admin email elevation: if the JWT contains an email (or 'sub' that looks
+    like an email) matching settings.ADMIN_EMAILS, the tier is forced to ADMIN
+    regardless of what the token claims.
+    """
     user_id = x_user_id or ""
     user_tier = (x_user_tier or "FREE").upper()
 
@@ -70,6 +75,15 @@ def _resolve_user(
         payload = decode_jwt_token(token)
         user_id = payload.get("sub", user_id)
         user_tier = payload.get("tier", user_tier).upper()
+
+        # Admin email elevation — check both 'email' claim and 'sub' (some
+        # OAuth providers embed the email address directly in 'sub').
+        jwt_email = payload.get("email") or (
+            payload.get("sub", "") if "@" in (payload.get("sub") or "") else None
+        )
+        if settings.is_admin_email(jwt_email):
+            user_tier = "ADMIN"
+            logger.info(f"Admin email elevation applied for: {jwt_email}")
 
     return user_id, user_tier
 
@@ -335,6 +349,14 @@ async def chat_websocket(
         payload = decode_jwt_token(auth_token)
         x_user_id = payload.get("sub", x_user_id)
         user_tier = payload.get("tier", "FREE").upper()
+
+        # Admin email elevation — same logic as _resolve_user()
+        jwt_email = payload.get("email") or (
+            payload.get("sub", "") if "@" in (payload.get("sub") or "") else None
+        )
+        if settings.is_admin_email(jwt_email):
+            user_tier = "ADMIN"
+            logger.info(f"[WS] Admin email elevation applied for: {jwt_email}")
 
     await websocket.accept()
     logger.info(f"Chatbot WS connected: user={x_user_id} tier={user_tier} session={chat_session_id}")

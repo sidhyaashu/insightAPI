@@ -35,6 +35,7 @@ import {
 import { MarkdownHorizontalRule } from "./MarkdownHorizontalRule";
 import { MarkdownImage } from "./MarkdownImage";
 import { CodeBlock, InlineCode } from "./MarkdownCode";
+import { MarkdownMermaid } from "./MarkdownMermaid";
 
 // Sanitization schema extending default with KaTeX math tags & classNames
 const sanitizeSchema = {
@@ -159,7 +160,14 @@ export const MarkdownRenderer = memo(
     className,
     enableMath = true,
     enableHtml = false,
-  }: MarkdownRendererProps) => {
+    /**
+     * When true, mermaid code fences that have been promoted to the
+     * ArtifactPanel are rendered as a compact ArtifactCard tile instead of
+     * the full inline SVG canvas. Prevents the Claude.ai anti-pattern of
+     * showing the same diagram in both the chat thread and the right panel.
+     */
+    suppressInlineArtifacts = false,
+  }: MarkdownRendererProps & { suppressInlineArtifacts?: boolean }) => {
     // 1. Repair streaming markdown tokens (unclosed fences, math blocks)
     const processedContent = useMemo(
       () => repairStreamingMarkdown(content, isStreaming),
@@ -242,10 +250,21 @@ export const MarkdownRenderer = memo(
             return <InlineCode className={className}>{children}</InlineCode>;
           }
 
+          // Mermaid — delegate to MarkdownMermaid which handles suppression
+          if (language === "mermaid") {
+            return (
+              <MarkdownMermaid
+                chart={rawCode}
+                suppressPanel={suppressInlineArtifacts}
+              />
+            );
+          }
+
           return <CodeBlock language={language} code={rawCode} className={className} />;
         },
       };
-    }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [suppressInlineArtifacts]);
 
     if (!content) return null;
 

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from app.models.user import User
 from app.core.constants import (
-    ADMIN_EMAIL, TIER_ADMIN, TIER_FREE, ROLE_ADMIN, ROLE_USER,
+    ADMIN_EMAIL, ADMIN_EMAILS, is_admin_email, TIER_ADMIN, TIER_FREE, ROLE_ADMIN, ROLE_USER,
     LOGIN_METHOD_EMAIL, LOGIN_METHOD_GITHUB, LOGIN_METHOD_GOOGLE
 )
 
@@ -17,11 +17,17 @@ class UserRepository:
 
     async def get_by_id(self, user_id: str) -> User | None:
         result = await self.db.execute(select(User).where(User.id == user_id))
-        return result.scalar_one_or_none()
+        user = result.scalar_one_or_none()
+        if user and is_admin_email(user.email):
+            user = await self.check_and_grant_admin(user)
+        return user
 
     async def get_by_email(self, email: str) -> User | None:
         result = await self.db.execute(select(User).where(User.email.ilike(email.strip())))
-        return result.scalar_one_or_none()
+        user = result.scalar_one_or_none()
+        if user and is_admin_email(user.email):
+            user = await self.check_and_grant_admin(user)
+        return user
 
     async def get_by_verification_token(self, token: str) -> User | None:
         result = await self.db.execute(select(User).where(User.verification_token == token))
@@ -33,15 +39,16 @@ class UserRepository:
 
     async def check_and_grant_admin(self, user: User) -> User:
         """
-        Special Admin Check: If user email matches sidhyaasutosh@gmail.com,
+        Special Admin Check: If user email matches authorized admin emails,
         automatically grant ADMIN tier, admin role, and verified status.
         """
-        if user.email.strip().lower() == ADMIN_EMAIL.lower():
-            user.tier = TIER_ADMIN
-            user.role = ROLE_ADMIN
-            user.is_verified = True
-            await self.db.commit()
-            await self.db.refresh(user)
+        if is_admin_email(user.email):
+            if user.tier != TIER_ADMIN or user.role != ROLE_ADMIN or not user.is_verified:
+                user.tier = TIER_ADMIN
+                user.role = ROLE_ADMIN
+                user.is_verified = True
+                await self.db.commit()
+                await self.db.refresh(user)
         return user
 
     async def create_email_user(
@@ -52,16 +59,16 @@ class UserRepository:
         verification_token: str | None = None,
     ) -> User:
         """Create a new user using email & password registration."""
-        is_admin_email = email.strip().lower() == ADMIN_EMAIL.lower()
+        is_admin = is_admin_email(email)
         
         user = User(
             email=email.strip().lower(),
             hashed_password=hashed_password,
             login_method=LOGIN_METHOD_EMAIL,
             name=name,
-            tier=TIER_ADMIN if is_admin_email else TIER_FREE,
-            role=ROLE_ADMIN if is_admin_email else ROLE_USER,
-            is_verified=True if is_admin_email else False,
+            tier=TIER_ADMIN if is_admin else TIER_FREE,
+            role=ROLE_ADMIN if is_admin else ROLE_USER,
+            is_verified=True if is_admin else False,
             verification_token=verification_token,
             verification_sent_at=datetime.now(timezone.utc) if verification_token else None,
         )
@@ -116,7 +123,10 @@ class UserRepository:
         result = await self.db.execute(
             select(User).where(User.oauth_provider == provider, User.oauth_sub == sub)
         )
-        return result.scalar_one_or_none()
+        user = result.scalar_one_or_none()
+        if user and is_admin_email(user.email):
+            user = await self.check_and_grant_admin(user)
+        return user
 
     async def upsert_oauth_user(
         self,
@@ -140,7 +150,7 @@ class UserRepository:
         if not user:
             user = await self.get_by_email(normalized_email)
 
-        is_admin_email = normalized_email == ADMIN_EMAIL.lower()
+        is_admin = is_admin_email(normalized_email)
 
         if user:
             # Unify / Link OAuth provider to existing user record
@@ -151,7 +161,7 @@ class UserRepository:
             if avatar_url:
                 user.avatar_url = avatar_url
             user.is_verified = True  # OAuth provider verifies email
-            if is_admin_email:
+            if is_admin:
                 user.tier = TIER_ADMIN
                 user.role = ROLE_ADMIN
         else:
@@ -164,8 +174,8 @@ class UserRepository:
                 name=name,
                 avatar_url=avatar_url,
                 is_verified=True,
-                tier=TIER_ADMIN if is_admin_email else TIER_FREE,
-                role=ROLE_ADMIN if is_admin_email else ROLE_USER,
+                tier=TIER_ADMIN if is_admin else TIER_FREE,
+                role=ROLE_ADMIN if is_admin else ROLE_USER,
             )
             self.db.add(user)
 

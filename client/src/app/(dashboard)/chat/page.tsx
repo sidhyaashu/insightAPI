@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -21,7 +21,7 @@ import {
   ConversationContent,
   MessageItem,
 } from "@/components/ui/conversation";
-import { Message, MessageContent, MessageResponse } from "@/components/ui/message";
+import { Message, MessageContent, MessageResponse, UserMessage } from "@/components/ui/message";
 import { PromptInput, PromptInputMessage } from "@/components/ui/prompt-input";
 import { ModelSelection } from "@/components/chat/ClaudeModelSelector";
 import {
@@ -34,7 +34,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CrawlSettingsModal, CrawlSettings } from "@/components/chat/CrawlSettingsModal";
-import { CrawlActivityDrawer } from "@/components/chat/CrawlActivityDrawer";
+import { CrawlActivityProvider, useCrawlActivity } from "@/components/chat/CrawlActivityContext";
+import { CrawlReasoningMessage } from "@/components/chat/CrawlReasoningMessage";
 import { crawlsApi } from "@/features/crawls/api/crawls.api";
 
 // Artifact panel
@@ -102,11 +103,9 @@ function IndustryChatInner() {
     effort: "Medium",
   });
   const [showCrawlSettingsModal, setShowCrawlSettingsModal] = useState(false);
-  const [showCrawlActivityDrawer, setShowCrawlActivityDrawer] = useState(false);
-  const [activeCrawlSessionId, setActiveCrawlSessionId] = useState<string | null>(null);
-  const [activeCrawlTargetUrl, setActiveCrawlTargetUrl] = useState<string>("");
 
   const { openPanel } = useArtifact();
+  const { openCrawlSession, sessionId: crawlSessionId } = useCrawlActivity();
   const currentStreamRef = useRef("");
   const pendingMessageRef = useRef<string | null>(null);
   const knownSessionIdRef = useRef<string | null>(null);
@@ -117,6 +116,24 @@ function IndustryChatInner() {
   }, [dispatch]);
 
   // ── URL synchronization: /chat vs /chat?session=uuid ────────────────────────
+  //
+  // PART 2 — Race condition audit (confirmed safe, no fix needed):
+  //
+  // handleSendMessage (for new sessions) does:
+  //   (A) await dispatch(createSessionThunk(title)).unwrap()  // DB call
+  //   (B) knownSessionIdRef.current = session.id             // sync ref set
+  //   (C) pendingMessageRef.current = text
+  //   (D) router.replace(`/chat?session=...`)               // URL update
+  //
+  // React 18 batching: lines B-D are synchronous in the same microtask
+  // continuation after (A) resolves — the React scheduler CANNOT interleave
+  // a re-render between B and D. The useEffect below only fires after the
+  // React commit triggered by D's URL change, by which time ref is already set.
+  //
+  // Message list key audit: <ConversationContent> and <Conversation> have no
+  // key prop tied to sessionId — messages are keyed only by message.id.
+  // Switching from /chat to /chat?session=uuid does NOT unmount/remount the
+  // message list. No skeleton flash from own-initiated session creation. ✓
   useEffect(() => {
     if (urlSessionId) {
       // If this session was just created by this client sending a message, don't re-fetch!
@@ -132,18 +149,27 @@ function IndustryChatInner() {
           router.replace("/chat");
         });
     } else {
-      // At root /chat: reset to clean state (ChatGPT style)
-      if (activeSessionId !== null || knownSessionIdRef.current !== null) {
+      // User explicitly clicked "+ New Chat" or navigated to /chat directly
+      if (knownSessionIdRef.current !== null) {
         knownSessionIdRef.current = null;
         dispatch(resetNewChat());
       }
     }
-  }, [urlSessionId, activeSessionId, dispatch, router]);
+  }, [urlSessionId, dispatch, router]);
 
   // ── WebSocket (opens when activeSessionId exists) ───────────────────────────
-  const { lastMessage, sendMessage } = useWebSocket(
+  const { isConnected, lastMessage, sendMessage } = useWebSocket(
     activeSessionId ? `/chat/${activeSessionId}` : null
   );
+
+  // Send pending queued message immediately when socket becomes connected
+  useEffect(() => {
+    if (isConnected && pendingMessageRef.current) {
+      const text = pendingMessageRef.current;
+      pendingMessageRef.current = null;
+      sendMessage({ message: text, model: modelSelection.model });
+    }
+  }, [isConnected, sendMessage, modelSelection.model]);
 
   // ── Handle WebSocket stream & events ────────────────────────────────────────
   useEffect(() => {
@@ -311,9 +337,9 @@ function IndustryChatInner() {
       });
       toast.dismiss();
       toast.success("Autonomous exploration started!");
-      setActiveCrawlSessionId(res.session_id || res.id || "");
-      setActiveCrawlTargetUrl(settings.targetUrl);
-      setShowCrawlActivityDrawer(true);
+      // Open inline CrawlReasoningMessage in the chat thread (Claude.ai style:
+      // live execution steps appear as left-side reasoning, not a modal overlay)
+      openCrawlSession(res.session_id || res.id || "", settings.targetUrl);
     } catch (err: any) {
       toast.dismiss();
       toast.error(err.response?.data?.detail || "Failed to start crawl.");
@@ -350,7 +376,7 @@ function IndustryChatInner() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {isLoadingHistory ? (
             <ChatHistorySkeleton />
-          ) : messages.length === 0 ? (
+          ) : messages.length === 0 && !crawlSessionId ? (
             /* ── Hero Welcome Screen (ChatGPT / Claude Style) ──────────── */
             <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-3xl mx-auto w-full overflow-y-auto no-scrollbar">
               <div className="flex items-center justify-center gap-3 mb-6">
@@ -471,12 +497,14 @@ function IndustryChatInner() {
                 <ConversationContent>
                   {(messages as MessageItem[]).map((m) => (
                     <Message key={m.id} from={m.role}>
-                      <MessageContent from={m.role}>
+                      {m.role === "user" ? (
+                        <UserMessage content={m.content} />
+                      ) : (
                         <MessageResponse
                           content={m.content}
-                          onRegenerate={m.role === "assistant" ? handleRegenerate : undefined}
+                          onRegenerate={handleRegenerate}
                         />
-                      </MessageContent>
+                      )}
                     </Message>
                   ))}
 
@@ -487,6 +515,18 @@ function IndustryChatInner() {
                           content={currentStreamContent}
                           isStreaming={isGenerating}
                         />
+                      </MessageContent>
+                    </Message>
+                  )}
+
+                  {/* ── Inline CrawlReasoningMessage (Claude.ai style) ───────
+                      Live crawl/security execution steps appear as a left-side
+                      collapsible reasoning block in the chat thread.
+                      RIGHT panel (ArtifactPanel) shows final output only. */}
+                  {crawlSessionId && (
+                    <Message from="assistant">
+                      <MessageContent from="assistant">
+                        <CrawlReasoningMessage />
                       </MessageContent>
                     </Message>
                   )}
@@ -522,12 +562,6 @@ function IndustryChatInner() {
         onOpenChange={setShowCrawlSettingsModal}
         onSave={handleStartCrawl}
       />
-      <CrawlActivityDrawer
-        open={showCrawlActivityDrawer}
-        onOpenChange={setShowCrawlActivityDrawer}
-        sessionId={activeCrawlSessionId}
-        targetUrl={activeCrawlTargetUrl}
-      />
     </div>
   );
 }
@@ -537,7 +571,11 @@ function IndustryChatInner() {
 export default function IndustryChatPage() {
   return (
     <ArtifactProvider>
-      <IndustryChatInner />
+      <CrawlActivityProvider>
+        <Suspense fallback={<ChatHistorySkeleton />}>
+          <IndustryChatInner />
+        </Suspense>
+      </CrawlActivityProvider>
     </ArtifactProvider>
   );
 }

@@ -68,19 +68,61 @@ export default function ReportsOverviewPage() {
     );
   }
 
+  const completedCount = crawls.filter((c) => c.status === "completed").length;
+  const reviewCount = crawls.filter((c) => c.status === "pending_review").length;
+  const runningCount = crawls.filter((c) => c.status === "running").length;
+
   return (
-    <div className="flex flex-col min-h-0 flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full font-sans pb-28">
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-border/50">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Crawl Reports & API Intelligence</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Review captured endpoints, approve specifications, and compare schema drift across crawls.
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+            <IconGlobe className="size-6" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Crawl Reports & API Intelligence
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Review captured endpoints, approve specifications, export OpenAPI/Postman artifacts, and compare schema drift across crawls.
+            </p>
+          </div>
         </div>
-        <Button variant="outline" size="sm" onClick={loadCrawls} className="gap-1.5 text-xs">
-          <IconRefresh className="size-3.5" />
-          Refresh
-        </Button>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={loadCrawls} className="gap-1.5 text-xs h-8">
+            <IconRefresh className="size-3.5" /> Refresh
+          </Button>
+          <Link href="/chat">
+            <Button size="sm" className="gap-1.5 text-xs bg-primary text-primary-foreground font-semibold h-8 shadow-xs">
+              <IconSparkles className="size-3.5" /> Start Crawl
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="p-4 rounded-2xl border border-border/60 bg-card shadow-xs">
+          <div className="text-[11px] text-muted-foreground font-mono uppercase mb-1">Total Crawls</div>
+          <div className="text-2xl font-extrabold font-mono text-foreground">{crawls.length}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Exploration sessions</div>
+        </div>
+        <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 shadow-xs">
+          <div className="text-[11px] text-emerald-500 font-mono uppercase mb-1">Completed Specifications</div>
+          <div className="text-2xl font-extrabold font-mono text-emerald-400">{completedCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">OpenAPI 3.1 ready</div>
+        </div>
+        <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 shadow-xs">
+          <div className="text-[11px] text-amber-500 font-mono uppercase mb-1">Pending Human Review</div>
+          <div className="text-2xl font-extrabold font-mono text-amber-400">{reviewCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Awaiting schema approval</div>
+        </div>
+        <div className="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 shadow-xs">
+          <div className="text-[11px] text-blue-400 font-mono uppercase mb-1">Running / Processing</div>
+          <div className="text-2xl font-extrabold font-mono text-blue-400">{runningCount}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Active crawler agents</div>
+        </div>
       </div>
 
       {crawls.length === 0 ? (
@@ -110,7 +152,7 @@ export default function ReportsOverviewPage() {
             return (
               <div
                 key={crawl.session_id}
-                className="rounded-2xl border border-border bg-card p-5 shadow-xs hover:border-border/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="rounded-2xl border border-border/70 bg-card p-5 shadow-xs hover:border-border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="space-y-1.5 min-w-0">
                   <div className="flex items-center gap-2.5 flex-wrap">

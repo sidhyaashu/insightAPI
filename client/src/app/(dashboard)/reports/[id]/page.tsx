@@ -167,7 +167,7 @@ export default function CrawlReportDetailsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-0 flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full font-sans">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full font-sans pb-28">
       {/* Top Navigation & Actions Bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-border/50">
         <div className="flex items-center gap-3">

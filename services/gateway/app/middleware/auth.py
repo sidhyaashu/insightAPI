@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import logging
-from fastapi import Request, HTTPException
+from fastapi import Request
+from fastapi.responses import JSONResponse
 from jose import jwt, JWTError
 from app.core.config import settings
 from app.core.constants import (
-    PUBLIC_PATHS, HEADER_USER_ID, HEADER_USER_TIER, HEADER_USER_ROLE, HEADER_USER_ALLOW_OVERAGE
+    PUBLIC_PATHS, HEADER_USER_ID, HEADER_USER_TIER, HEADER_USER_ROLE, HEADER_USER_ALLOW_OVERAGE,
+    is_admin_email
 )
 import redis.asyncio as aioredis
 
@@ -31,7 +33,13 @@ async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
     # Allow public paths without auth
-    if path in PUBLIC_PATHS or path.startswith("/docs"):
+    if (
+        path in PUBLIC_PATHS
+        or path.startswith("/docs")
+        or path.startswith("/openapi.json")
+        or path.startswith("/api/v1/auth/")
+        or path.startswith("/api/auth/")
+    ):
         return await call_next(request)
 
     # Extract token from HttpOnly cookie `access_token`, Authorization header, or query param
@@ -46,26 +54,31 @@ async def auth_middleware(request: Request, call_next):
                 token = auth_header[7:].strip()
 
     if not token:
-        raise HTTPException(status_code=401, detail="Missing authentication token.")
+        return JSONResponse(status_code=401, content={"detail": "Missing authentication token."})
 
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
     except JWTError as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
+        return JSONResponse(status_code=401, content={"detail": f"Invalid token: {e}"})
 
     user_id: str = payload.get("sub", "")
+    email: str = payload.get("email", "")
     tier: str = payload.get("tier", "FREE")
     role: str = payload.get("role", "user")
     allow_overage: str = "false"
 
     if not user_id:
-        raise HTTPException(status_code=401, detail="Token missing sub claim.")
+        return JSONResponse(status_code=401, content={"detail": "Token missing sub claim."})
+
+    if is_admin_email(email) or is_admin_email(user_id):
+        tier = "ADMIN"
+        role = "admin"
 
     # Try Redis cache for tier & overage updates
     try:
         redis = await get_redis()
         cached = await redis.hgetall(f"user:session:{user_id}")
-        if cached and "tier" in cached:
+        if cached and "tier" in cached and not is_admin_email(email) and not is_admin_email(user_id):
             tier = cached["tier"]
         if cached and "allow_overage" in cached:
             allow_overage = cached["allow_overage"]

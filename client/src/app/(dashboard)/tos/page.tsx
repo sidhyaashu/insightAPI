@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 export default function TermsOfServicePage() {
   return (
-    <div className="flex flex-col min-h-0 flex-1 overflow-y-auto p-6 space-y-8 max-w-4xl mx-auto w-full font-sans pb-20">
+    <div className="p-4 sm:p-8 space-y-8 max-w-4xl mx-auto w-full font-sans pb-28">
       {/* Back link */}
       <div>
         <Link href="/chat">

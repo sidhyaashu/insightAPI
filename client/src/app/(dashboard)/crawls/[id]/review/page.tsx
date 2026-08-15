@@ -511,7 +511,7 @@ export default function CrawlReviewPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-0 flex-1 overflow-y-auto pb-24">
+    <div className="flex flex-col min-h-0 flex-1 overflow-y-auto pb-36">
       {/* ── Top Header ────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 border-b border-border/50 bg-background/95 backdrop-blur-md px-6 py-4">
         <div className="flex items-center justify-between gap-4 flex-wrap">
