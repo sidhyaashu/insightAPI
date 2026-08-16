@@ -464,6 +464,19 @@
 
 ---
 
+## 23. Azure AI Foundry (Microsoft Foundry) & `gpt-4.1-mini` Deployment Integration
+
+* **Dynamic Azure OpenAI Tier Routing (`services/agent-service/app/agents/nodes/llm_client.py`)**:
+  * Unified support for Microsoft Foundry deployments (`gpt-4.1-mini`, `gpt-4.1`, etc.).
+  * Single deployment fallback architecture: When a primary deployment (e.g. `gpt-4.1-mini`) is set via `AZURE_OPENAI_DEPLOYMENT`, all agent execution tiers (`FAST`, `SMART`, `VISION`) seamlessly inherit the deployment unless explicitly overridden.
+  * Granular cost estimation and usage ledger tracking updated with `gpt-4.1-mini` token pricing ($0.15 / 1M tokens).
+* **Streaming Chat Service (`services/agent-service/app/services/chat_service.py`)**:
+  * Azure OpenAI streaming chat integration using `AzureChatOpenAI` targeting configured Microsoft Foundry endpoints and api-versions (`2024-12-01-preview`).
+* **Frontend Model Selectors (`client/`)**:
+  * Integrated `GPT-4.1 Mini` with `AZURE FOUNDRY` badge across `ClaudeModelSelector`, `CrawlSettingsModal`, and workspace Settings.
+
+---
+
 
 ## 🧪 Verification & Test Results
 
@@ -482,6 +495,7 @@
 | **Domain Verification Unit Tests** | `pytest services/agent-service/tests/test_domain_verification.py` | **7/7 Tests Passed** |
 | **Pay-Per-Crawl Unit Tests** | `pytest services/agent-service/tests/test_pay_per_crawl.py` | **4/4 Tests Passed** |
 | **Review Gate Unit Tests** | `pytest services/agent-service/tests/test_review_gate.py` | **3/3 Tests Passed** |
+| **Azure AI Foundry & ModelRouter Tests** | `pytest services/agent-service/tests/test_azure_model_router.py` | **5/5 Tests Passed** |
 | **Comprehensive Feature Suite** | `pytest (collected across all test suites)` | **90/90 Tests Passed (100%)** |
 | **Markdown & Regex Unit Tests** | `node --experimental-strip-types scripts/verify-markdown.mjs` | **17/17 Tests Passed** |
 | **Database Migrations** | `alembic upgrade head (revisions 001 -> 005)` | **Applied & Verified** |
@@ -576,8 +590,39 @@ InsightAPI/
 │           └── test_security_reasoner.py # 26 unit & integration tests
 ├── nginx/
 │   └── nginx.conf                  # Nginx proxy with cookie forwarding & log token redaction
-├── docker-compose.yml              # Multi-container stack (including Celery worker)
 ├── .env                            # Environment configuration
 └── V1_IMPLEMENTATION.md            # Master specification & tracking document
 ```
+
+---
+
+## 24. Intelligent Crawl Intent Auto-Router & Zero-Flicker Chat Session Lifecycle
+
+### Architectural Enhancements:
+1. **Intelligent Crawl Intent Auto-Router**:
+   - When a user attaches a Target Web Application URL (e.g. `https://www.nseindia.com/`) in the `PromptInput` and enters an extraction/exploration command (e.g. `extract 10 page`, `crawl 20 pages`, `scan API endpoints`), the chat engine automatically detects the crawl intent and parameterizes `maxPages`.
+   - Instead of routing an extraction command to a text-only LLM chat endpoint, it directly launches the autonomous Playwright crawler via `crawlsApi.startCrawl(...)` and mounts `<CrawlReasoningMessage />` in the conversation thread.
+
+2. **Zero-Flicker Chat State & WebSocket Resiliency**:
+   - **Clean Close Discrimination**: `useWebSocket` distinguishes between clean connection teardowns (`event.code === 1000` / `1005` or React unmounts) and true network errors, preventing false error state poisoning when transitioning between `/chat` and `/chat?session={id}`.
+   - **Optimistic Message Preservation**: `chatSlice.ts` guards optimistic in-flight messages against history wipes on session creation.
+   - **In-Thread Error Resilience**: If a WebSocket error occurs, the thread displays a structured GitHub-style alert banner (`[!WARNING]`) with actionable diagnostic instructions rather than abruptly resetting to a blank screen.
+
+---
+
+## 25. Unified Multi-Provider LLM Architecture & Responsive Crawl Execution Modal
+
+### Architectural Enhancements:
+1. **Unified Multi-Provider LLM Architecture (`app/core/llm/`)**:
+   - **Modular Provider Adapters**: Concrete adapters for Azure AI Foundry (`AzureOpenAIProvider`), Google Gemini (`GoogleGeminiProvider`), OpenAI (`OpenAIProvider`), Anthropic Claude (`AnthropicClaudeProvider`), and Ollama/Local (`OllamaLocalProvider`) implementing the unified `BaseLLMProvider` protocol.
+   - **Automated Fallback & Dynamic Routing**: Resolves available providers dynamically with priority order ($\text{Azure} \to \text{Gemini} \to \text{OpenAI} \to \text{Anthropic} \to \text{Local}$) and routes per-request model selections from the chat header or crawl modal on the fly.
+   - **Single Source of Truth**: Completely eliminated redundant client construction in `chat_service.py` while maintaining 100% backward compatibility via `llm_client.py`.
+
+2. **Responsive Wide 2-Column Crawl Settings Modal ([`CrawlSettingsModal.tsx`](file:///c:/Users/ashut/Devlopments/InsightAPI/client/src/components/chat/CrawlSettingsModal.tsx))**:
+   - **Viewport-Guaranteed Sizing**: Switched from narrow `max-w-md` single-column to wide `max-w-3xl` with `max-h-[88vh]`, fixed header, fixed footer, and an internal smooth scrolling area (`overflow-y-auto`).
+   - **Clean 2-Column Visual Organization**:
+     - *Left Column*: Target Web App URL, Real-Time Domain Verification Badge, ToS Authorization Checkbox, Login Profile Auto-Authentication, and Custom Auth Header.
+     - *Right Column*: AI Intelligence Model Selector, Quick-Select Max Pages (5, 15, 25, 50), and Engine Runtime Toggles (Playwright JS Rendering, Anti-Bot Stealth Engine, Human-in-the-Loop Gate).
+   - **Instant Error Dismissal**: Clears target URL validation warnings immediately upon user input.
+
 

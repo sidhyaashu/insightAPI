@@ -26,7 +26,9 @@ CRAWL_SESSIONS: Dict[str, Dict[str, Any]] = {}
 
 
 class CrawlRequest(BaseModel):
-    target_url: Optional[str] = Field(default=None, alias="url")
+    model_config = {"populate_by_name": True, "extra": "ignore"}
+
+    target_url: Optional[str] = None
     url: Optional[str] = None
     max_pages: Optional[int] = 10
     headless: Optional[bool] = True
@@ -61,9 +63,9 @@ class CrawlRequest(BaseModel):
 
     def get_url(self) -> str:
         res = self.target_url or self.url
-        if not res:
+        if not res or not str(res).strip():
             raise ValueError("Target URL is required.")
-        return res
+        return str(res).strip()
 
 
 class CrawlResponse(BaseModel):

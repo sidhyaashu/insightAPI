@@ -393,6 +393,7 @@ async def chat_websocket(
                 payload = json.loads(raw)
                 user_message = payload.get("message", "").strip()
                 crawl_context = payload.get("crawl_context")
+                requested_model = payload.get("model")
             except json.JSONDecodeError:
                 await websocket.send_json({"type": "error", "message": "Invalid JSON payload."})
                 continue
@@ -444,7 +445,7 @@ async def chat_websocket(
 
             # Stream LLM tokens
             full_response: list[str] = []
-            async for token_text in stream_chat_response(history, user_message, crawl_context):
+            async for token_text in stream_chat_response(history, user_message, crawl_context, model=requested_model):
                 await websocket.send_json({"type": "token", "content": token_text})
                 full_response.append(token_text)
 

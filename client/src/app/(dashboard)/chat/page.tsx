@@ -213,9 +213,21 @@ function IndustryChatInner() {
       if (lastMessage.quota) setQuota(lastMessage.quota);
     } else if (lastMessage.type === "error") {
       dispatch(setIsGenerating(false));
-      toast.error(lastMessage.message || "An error occurred.");
+      const errText = lastMessage.message || "WebSocket disconnected.";
+      toast.error(errText);
+      if (!currentStreamRef.current && activeSessionId) {
+        dispatch(
+          addMessage({
+            id: `err-${Date.now()}`,
+            session_id: activeSessionId,
+            role: "assistant",
+            content: `> [!WARNING]\n> **Chat Service Alert**: ${errText}\n\n*Please ensure services are running and your LLM API keys are configured in \`.env\`.*`,
+            created_at: new Date().toISOString(),
+          })
+        );
+      }
     }
-  }, [lastMessage, dispatch, modelSelection.model, openPanel, sendMessage]);
+  }, [lastMessage, dispatch, modelSelection.model, openPanel, sendMessage, activeSessionId]);
 
   // ── Greeting Header ─────────────────────────────────────────────────────────
   const greetingTitle = useMemo(() => {
@@ -231,6 +243,39 @@ function IndustryChatInner() {
     async (msg: PromptInputMessage) => {
       const text = msg.text.trim();
       if (!text) return;
+
+      // ── Intelligent Crawl Intent Detection ──────────────────────────────────
+      // If user attached a Target Web App URL and asked to extract/crawl/explore:
+      const hasAttachedUrl = Boolean(msg.targetUrl?.trim());
+      const lowerText = text.toLowerCase();
+      const isCrawlIntent =
+        hasAttachedUrl &&
+        (lowerText.includes("extract") ||
+          lowerText.includes("crawl") ||
+          lowerText.includes("scrape") ||
+          lowerText.includes("page") ||
+          lowerText.includes("explore") ||
+          lowerText.includes("scan") ||
+          lowerText.includes("inspect"));
+
+      if (isCrawlIntent && msg.targetUrl) {
+        const pageMatch =
+          text.match(/(?:extract|crawl|scrape|explore|scan|limit|max)\s*(\d+)\s*(?:pages?|eps?|endpoints?)?/i) ||
+          text.match(/(\d+)\s*(?:pages?|eps?|endpoints?)/i);
+        const maxPages = pageMatch ? Math.min(Math.max(parseInt(pageMatch[1], 10), 1), 100) : 10;
+
+        await handleStartCrawl({
+          targetUrl: msg.targetUrl.trim(),
+          maxPages,
+          jsRendering: true,
+          stealthMode: true,
+          requireReview: true,
+          model: modelSelection.model,
+          authHeader: "",
+          tosAccepted: true,
+        });
+        return;
+      }
 
       if (quota?.is_exceeded && quota.tier !== "ADMIN" && quota.tier !== "ENTERPRISE") {
         setQuotaExceededMsg(
@@ -325,10 +370,20 @@ function IndustryChatInner() {
 
   // ── Crawl modal handler ─────────────────────────────────────────────────────
   const handleStartCrawl = async (settings: CrawlSettings) => {
+    const rawUrl = settings.targetUrl.trim();
+    if (!rawUrl) {
+      toast.error("Please enter a Target Web Application URL.");
+      throw new Error("Please enter a Target Web Application URL.");
+    }
+
+    const normalizedUrl = rawUrl.startsWith("http://") || rawUrl.startsWith("https://")
+      ? rawUrl
+      : `https://${rawUrl}`;
+
     try {
       toast.loading("Initiating agentic exploration...");
       const res = await crawlsApi.startCrawl({
-        target_url: settings.targetUrl,
+        target_url: normalizedUrl,
         max_pages: settings.maxPages,
         goal: undefined,
         require_review: settings.requireReview,
@@ -337,12 +392,37 @@ function IndustryChatInner() {
       });
       toast.dismiss();
       toast.success("Autonomous exploration started!");
-      // Open inline CrawlReasoningMessage in the chat thread (Claude.ai style:
-      // live execution steps appear as left-side reasoning, not a modal overlay)
-      openCrawlSession(res.session_id || res.id || "", settings.targetUrl);
+
+      // 1. If at root /chat (no session yet), create in DB first and update URL smoothly
+      if (!activeSessionId) {
+        try {
+          const autoTitle = `Crawl: ${normalizedUrl.replace(/^https?:\/\//, "")}`;
+          const session = await dispatch(createSessionThunk(autoTitle)).unwrap();
+          knownSessionIdRef.current = session.id;
+          router.replace(`/chat?session=${session.id}`, { scroll: false });
+        } catch {
+          // Non-critical if session creation fails
+        }
+      }
+
+      // 2. Add an explicit user message showing the crawl request in the thread
+      dispatch(
+        addMessage({
+          id: `crawl-launch-${Date.now()}`,
+          session_id: activeSessionId || "pending",
+          role: "user",
+          content: `🌐 Autonomous Web Crawl: **${normalizedUrl}**\n\n* **Target**: \`${normalizedUrl}\`\n* **Max Pages**: \`${settings.maxPages}\`\n* **Model**: \`${settings.model}\`\n* **Review Gate**: \`${settings.requireReview ? "Enabled" : "Disabled"}\``,
+          created_at: new Date().toISOString(),
+        })
+      );
+
+      // 3. Open inline CrawlReasoningMessage in the chat thread
+      openCrawlSession(res.session_id || res.id || "", normalizedUrl);
     } catch (err: any) {
       toast.dismiss();
-      toast.error(err.response?.data?.detail || "Failed to start crawl.");
+      const errMsg = err.response?.data?.detail || err.message || "Failed to start crawl.";
+      toast.error(errMsg);
+      throw new Error(errMsg);
     }
   };
 

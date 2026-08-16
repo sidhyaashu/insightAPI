@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * CrawlReasoningMessage
@@ -92,6 +92,10 @@ export function CrawlReasoningMessage() {
     events,
     isCompleted,
     isConnected,
+    crawlStatus,
+    capturedCount,
+    capturedEndpoints,
+    errorMessage,
     activeCost,
     pendingApproval,
     approving,
@@ -117,18 +121,30 @@ export function CrawlReasoningMessage() {
     return completed;
   }, [events]);
 
-  const capturedCount = useMemo(
-    () => events.filter((e) => e.type === "endpoint_captured").length,
-    [events]
+  const displayEndpointCount = useMemo(
+    () =>
+      Math.max(
+        capturedCount,
+        capturedEndpoints.length,
+        events.filter((e) => e.type === "endpoint_captured").length
+      ),
+    [capturedCount, capturedEndpoints.length, events]
   );
 
   if (!sessionId) return null;
 
-  const statusLabel = isCompleted
-    ? "COMPLETED"
-    : isConnected
-    ? "EXPLORING"
-    : "CONNECTING";
+  const statusLabel =
+    crawlStatus === "pending_review"
+      ? "PENDING REVIEW"
+      : crawlStatus === "complete"
+      ? "COMPLETED"
+      : crawlStatus === "error"
+      ? "FAILED"
+      : isCompleted
+      ? "COMPLETED"
+      : isConnected
+      ? "EXPLORING"
+      : "CONNECTING";
 
   return (
     <div className="w-full space-y-2 font-sans">
@@ -472,11 +488,202 @@ export function CrawlReasoningMessage() {
         </ChainOfThoughtContent>
       </ChainOfThought>
 
+      {/* --- Completion & Review Decision Cards --- */}
+      {isCompleted && (
+        <>
+          {crawlStatus === "pending_review" ? (
+            <div className="mt-3 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 backdrop-blur-xs space-y-3 animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-amber-500/20">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30 shrink-0">
+                    <ShieldCheckIcon className="size-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-xs text-foreground">
+                      Autonomous Exploration Finished &mdash; Human Review Required
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground">
+                      Target: <span className="font-mono text-foreground font-medium">{targetUrl}</span>
+                    </p>
+                  </div>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/40 text-amber-400 bg-amber-500/10 font-mono text-[10px] uppercase self-start sm:self-center"
+                >
+                  pending_review
+                </Badge>
+              </div>
+
+              <div className="text-xs text-muted-foreground leading-relaxed">
+                {displayEndpointCount > 0 ? (
+                  <>
+                    Discovered <strong>{displayEndpointCount} endpoint{displayEndpointCount === 1 ? "" : "s"}</strong>.
+                    Because <strong>Review Gate</strong> is enabled, schema generation is paused so you can inspect, edit parameters, or exclude endpoints before finalizing the OpenAPI and Postman specs.
+                  </>
+                ) : (
+                  <>
+                    Exploration finished with 0 new API endpoints detected. Review Gate is active &mdash; you can inspect the crawl trace or proceed to finalize.
+                  </>
+                )}
+              </div>
+
+              {capturedEndpoints.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold">
+                    Discovered Endpoints ({capturedEndpoints.length})
+                  </div>
+                  <div className="max-h-32 overflow-y-auto space-y-1 pr-1 font-mono text-[11px]">
+                    {capturedEndpoints.map((ep, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/40 text-xs"
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[9px] px-1 py-0 h-4 font-mono font-bold shrink-0",
+                              ep.method === "GET"
+                                ? "text-blue-400 border-blue-500/30 bg-blue-500/10"
+                                : ep.method === "POST"
+                                ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
+                                : "text-amber-400 border-amber-500/30 bg-amber-500/10"
+                            )}
+                          >
+                            {ep.method}
+                          </Badge>
+                          <span className="text-foreground truncate">{ep.template_route || ep.url}</span>
+                        </div>
+                        {ep.status && (
+                          <Badge variant="secondary" className="text-[9px] font-mono px-1.5 py-0 h-4 shrink-0">
+                            HTTP {ep.status}
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2.5 pt-1">
+                <Link href={`/crawls/${sessionId}/review`}>
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs px-3.5 gap-1.5 bg-amber-500 hover:bg-amber-600 text-black font-semibold cursor-pointer shadow-xs"
+                  >
+                    <span>Review & Approve Schema</span>
+                    <ArrowRightIcon className="size-3.5" />
+                  </Button>
+                </Link>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearCrawlSession}
+                  className="h-8 text-xs px-3 text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          ) : crawlStatus === "complete" ? (
+            <div className="mt-3 p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 backdrop-blur-xs space-y-3 animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-emerald-500/20">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shrink-0">
+                    <CheckCircle2Icon className="size-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-xs text-foreground">
+                      Autonomous Crawl & Specification Ready
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground">
+                      Target: <span className="font-mono text-foreground font-medium">{targetUrl}</span>
+                    </p>
+                  </div>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="border-emerald-500/40 text-emerald-400 bg-emerald-500/10 font-mono text-[10px] uppercase self-start sm:self-center"
+                >
+                  completed
+                </Badge>
+              </div>
+
+              <div className="text-xs text-muted-foreground leading-relaxed">
+                Autonomous exploration finished with <strong>{displayEndpointCount} endpoint{displayEndpointCount === 1 ? "" : "s"}</strong> captured. OpenAPI 3.1 & Postman Collections are generated and ready.
+              </div>
+
+              <div className="flex items-center gap-2.5 pt-1">
+                <Link href={`/reports/${sessionId}`}>
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs px-3.5 gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer shadow-xs"
+                  >
+                    <span>View Intelligence Report</span>
+                    <ArrowRightIcon className="size-3.5" />
+                  </Button>
+                </Link>
+                <Link href={`/crawls/${sessionId}/review`}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs px-3 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                  >
+                    Review Schema
+                  </Button>
+                </Link>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearCrawlSession}
+                  className="h-8 text-xs px-3 text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          ) : crawlStatus === "error" ? (
+            <div className="mt-3 p-4 rounded-2xl border border-rose-500/30 bg-rose-500/5 backdrop-blur-xs space-y-3 animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex items-center justify-between gap-2 pb-2 border-b border-rose-500/20">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/30 shrink-0">
+                    <ShieldAlertIcon className="size-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-xs text-foreground">
+                      Autonomous Exploration Encountered an Error
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground font-mono truncate max-w-sm">
+                      {errorMessage || "Crawl session failed."}
+                    </p>
+                  </div>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="border-rose-500/40 text-rose-400 bg-rose-500/10 font-mono text-[10px] uppercase"
+                >
+                  failed
+                </Badge>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={clearCrawlSession}
+                className="h-7 text-xs px-3 text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Dismiss
+              </Button>
+            </div>
+          ) : null}
+        </>
+      )}
+
       {/* --- Footer: completion actions + target --- */}
       <div className="flex items-center justify-between gap-3 pt-1 text-[11px] text-muted-foreground font-mono">
         <span className="truncate max-w-xs">{targetUrl}</span>
         <div className="flex items-center gap-2 shrink-0">
-          <span>{capturedCount} endpoints</span>
+          <span>{displayEndpointCount} endpoints</span>
           {isCompleted && sessionId && (
             <Link href={`/crawls/${sessionId}/review`}>
               <Button

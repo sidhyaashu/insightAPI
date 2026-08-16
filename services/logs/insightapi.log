@@ -1147,3 +1147,610 @@ KeyError: 'visited_urls'
 [2026-08-15 02:30:53] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 4.458899092228386 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 5, model: gemini-3.7-flash\nPlease retry in 6.572827612s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '5'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '6s'}]}}.
 [2026-08-15 02:31:01] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 8.613304278275862 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
 [2026-08-15 02:49:43] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 15:42:05] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 15:42:07] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-16 15:42:07] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-16 15:42:07] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-16 15:42:07] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-16 15:42:07] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-16 15:42:07] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-16 15:42:07] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-16 15:42:08] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:42:08] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-16 15:42:08] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:42:08] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:44:23] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 15:45:18] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 15:45:22] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-16 15:45:22] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-16 15:45:22] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-16 15:45:22] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-16 15:45:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:24] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:24] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 207f65ba-c95f-4f2a-a2da-74b2d9f74721. Total memory size: 1
+[2026-08-16 15:45:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:24] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:24] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 4c0bff2a-6ca6-4e99-8e7d-007272621d5d. Total memory size: 2
+[2026-08-16 15:45:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:24] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:24] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 2 endpoints for session 041d8311-d01a-4a9b-b101-b8fd266cd79b. Total memory size: 4
+[2026-08-16 15:45:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:24] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:24] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 262e4dec-7e79-4a25-be29-1371ee35d7e9. Total memory size: 5
+[2026-08-16 15:45:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:24] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:24] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 33ca6f21-8e59-4f51-9ca4-9000cf4dd555. Total memory size: 6
+[2026-08-16 15:45:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:24] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:24] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 6ae100db-a113-4400-abd4-5c2c1b06bb63. Total memory size: 7
+[2026-08-16 15:45:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:24] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:24] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 2 endpoints for session 8762a41e-0790-4ccf-9857-aa0b8dc816ce. Total memory size: 9
+[2026-08-16 15:45:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:24] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:24] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session a8f34a66-c691-4fd4-a441-ef621e303d75. Total memory size: 10
+[2026-08-16 15:45:24] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-16 15:45:24] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-16 15:45:24] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-16 15:45:24] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-16 15:45:24] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-16 15:45:24] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-16 15:45:24] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-16 15:45:24] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-16 15:45:24] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_auth_crawl] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 15:45:24] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'example.com'
+[2026-08-16 15:45:24] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> DISALLOWED by robots.txt: Blocked path: https://example.com/admin
+[2026-08-16 15:45:24] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> DISALLOWED by robots.txt: Blocked path: https://example.com/private/data
+[2026-08-16 15:45:25] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> Rate Limit Pausing: Waiting 0.10s to respect 100ms domain delay.
+[2026-08-16 15:45:25] [INFO] [insightapi.core.compliance:102] - Compliance Guard [disallowed-site.com] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'disallowed-site.com'
+[2026-08-16 15:45:25] [INFO] [insightapi.core.compliance:102] - Compliance Guard [blocked-target.org] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'blocked-target.org'
+[2026-08-16 15:45:25] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://blocked-target.org | Max Pages: 1 | Rate Limit: 500ms | Headless: True | Humanized: True | Authenticated: False | Goal: all APIs
+[2026-08-16 15:45:25] [INFO] [insightapi.engine.sdk:177] - LLMCostManager initialized | Budget: 50000 tokens | Planner cap: 20 calls
+[2026-08-16 15:45:25] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 2: Parsing robots.txt Compliance Rules[/bold yellow] Domain target: https://blocked-target.org
+[2026-08-16 15:45:25] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 3: Launching Browser & Navigating[/bold yellow] URL: https://blocked-target.org
+[2026-08-16 15:45:33] [WARNING] [app.engine.browser.manager:192] - Navigation with strategy 'commit' failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://blocked-target.org/
+Call log:
+  - navigating to "https://blocked-target.org/", waiting until "commit"
+
+[2026-08-16 15:45:33] [WARNING] [app.engine.browser.manager:192] - Navigation with strategy 'domcontentloaded' failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://blocked-target.org/
+Call log:
+  - navigating to "https://blocked-target.org/", waiting until "domcontentloaded"
+
+[2026-08-16 15:45:33] [WARNING] [app.engine.browser.manager:192] - Navigation with strategy 'load' failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://blocked-target.org/
+Call log:
+  - navigating to "https://blocked-target.org/", waiting until "load"
+
+[2026-08-16 15:45:33] [INFO] [agent.vision:62] - 👁️ VisionFallback Triggered! AXTree extracted only 0 elements (threshold=3). Capturing screenshot for Vision LLM analysis.
+[2026-08-16 15:45:33] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.VISION, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:33] [WARNING] [agent.vision:146] - VisionFallback execution failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Using original snapshot.
+[2026-08-16 15:45:33] [INFO] [insightapi.engine.sdk:193] - Initial AXTree DOM snapshot extracted: 0 interactive elements found.
+[2026-08-16 15:45:33] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 4: Starting Autonomous Exploration Loop[/bold yellow] Invoking LangGraph Agent Graph
+[2026-08-16 15:45:33] [INFO] [insightapi.agent.planner:401] - Crawl limit reached (1/1 pages). Terminating crawl graph.
+[2026-08-16 15:45:33] [INFO] [insightapi.engine.sdk:264] - Exploration complete. Total captured network calls: 0
+[2026-08-16 15:45:33] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 5: Running Endpoint Disambiguation & Schema Analyzer[/bold yellow] 
+[2026-08-16 15:45:33] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 6: Session Completed Successfully[/bold yellow] Final Unique Endpoints Discovered: 0
+[2026-08-16 15:45:34] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-16 15:45:34] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-16 15:45:34] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-16 15:45:34] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_tos_pass] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 15:45:34] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-16 15:45:34] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_verified_direct] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 15:45:34] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://httpbin.org/get | Max Pages: 2 | Rate Limit: 500ms | Headless: True | Humanized: True | Authenticated: False | Goal: all APIs
+[2026-08-16 15:45:34] [INFO] [insightapi.engine.sdk:177] - LLMCostManager initialized | Budget: 50000 tokens | Planner cap: 20 calls
+[2026-08-16 15:45:34] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 2: Parsing robots.txt Compliance Rules[/bold yellow] Domain target: https://httpbin.org/get
+[2026-08-16 15:45:36] [INFO] [insightapi.core.compliance:102] - Compliance Guard [httpbin.org] -> robots.txt Not Found: Status 503. Defaulting to allow_all.
+[2026-08-16 15:45:36] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 3: Launching Browser & Navigating[/bold yellow] URL: https://httpbin.org/get
+[2026-08-16 15:45:39] [INFO] [agent.vision:62] - 👁️ VisionFallback Triggered! AXTree extracted only 0 elements (threshold=3). Capturing screenshot for Vision LLM analysis.
+[2026-08-16 15:45:39] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.VISION, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:39] [WARNING] [agent.vision:146] - VisionFallback execution failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Using original snapshot.
+[2026-08-16 15:45:39] [INFO] [insightapi.engine.sdk:193] - Initial AXTree DOM snapshot extracted: 0 interactive elements found.
+[2026-08-16 15:45:39] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 4: Starting Autonomous Exploration Loop[/bold yellow] Invoking LangGraph Agent Graph
+[2026-08-16 15:45:39] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-16 15:45:39] [INFO] [insightapi.agent.planner:488] - Frontier queue empty. No remaining unexplored interactive elements found. Terminating crawl.
+[2026-08-16 15:45:39] [INFO] [insightapi.engine.sdk:264] - Exploration complete. Total captured network calls: 0
+[2026-08-16 15:45:39] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 5: Running Endpoint Disambiguation & Schema Analyzer[/bold yellow] 
+[2026-08-16 15:45:39] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 6: Session Completed Successfully[/bold yellow] Final Unique Endpoints Discovered: 0
+[2026-08-16 15:45:40] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-16 15:45:41] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:45:41] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-16 15:45:41] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:45:41] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:45:41] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-16 15:45:42] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:45:42] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-16 15:45:42] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:45:42] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:45:42] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-16 15:45:43] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:45:43] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-16 15:45:43] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:45:43] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:45:47] [INFO] [insightapi.test:9] - Testing production logging initialization.
+[2026-08-16 15:45:47] [INFO] [insightapi.test_step:85] - [bold yellow]STEP 99: Testing Step Title[/bold yellow] Step details info
+[2026-08-16 15:45:48] [WARNING] [insightapi.agent.executor:28] - 🔒 Login wall detected on URL: about:blank. Halting crawl graph with 'auth_required'.
+[2026-08-16 15:45:49] [WARNING] [insightapi.agent.executor:116] - ⚠️ Modal trap detected! 3 consecutive actions inside modal yielded no new endpoints. Force-closing modal.
+[2026-08-16 15:45:49] [INFO] [app.api.v1.endpoints.crawls:430] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-16 15:45:49] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-16 15:45:49] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_overage_123] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 15:45:49] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-16 15:45:49] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_payg_456] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 15:45:50] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-16 15:45:50] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-16 15:45:50] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-16 15:45:50] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-16 15:45:50] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-16 15:45:50] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:45:50] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.example.com/results
+[2026-08-16 15:45:50] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:45:50] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:45:52] [INFO] [insightapi.agent.executor:65] - 🌐 Popup / target='_blank' page detected: about:blank. Capturing traffic and closing.
+[2026-08-16 15:45:52] [INFO] [insightapi.agent.executor:79] - Popup page closed. Restored focus to primary crawling page.
+[2026-08-16 15:45:52] [INFO] [queue.client:43] - Enqueued crawl job [crawl-job-999] to Redis queue 'insightapi:queue:crawls'
+[2026-08-16 15:45:52] [INFO] [queue.worker:49] - Worker test-worker: Starting execution of crawl job [crawl-job-999]
+[2026-08-16 15:45:52] [INFO] [queue.worker:55] - Worker test-worker: Successfully completed crawl job [crawl-job-999]
+[2026-08-16 15:45:52] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:52] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Endpoints exported without AI summaries.
+[2026-08-16 15:45:52] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session ca4c75c5-939c-4b02-80af-85b70969521f. Total memory size: 11
+[2026-08-16 15:45:52] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://httpbin.org/get | Max Pages: 2 | Rate Limit: 500ms | Headless: True | Humanized: True | Authenticated: False | Goal: all APIs
+[2026-08-16 15:45:52] [INFO] [insightapi.engine.sdk:177] - LLMCostManager initialized | Budget: 50000 tokens | Planner cap: 20 calls
+[2026-08-16 15:45:52] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 2: Parsing robots.txt Compliance Rules[/bold yellow] Domain target: https://httpbin.org/get
+[2026-08-16 15:45:54] [INFO] [insightapi.core.compliance:102] - Compliance Guard [httpbin.org] -> robots.txt Not Found: Status 503. Defaulting to allow_all.
+[2026-08-16 15:45:54] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 3: Launching Browser & Navigating[/bold yellow] URL: https://httpbin.org/get
+[2026-08-16 15:45:57] [INFO] [agent.vision:62] - 👁️ VisionFallback Triggered! AXTree extracted only 0 elements (threshold=3). Capturing screenshot for Vision LLM analysis.
+[2026-08-16 15:45:57] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.VISION, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:45:57] [WARNING] [agent.vision:146] - VisionFallback execution failed (OpenAIError: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.). Using original snapshot.
+[2026-08-16 15:45:57] [INFO] [insightapi.engine.sdk:193] - Initial AXTree DOM snapshot extracted: 0 interactive elements found.
+[2026-08-16 15:45:57] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 4: Starting Autonomous Exploration Loop[/bold yellow] Invoking LangGraph Agent Graph
+[2026-08-16 15:45:57] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-16 15:45:57] [INFO] [insightapi.agent.planner:488] - Frontier queue empty. No remaining unexplored interactive elements found. Terminating crawl.
+[2026-08-16 15:45:57] [INFO] [insightapi.engine.sdk:264] - Exploration complete. Total captured network calls: 0
+[2026-08-16 15:45:57] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 5: Running Endpoint Disambiguation & Schema Analyzer[/bold yellow] 
+[2026-08-16 15:45:57] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 6: Session Completed Successfully[/bold yellow] Final Unique Endpoints Discovered: 0
+[2026-08-16 15:45:58] [INFO] [app.main:51] - Sentry DSN not configured — error tracking disabled.
+[2026-08-16 15:46:02] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `#delete-btn` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-16 15:46:02] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `.pagination-next` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'next'
+[2026-08-16 15:46:02] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-2 Context] -> [[bold red]UNSAFE[/bold red]] Target: `form > button` | Reason: [Tier-2 Context] Ambiguous action 'Submit' is inside a high-risk form/context: 'password'
+[2026-08-16 15:46:02] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-2 Context] -> [[bold green]SAFE[/bold green]] Target: `form > button` | Reason: [Tier-2 Context] Action 'Submit' evaluated as safe read-only/navigation target.
+[2026-08-16 15:46:02] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `#view-item-1` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-16 15:46:02] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [CACHE] -> [[bold green]SAFE[/bold green]] Target: `#view-item-1` | Reason: [Cache Hit] [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-16 15:46:04] [WARNING] [insightapi.agent.security_reasoner:335] - ⛔ Security testing blocked: Domain 'unverified-target.com' is not verified or active_testing_opt_in is not enabled for user user-unverified.
+[2026-08-16 15:46:04] [WARNING] [insightapi.agent.security_reasoner:335] - ⛔ Security testing blocked: Domain 'verified-target.com' is not verified or active_testing_opt_in is not enabled for user user-verified-no-opt-in.
+[2026-08-16 15:46:04] [INFO] [agent.security_repo:94] - 🔒 New security pattern | sig=sig1… | class=idor | destructive=False | outcome=vulnerable
+[2026-08-16 15:46:04] [INFO] [agent.security_repo:111] - 📍 New distinct target for sig=test-sig… | domain=new-domain.com | distinct_count=16
+[2026-08-16 15:46:04] [INFO] [agent.security_repo:111] - 📍 New distinct target for sig=test-sig… | domain=d4.com | distinct_count=5
+[2026-08-16 15:46:04] [INFO] [agent.security_repo:111] - 📍 New distinct target for sig=test-sig… | domain=d20.com | distinct_count=20
+[2026-08-16 15:46:04] [INFO] [agent.security_repo:111] - 📍 New distinct target for sig=test-sig… | domain=d14.com | distinct_count=15
+[2026-08-16 15:46:04] [INFO] [agent.security_repo:160] - 🎓 Security pattern promoted → learned | sig=test-sig… | occurrences=20 | distinct_targets=15 | confidence=0.99
+[2026-08-16 15:46:04] [INFO] [insightapi.agent.security_reasoner:387] - ⚡ Cache HIT | sig=8ccc1e47763c… | class=idor | confidence=0.9 | occurrences=20 | distinct_targets=15
+[2026-08-16 15:46:08] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:12] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:16] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:16] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=1 | approvals_queued=0
+[2026-08-16 15:46:16] [INFO] [insightapi.agent.security_reasoner:420] - 🔍 LLM reasoning | sig=8ccc1e47763c… | reason=thresholds not met (occ=20, dist=14)
+[2026-08-16 15:46:20] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:24] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:24] [ERROR] [agent.llm_client:249] - ModelRouter: Failed to build LLM client (provider=azure, tier=ModelTier.FAST, model=gpt-4.1-mini): Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:46:24] [WARNING] [insightapi.agent.security_reasoner:675] - LLM classifier failed: Missing credentials. Please pass one of `api_key`, `azure_ad_token`, `azure_ad_token_provider`, or the `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` environment variables.
+[2026-08-16 15:46:28] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:28] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=0 | approvals_queued=0
+[2026-08-16 15:46:28] [INFO] [insightapi.agent.security_reasoner:420] - 🔍 LLM reasoning | sig=8ccc1e47763c… | reason=cache miss
+[2026-08-16 15:46:32] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:32] [INFO] [insightapi.agent.security_reasoner:446] - 🔐 Destructive test proposed | sig=8ccc1e47763c… | class=auth_bypass → queuing approval
+[2026-08-16 15:46:36] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:36] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=0 | approvals_queued=1
+[2026-08-16 15:46:36] [INFO] [insightapi.agent.security_reasoner:357] - 🔐 Destructive pattern found | sig=8ccc1e47763c… → queuing approval request (will NOT auto-execute)
+[2026-08-16 15:46:40] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:40] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=0 | approvals_queued=1
+[2026-08-16 15:46:41] [INFO] [insightapi.agent.security_reasoner:387] - ⚡ Cache HIT | sig=8ccc1e47763c… | class=idor | confidence=0.9 | occurrences=20 | distinct_targets=15
+[2026-08-16 15:46:45] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:49] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:53] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:46:53] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=1 | approvals_queued=0
+[2026-08-16 15:46:53] [INFO] [insightapi.agent.security_reasoner:420] - 🔍 LLM reasoning | sig=8ccc1e47763c… | reason=cache miss
+[2026-08-16 15:46:57] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:47:01] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:47:05] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:47:05] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=1 | approvals_queued=0
+[2026-08-16 15:47:05] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-16 15:47:09] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:47:13] [WARNING] [app.api.v1.endpoints.crawls:292] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-16 15:47:13] [INFO] [app.api.v1.endpoints.crawls:305] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-16 15:47:17] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+[2026-08-16 15:47:17] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 1/3)
+[2026-08-16 15:47:17] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 2/3)
+[2026-08-16 15:47:17] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 3/3)
+[2026-08-16 15:47:17] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-16 15:47:17] [INFO] [service.fuzzer:77] - APIFuzzer: schemathesis not installed. Using built-in property schema analyzer.
+[2026-08-16 15:47:17] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session test-session-ext. Total memory size: 12
+[2026-08-16 15:47:17] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-16 15:47:17] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-16 15:47:17] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-16 15:47:17] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-16 15:47:17] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-16 15:47:17] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-16 15:47:17] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-16 15:47:18] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:47:18] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-16 15:47:18] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:47:18] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:47:52] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 15:47:52] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-16 15:47:54] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:47:54] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-16 15:47:54] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:47:54] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:47:54] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-16 15:47:55] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:47:55] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-16 15:47:55] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:47:55] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:47:55] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-16 15:47:56] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 15:47:56] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-16 15:47:56] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 15:47:56] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 15:48:05] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 15:54:59] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 15:55:00] [WARNING] [agent.llm_client:181] - LLM_PROVIDER is configured as 'azure' but AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_API_KEY is not set. Falling back to available provider credentials.
+[2026-08-16 16:04:30] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 16:04:32] [WARNING] [agent.llm_client:181] - LLM_PROVIDER is configured as 'azure' but AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_API_KEY is not set. Falling back to available provider credentials.
+[2026-08-16 16:04:35] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-16 16:04:36] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:04:36] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-16 16:04:36] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:04:36] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:04:36] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-16 16:04:37] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:04:37] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-16 16:04:37] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:04:37] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:04:37] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-16 16:04:38] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:04:38] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-16 16:04:38] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:04:38] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:04:38] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-16 16:04:38] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-16 16:04:38] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-16 16:04:38] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_tos_pass] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:04:38] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-16 16:04:38] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_verified_direct] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:12:57] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 16:13:31] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 16:13:43] [WARNING] [agent.llm_cost:98] - LLMCostManager: Token budget exhausted (1100/1000). Falling back to heuristics.
+[2026-08-16 16:13:43] [INFO] [agent.llm_cost:108] - LLMCostManager: Planner call limit reached (2/2). Switching to heuristic scoring.
+[2026-08-16 16:13:43] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:13:44] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-16 16:13:45] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:13:45] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-16 16:13:45] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:13:45] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:13:45] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-16 16:13:46] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:13:46] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-16 16:13:46] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:13:46] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:13:46] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-16 16:13:47] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:13:47] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-16 16:13:47] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:13:47] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:13:47] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-16 16:13:47] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-16 16:13:48] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-16 16:13:48] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_tos_pass] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:13:48] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-16 16:13:48] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_verified_direct] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:14:19] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 16:14:30] [WARNING] [agent.llm_cost:98] - LLMCostManager: Token budget exhausted (1100/1000). Falling back to heuristics.
+[2026-08-16 16:14:30] [INFO] [agent.llm_cost:108] - LLMCostManager: Planner call limit reached (2/2). Switching to heuristic scoring.
+[2026-08-16 16:14:30] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:14:30] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-16 16:14:31] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:14:31] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-16 16:14:31] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:14:31] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:14:31] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-16 16:14:32] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:14:32] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-16 16:14:32] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:14:32] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:14:32] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-16 16:14:33] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:14:33] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-16 16:14:33] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:14:33] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:14:33] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-16 16:14:33] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-16 16:14:33] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-16 16:14:33] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_tos_pass] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:14:33] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-16 16:14:33] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_verified_direct] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:14:44] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 16:14:51] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `button#details` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-16 16:14:51] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.btn-danger` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-16 16:14:51] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button[name='checkout']` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'purchase'
+[2026-08-16 16:14:51] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `button.grant-admin` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'grant admin'
+[2026-08-16 16:14:51] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:14:52] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:15:06] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 13814720-8516-4b49-822c-e0a10424dd5b. Total memory size: 1
+[2026-08-16 16:15:06] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:15:08] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:15:21] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.9180007524813742 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:16:18] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session c7337361-4060-42e2-9d8b-131a72044c66. Total memory size: 2
+[2026-08-16 16:16:18] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:16:20] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:16:35] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.6060616112399024 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:16:48] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 2 endpoints for session e5d408d3-3e02-47b7-b598-5f3dc10e6b84. Total memory size: 4
+[2026-08-16 16:16:48] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:16:50] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:17:04] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.2720510962970577 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:17:17] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 2.9937665746718984 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:17:31] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 4.77459520001443 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:17:45] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 4452653d-4db4-48ab-920b-023a32f025c9. Total memory size: 5
+[2026-08-16 16:17:45] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:17:46] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:17:54] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session eaf05c6d-8f46-46ba-81be-98050213e96a. Total memory size: 6
+[2026-08-16 16:17:54] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:17:56] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:18:01] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.8361003096674775 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:18:07] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 2.5808605360020804 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:18:16] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 4.071084389496953 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:18:52] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 8.413510846781968 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:19:06] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session fb383c18-8d80-400d-a7d1-143e1b307f52. Total memory size: 7
+[2026-08-16 16:19:06] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:19:07] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:19:36] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 2 endpoints for session e5bdb640-ccac-443b-9d1d-accae3548e66. Total memory size: 9
+[2026-08-16 16:19:36] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:19:37] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:19:48] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.2589089191672667 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:19:57] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 4b651fc0-2c73-41e5-ae50-58f74ac329b2. Total memory size: 10
+[2026-08-16 16:19:57] [INFO] [app.engine.auth.form_auth:34] - 🔑 FormAuthHandler: Navigating to login URL: https://app.example.com/login
+[2026-08-16 16:19:57] [INFO] [app.engine.auth.form_auth:82] - Filling username field via selector: #email
+[2026-08-16 16:19:57] [INFO] [app.engine.auth.form_auth:92] - Filling password field via selector: #pass
+[2026-08-16 16:19:57] [INFO] [app.engine.auth.form_auth:108] - Clicking submit button via selector: #login-btn
+[2026-08-16 16:19:57] [INFO] [app.engine.auth.form_auth:129] - ✓ FormAuthHandler: Login executed. Pre-URL: https://app.example.com/dashboard -> Post-URL: https://app.example.com/dashboard | Cookies captured: 1
+[2026-08-16 16:19:57] [INFO] [app.engine.auth.executor:40] - 🔐 AutoLoginExecutor: Initiating automated login for profile 'Admin Test' [form] -> https://example.com/login
+[2026-08-16 16:19:57] [INFO] [app.engine.auth.executor:68] - ✓ AutoLoginExecutor: Successfully authenticated profile 'Admin Test'. Captured 1 session cookies.
+[2026-08-16 16:19:57] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_auth_crawl` from system
+[2026-08-16 16:19:57] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_auth_crawl] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:19:57] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:19:57] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'example.com'
+[2026-08-16 16:19:57] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> DISALLOWED by robots.txt: Blocked path: https://example.com/admin
+[2026-08-16 16:19:57] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> DISALLOWED by robots.txt: Blocked path: https://example.com/private/data
+[2026-08-16 16:19:57] [INFO] [insightapi.core.compliance:102] - Compliance Guard [example.com] -> Rate Limit Pausing: Waiting 0.10s to respect 100ms domain delay.
+[2026-08-16 16:19:57] [INFO] [insightapi.core.compliance:102] - Compliance Guard [disallowed-site.com] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'disallowed-site.com'
+[2026-08-16 16:19:57] [INFO] [insightapi.core.compliance:102] - Compliance Guard [blocked-target.org] -> Parsed Inline robots.txt Rules: Rules loaded for domain 'blocked-target.org'
+[2026-08-16 16:19:57] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://blocked-target.org | Max Pages: 1 | Rate Limit: 500ms | Headless: True | Humanized: True | Authenticated: False | Goal: all APIs
+[2026-08-16 16:19:57] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-16 16:19:57] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-16 16:19:57] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-16 16:19:57] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_tos_pass] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:19:57] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-16 16:19:57] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_verified_direct] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:19:57] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://httpbin.org/get | Max Pages: 2 | Rate Limit: 500ms | Headless: True | Humanized: True | Authenticated: False | Goal: all APIs
+[2026-08-16 16:19:58] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `form#login-form button[type='submit']`
+[2026-08-16 16:19:59] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:19:59] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://example.com/login
+[2026-08-16 16:19:59] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:19:59] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:19:59] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `div.react-modal form div.btn-container button#submit-btn`
+[2026-08-16 16:20:00] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:20:00] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/signup
+[2026-08-16 16:20:00] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:20:00] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:20:00] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `button#complete-order`
+[2026-08-16 16:20:01] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:20:01] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.saas.io/checkout
+[2026-08-16 16:20:01] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:20:01] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 2 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:20:11] [WARNING] [agent.llm_cost:98] - LLMCostManager: Token budget exhausted (1100/1000). Falling back to heuristics.
+[2026-08-16 16:20:11] [INFO] [agent.llm_cost:108] - LLMCostManager: Planner call limit reached (2/2). Switching to heuristic scoring.
+[2026-08-16 16:20:11] [INFO] [insightapi.test:9] - Testing production logging initialization.
+[2026-08-16 16:20:11] [INFO] [insightapi.test_step:85] - [bold yellow]STEP 99: Testing Step Title[/bold yellow] Step details info
+[2026-08-16 16:20:12] [WARNING] [insightapi.agent.executor:28] - 🔒 Login wall detected on URL: about:blank. Halting crawl graph with 'auth_required'.
+[2026-08-16 16:20:13] [WARNING] [insightapi.agent.executor:116] - ⚠️ Modal trap detected! 3 consecutive actions inside modal yielded no new endpoints. Force-closing modal.
+[2026-08-16 16:20:13] [INFO] [app.api.v1.endpoints.crawls:430] - User user_123 exceeded daily quota (1) on FREE tier. Allowing overage run billed via pay-per-crawl.
+[2026-08-16 16:20:13] [INFO] [insightapi.audit:70] - [Audit] user_123 performed `crawl.create` on `session_overage_123` from system
+[2026-08-16 16:20:13] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_overage_123] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:20:13] [INFO] [insightapi.audit:70] - [Audit] user_payg_1 performed `crawl.create` on `session_payg_456` from system
+[2026-08-16 16:20:13] [WARNING] [app.api.v1.endpoints.crawls:527] - Celery dispatch failed for [session_payg_456] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:20:13] [INFO] [app.api.v1.endpoints.crawls:142] - Reported metered crawl usage for user user_test_99, session crawl_test_99: status=200
+[2026-08-16 16:20:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-16 16:20:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-16 16:20:13] [INFO] [insightapi.audit:70] - [Audit] default-user performed `export.download` on `test_gen_session_99` from system
+[2026-08-16 16:20:13] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [type] on selector `input#query`
+[2026-08-16 16:20:14] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:20:14] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://app.example.com/results
+[2026-08-16 16:20:14] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:20:14] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:20:15] [INFO] [insightapi.agent.executor:65] - 🌐 Popup / target='_blank' page detected: about:blank. Capturing traffic and closing.
+[2026-08-16 16:20:15] [INFO] [insightapi.agent.executor:79] - Popup page closed. Restored focus to primary crawling page.
+[2026-08-16 16:20:16] [INFO] [queue.client:43] - Enqueued crawl job [crawl-job-999] to Redis queue 'insightapi:queue:crawls'
+[2026-08-16 16:20:16] [INFO] [queue.worker:49] - Worker test-worker: Starting execution of crawl job [crawl-job-999]
+[2026-08-16 16:20:16] [INFO] [queue.worker:55] - Worker test-worker: Successfully completed crawl job [crawl-job-999]
+[2026-08-16 16:20:16] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:20:17] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:20:23] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.1449765465947404 seconds as it raised ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}.
+[2026-08-16 16:20:29] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 328bdda6-6f3c-40ba-9317-b7b78a78e9fd. Total memory size: 11
+[2026-08-16 16:20:29] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://httpbin.org/get | Max Pages: 2 | Rate Limit: 500ms | Headless: True | Humanized: True | Authenticated: False | Goal: all APIs
+[2026-08-16 16:20:29] [INFO] [app.main:51] - Sentry DSN not configured — error tracking disabled.
+[2026-08-16 16:20:33] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold red]UNSAFE[/bold red]] Target: `#delete-btn` | Reason: [Tier-1 Guardrail] Unsafe action matches high-risk pattern: 'delete'
+[2026-08-16 16:20:33] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `.pagination-next` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'next'
+[2026-08-16 16:20:33] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-2 Context] -> [[bold red]UNSAFE[/bold red]] Target: `form > button` | Reason: [Tier-2 Context] Ambiguous action 'Submit' is inside a high-risk form/context: 'password'
+[2026-08-16 16:20:33] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-2 Context] -> [[bold green]SAFE[/bold green]] Target: `form > button` | Reason: [Tier-2 Context] Action 'Submit' evaluated as safe read-only/navigation target.
+[2026-08-16 16:20:33] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [Tier-1 Regex] -> [[bold green]SAFE[/bold green]] Target: `#view-item-1` | Reason: [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-16 16:20:33] [INFO] [insightapi.agent.risk_evaluator:91] - Risk Classifier [CACHE] -> [[bold green]SAFE[/bold green]] Target: `#view-item-1` | Reason: [Cache Hit] [Tier-1 Guardrail] Safe navigation action matches pattern: 'view'
+[2026-08-16 16:20:39] [WARNING] [insightapi.agent.security_reasoner:335] - ⛔ Security testing blocked: Domain 'unverified-target.com' is not verified or active_testing_opt_in is not enabled for user user-unverified.
+[2026-08-16 16:20:39] [WARNING] [insightapi.agent.security_reasoner:335] - ⛔ Security testing blocked: Domain 'verified-target.com' is not verified or active_testing_opt_in is not enabled for user user-verified-no-opt-in.
+[2026-08-16 16:20:39] [INFO] [agent.security_repo:94] - 🔒 New security pattern | sig=sig1… | class=idor | destructive=False | outcome=vulnerable
+[2026-08-16 16:20:39] [INFO] [agent.security_repo:111] - 📍 New distinct target for sig=test-sig… | domain=new-domain.com | distinct_count=16
+[2026-08-16 16:20:39] [INFO] [agent.security_repo:111] - 📍 New distinct target for sig=test-sig… | domain=d4.com | distinct_count=5
+[2026-08-16 16:20:39] [INFO] [agent.security_repo:111] - 📍 New distinct target for sig=test-sig… | domain=d20.com | distinct_count=20
+[2026-08-16 16:20:39] [INFO] [agent.security_repo:111] - 📍 New distinct target for sig=test-sig… | domain=d14.com | distinct_count=15
+[2026-08-16 16:20:39] [INFO] [agent.security_repo:160] - 🎓 Security pattern promoted → learned | sig=test-sig… | occurrences=20 | distinct_targets=15 | confidence=0.99
+[2026-08-16 16:20:39] [INFO] [insightapi.agent.security_reasoner:387] - ⚡ Cache HIT | sig=8ccc1e47763c… | class=idor | confidence=0.9 | occurrences=20 | distinct_targets=15
+[2026-08-16 16:20:39] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:20:39] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=1 | approvals_queued=0
+[2026-08-16 16:20:39] [INFO] [insightapi.agent.security_reasoner:420] - 🔍 LLM reasoning | sig=8ccc1e47763c… | reason=thresholds not met (occ=20, dist=14)
+[2026-08-16 16:20:39] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:20:39] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Event loop is closed
+[2026-08-16 16:20:39] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:20:40] [INFO] [google_genai.models:8718] - AFC is enabled with max remote calls: 10.
+[2026-08-16 16:20:41] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 1.193322122955505 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.7-flash\nPlease retry in 18.345747933s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '18s'}]}}.
+[2026-08-16 16:20:42] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 2.485560180456368 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.7-flash\nPlease retry in 16.880664798s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '16s'}]}}.
+[2026-08-16 16:20:45] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 4.589498123488836 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.7-flash\nPlease retry in 14.033695903s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '14s'}]}}.
+[2026-08-16 16:20:50] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 8.893772264717226 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.7-flash\nPlease retry in 9.2236446s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '9s'}]}}.
+[2026-08-16 16:20:59] [INFO] [google_genai._api_client:65] - Retrying google.genai._api_client.BaseApiClient._async_request_once in 16.457874497351575 seconds as it raised ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.7-flash\nPlease retry in 43.590873ms.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '0s'}]}}.
+[2026-08-16 16:21:16] [WARNING] [insightapi.agent.security_reasoner:675] - LLM classifier failed: Error calling model 'gemini-3.7-flash' (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.7-flash\nPlease retry in 43.169093042s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.7-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '43s'}]}}
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=0 | approvals_queued=0
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:420] - 🔍 LLM reasoning | sig=8ccc1e47763c… | reason=cache miss
+[2026-08-16 16:21:16] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:21:16] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Event loop is closed
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:446] - 🔐 Destructive test proposed | sig=8ccc1e47763c… | class=auth_bypass → queuing approval
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=0 | approvals_queued=1
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:357] - 🔐 Destructive pattern found | sig=8ccc1e47763c… → queuing approval request (will NOT auto-execute)
+[2026-08-16 16:21:16] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Event loop is closed
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=0 | approvals_queued=1
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:387] - ⚡ Cache HIT | sig=8ccc1e47763c… | class=idor | confidence=0.9 | occurrences=20 | distinct_targets=15
+[2026-08-16 16:21:16] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=1 | approvals_queued=0
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:420] - 🔍 LLM reasoning | sig=8ccc1e47763c… | reason=cache miss
+[2026-08-16 16:21:16] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-16 16:21:16] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for crawl-001: Event loop is closed
+[2026-08-16 16:21:16] [INFO] [insightapi.agent.security_reasoner:555] - 🔒 SecurityReasonerNode done | endpoints=1 | findings=1 | approvals_queued=0
+[2026-08-16 16:21:16] [INFO] [app.engine.browser.manager:114] - BrowserManager: Launching context with injected storage_state (authenticated session).
+[2026-08-16 16:21:16] [WARNING] [app.api.v1.endpoints.crawls:122] - Failed to publish WS event for test-session-leak-check: Event loop is closed
+[2026-08-16 16:21:21] [WARNING] [app.api.v1.endpoints.crawls:292] - DB update failed for crawl test-session-leak-check: [WinError 1225] The remote computer refused the network connection
+[2026-08-16 16:21:21] [INFO] [app.api.v1.endpoints.crawls:305] - Crawl test-session-leak-check: persisted 0 endpoint snapshots for drift tracking.
+[2026-08-16 16:21:21] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 1/3)
+[2026-08-16 16:21:21] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 2/3)
+[2026-08-16 16:21:21] [INFO] [engine.stagnation_detector:49] - ⚠️ Zero-yield action recorded (Streak: 3/3)
+[2026-08-16 16:21:21] [INFO] [insightapi.audit:70] - [Audit] enterprise_cust_1 performed `export.download` on `sess_xyz` from 192.168.1.50
+[2026-08-16 16:21:21] [INFO] [service.fuzzer:77] - APIFuzzer: schemathesis not installed. Using built-in property schema analyzer.
+[2026-08-16 16:21:21] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session test-session-ext. Total memory size: 12
+[2026-08-16 16:21:21] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-16 16:21:21] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #2 at (280, 75): Toolbar Export API button
+[2026-08-16 16:21:21] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-16 16:21:21] [INFO] [insightapi.agent.planner:479] - 👁️ Frontier queue empty on Canvas page. Triggering VisionPlannerNode fallback...
+[2026-08-16 16:21:21] [INFO] [agent.vision_planner:94] - 👁️ VisionPlannerNode: Querying Vision LLM with Set-of-Mark screenshot...
+[2026-08-16 16:21:21] [INFO] [agent.vision_planner:113] - 🎯 VisionPlannerNode selected Mark #1 at (150, 80): Toolbar new shape button
+[2026-08-16 16:21:21] [INFO] [insightapi.agent.executor:175] - ⚡ Executing action [click] on selector `canvas[mark=1,x=150,y=80]`
+[2026-08-16 16:21:22] [INFO] [insightapi.agent.executor:183] - Action execution status: success=True | message=''
+[2026-08-16 16:21:22] [INFO] [insightapi.agent.executor:195] - Explored new URL page state: https://draw.canvas-app.com
+[2026-08-16 16:21:22] [INFO] [insightapi.agent.executor:354] - Re-extracted interactive AXTree snapshot: 0 elements remaining.
+[2026-08-16 16:21:22] [INFO] [engine.stagnation_detector:52] - ✨ API yield recorded! Captured 1 new endpoint(s). Reset zero-yield streak.
+[2026-08-16 16:22:13] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 16:22:15] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://httpbin.org/get | Max Pages: 2 | Rate Limit: 500ms | Headless: True | Humanized: True | Authenticated: False | Goal: all APIs
+[2026-08-16 16:22:21] [INFO] [insightapi.engine.sdk:177] - LLMCostManager initialized | Budget: 50000 tokens | Planner cap: 20 calls
+[2026-08-16 16:22:21] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 2: Parsing robots.txt Compliance Rules[/bold yellow] Domain target: https://httpbin.org/get
+[2026-08-16 16:22:28] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 3: Launching Browser & Navigating[/bold yellow] URL: https://httpbin.org/get
+[2026-08-16 16:22:59] [WARNING] [app.engine.browser.manager:192] - Navigation with strategy 'commit' failed: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://httpbin.org/get", waiting until "commit"
+
+[2026-08-16 16:23:11] [INFO] [agent.vision:62] - 👁️ VisionFallback Triggered! AXTree extracted only 0 elements (threshold=3). Capturing screenshot for Vision LLM analysis.
+[2026-08-16 16:23:14] [WARNING] [agent.vision:146] - VisionFallback execution failed (NotFoundError: Error code: 404 - {'error': {'code': '404', 'message': 'Resource not found'}}). Using original snapshot.
+[2026-08-16 16:23:14] [INFO] [insightapi.engine.sdk:193] - Initial AXTree DOM snapshot extracted: 0 interactive elements found.
+[2026-08-16 16:23:14] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 4: Starting Autonomous Exploration Loop[/bold yellow] Invoking LangGraph Agent Graph
+[2026-08-16 16:23:14] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-16 16:23:14] [INFO] [insightapi.agent.planner:488] - Frontier queue empty. No remaining unexplored interactive elements found. Terminating crawl.
+[2026-08-16 16:23:14] [INFO] [insightapi.engine.sdk:264] - Exploration complete. Total captured network calls: 0
+[2026-08-16 16:23:14] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 5: Running Endpoint Disambiguation & Schema Analyzer[/bold yellow] 
+[2026-08-16 16:23:14] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 6: Session Completed Successfully[/bold yellow] Final Unique Endpoints Discovered: 0
+[2026-08-16 16:23:18] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (NotFoundError: Error code: 404 - {'error': {'code': '404', 'message': 'Resource not found'}}). Endpoints exported without AI summaries.
+[2026-08-16 16:23:18] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 4f85b586-60e1-452e-9976-554cee21c937. Total memory size: 1
+[2026-08-16 16:23:18] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 1: Initializing Engine Session[/bold yellow] Target URL: https://httpbin.org/get | Max Pages: 2 | Rate Limit: 500ms | Headless: True | Humanized: True | Authenticated: False | Goal: all APIs
+[2026-08-16 16:23:18] [INFO] [insightapi.engine.sdk:177] - LLMCostManager initialized | Budget: 50000 tokens | Planner cap: 20 calls
+[2026-08-16 16:23:18] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 2: Parsing robots.txt Compliance Rules[/bold yellow] Domain target: https://httpbin.org/get
+[2026-08-16 16:23:18] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 3: Launching Browser & Navigating[/bold yellow] URL: https://httpbin.org/get
+[2026-08-16 16:23:48] [WARNING] [app.engine.browser.manager:192] - Navigation with strategy 'commit' failed: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://httpbin.org/get", waiting until "commit"
+
+[2026-08-16 16:23:49] [INFO] [insightapi.engine.network:97] - Captured [REST] GET https://httpbin.org/get -> Status 200
+[2026-08-16 16:23:51] [INFO] [agent.vision:62] - 👁️ VisionFallback Triggered! AXTree extracted only 0 elements (threshold=3). Capturing screenshot for Vision LLM analysis.
+[2026-08-16 16:23:53] [WARNING] [agent.vision:146] - VisionFallback execution failed (NotFoundError: Error code: 404 - {'error': {'code': '404', 'message': 'Resource not found'}}). Using original snapshot.
+[2026-08-16 16:23:53] [INFO] [insightapi.engine.sdk:193] - Initial AXTree DOM snapshot extracted: 0 interactive elements found.
+[2026-08-16 16:23:53] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 4: Starting Autonomous Exploration Loop[/bold yellow] Invoking LangGraph Agent Graph
+[2026-08-16 16:23:53] [ERROR] [asyncio:1879] - Task exception was never retrieved
+future: <Task finished name='Task-37' coro=<AsyncClient.aclose() done, defined at C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py:1978> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1985, in aclose
+    await self._transport.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_transports\default.py", line 406, in aclose
+    await self._pool.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_backends\anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\streams\tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\_backends\_asyncio.py", line 1344, in aclose
+    self._transport.close()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 109, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 833, in call_soon
+    self._check_closed()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 556, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[2026-08-16 16:23:54] [ERROR] [asyncio:1879] - Task exception was never retrieved
+future: <Task finished name='Task-38' coro=<AsyncClient.aclose() done, defined at C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py:1978> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1985, in aclose
+    await self._transport.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_transports\default.py", line 406, in aclose
+    await self._pool.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_backends\anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\streams\tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\_backends\_asyncio.py", line 1344, in aclose
+    self._transport.close()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 109, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 833, in call_soon
+    self._check_closed()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\ashut\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 556, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[2026-08-16 16:23:54] [INFO] [insightapi.agent.planner:448] - Planner discovered 0 new candidate actions on page. Frontier queue size: 0
+[2026-08-16 16:23:54] [INFO] [insightapi.agent.planner:488] - Frontier queue empty. No remaining unexplored interactive elements found. Terminating crawl.
+[2026-08-16 16:23:56] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (NotFoundError: Error code: 404 - {'error': {'code': '404', 'message': 'Resource not found'}}). Endpoints exported without AI summaries.
+[2026-08-16 16:23:56] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 9209c22b-3586-4967-8bda-66b09e26393b. Total memory size: 2
+[2026-08-16 16:23:56] [INFO] [insightapi.engine.sdk:264] - Exploration complete. Total captured network calls: 1
+[2026-08-16 16:23:56] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 5: Running Endpoint Disambiguation & Schema Analyzer[/bold yellow] 
+[2026-08-16 16:23:58] [WARNING] [agent.analyzer:509] - LLM semantic enrichment failed (NotFoundError: Error code: 404 - {'error': {'code': '404', 'message': 'Resource not found'}}). Endpoints exported without AI summaries.
+[2026-08-16 16:23:58] [INFO] [agent.vector_store:117] - 💾 VectorStore: Stored 1 endpoints for session 65d3a608-94b0-4bd2-a926-173f935aea7b. Total memory size: 3
+[2026-08-16 16:23:58] [INFO] [insightapi.engine.sdk:85] - [bold yellow]STEP 6: Session Completed Successfully[/bold yellow] Final Unique Endpoints Discovered: 1
+[2026-08-16 16:24:00] [INFO] [app.main:51] - Sentry DSN not configured — error tracking disabled.
+[2026-08-16 16:26:06] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-16 16:26:11] [INFO] [app.core.domain_verifier:86] - DNS TXT verification succeeded for example.com on _insightapi-challenge.example.com
+[2026-08-16 16:26:11] [INFO] [app.core.domain_verifier:114] - Well-Known file verification succeeded for example.com at https://example.com/.well-known/insightapi-verification.txt
+[2026-08-16 16:26:11] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_tos_pass` from 203.0.113.45
+[2026-08-16 16:26:11] [WARNING] [app.api.v1.endpoints.crawls:529] - Celery dispatch failed for [session_tos_pass] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:26:11] [INFO] [insightapi.audit:70] - [Audit] user_test_1 performed `crawl.create` on `session_verified_direct` from 10.0.0.1
+[2026-08-16 16:26:11] [WARNING] [app.api.v1.endpoints.crawls:529] - Celery dispatch failed for [session_verified_direct] (No module named 'celery'). Using BackgroundTasks fallback — crawl tied to web process lifecycle.
+[2026-08-16 16:26:14] [WARNING] [agent.llm_cost:98] - LLMCostManager: Token budget exhausted (1100/1000). Falling back to heuristics.
+[2026-08-16 16:26:14] [INFO] [agent.llm_cost:108] - LLMCostManager: Planner call limit reached (2/2). Switching to heuristic scoring.

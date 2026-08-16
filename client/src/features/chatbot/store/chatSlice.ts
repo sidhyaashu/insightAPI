@@ -173,15 +173,23 @@ const chatSlice = createSlice({
 
     // ── loadSessionHistory ────────────────────────────────────────────────────
     builder
-      .addCase(loadSessionHistoryThunk.pending, (state) => {
-        state.isLoadingHistory = true;
-        state.messages = [];
-        state.currentStreamContent = "";
+      .addCase(loadSessionHistoryThunk.pending, (state, action) => {
+        const targetId = action.meta.arg;
+        if (state.activeSessionId !== targetId) {
+          state.isLoadingHistory = true;
+          state.messages = [];
+          state.currentStreamContent = "";
+        }
       })
       .addCase(loadSessionHistoryThunk.fulfilled, (state, action) => {
         state.isLoadingHistory = false;
         state.activeSessionId = action.payload.session.id;
-        state.messages = action.payload.messages;
+        // If we already have optimistic messages that are generating, merge them intelligently
+        if (state.isGenerating && state.messages.length > action.payload.messages.length) {
+          // Keep current generating state
+        } else {
+          state.messages = action.payload.messages;
+        }
         // Update session in list if present
         const idx = state.sessions.findIndex((s) => s.id === action.payload.session.id);
         if (idx >= 0) {

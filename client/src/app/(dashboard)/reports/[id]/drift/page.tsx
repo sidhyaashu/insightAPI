@@ -302,6 +302,45 @@ function DriftReportInner() {
   }
 
   if (error) {
+    const isFirstCrawl =
+      error.toLowerCase().includes("no prior crawl snapshot") ||
+      error.toLowerCase().includes("at least two crawls") ||
+      error.toLowerCase().includes("not found");
+
+    if (isFirstCrawl) {
+      return (
+        <div className="flex flex-col items-center justify-center flex-1 gap-5 p-8 text-center max-w-lg mx-auto min-h-[60vh]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
+            <IconGitCompare className="size-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-base font-bold text-foreground">
+              Initial API Baseline Snapshot Established
+            </h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This is your project&apos;s first completed crawl. <strong>API Drift Detection</strong> compares two consecutive crawls to automatically detect breaking schema changes, type mutations, and added/removed endpoints.
+            </p>
+            <p className="text-[11px] text-muted-foreground/80 font-mono">
+              Baseline Crawl: {compareCrawlId}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 pt-2">
+            <Link href={`/reports/${compareCrawlId}`}>
+              <Button size="sm" className="gap-1.5 text-xs font-semibold">
+                <IconSparkles className="size-4" />
+                View API Documentation
+              </Button>
+            </Link>
+            <Link href="/chat">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                Query in Chat
+              </Button>
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center flex-1 gap-4 p-8 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 border border-destructive/20">

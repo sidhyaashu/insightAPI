@@ -82,6 +82,10 @@
 * **Global Frosted Header**: `(dashboard)/layout.tsx` must maintain a persistent top header with `<SidebarTrigger />`, active section breadcrumb (`Category / Title`), active user tier indicator, `<ThemeToggle />`, and `<UserAvatarMenu />`.
 * **Guaranteed Vertical Scrolling**: `<main className="flex flex-1 flex-col min-h-0 w-full overflow-y-auto bg-background">` guarantees that all dashboard views have fluid vertical scrolling. All secondary content views (`/audit-logs`, `/auth-profiles`, `/billing`, `/domains`, `/intelligence`, `/reports`, `/security`, `/settings`, `/tos`) must include bottom padding (`pb-28`) so bottom controls and table items are never clipped.
 
+### J. Modal Dialog Sizing & Viewport Containment
+* **Viewport Containment**: All modals and dialogs with 4+ fields or complex settings must use a responsive multi-column layout (`max-w-2xl` or `max-w-3xl`) with strict viewport height limits (`max-h-[88vh]`), fixed header/footer containers, and an internal scrollable body (`overflow-y-auto`).
+* **Input-Driven Validation Clearance**: Validation error banners must automatically dismiss when the user corrects or types into the invalid input field.
+
 ---
 
 ## 3. Maintenance of Guidelines & Feature Tracking

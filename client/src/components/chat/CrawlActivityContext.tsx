@@ -38,6 +38,14 @@ export interface CrawlEventItem {
   data: Record<string, any>;
 }
 
+export interface DiscoveredEndpoint {
+  method: string;
+  url: string;
+  template_route?: string;
+  status?: number;
+  resource_type?: string;
+}
+
 // --- Context Shape ---
 
 interface CrawlActivityContextValue {
@@ -46,6 +54,10 @@ interface CrawlActivityContextValue {
   events: CrawlEventItem[];
   isCompleted: boolean;
   isConnected: boolean;
+  crawlStatus: "idle" | "running" | "pending_review" | "complete" | "error";
+  capturedCount: number;
+  capturedEndpoints: DiscoveredEndpoint[];
+  errorMessage: string | null;
   activeCost: { tokens: number; costUsd: number; cacheHits: number };
   pendingApproval: Record<string, any> | null;
   approving: boolean;
@@ -70,6 +82,10 @@ export function CrawlActivityProvider({
   const [targetUrl, setTargetUrl] = useState("");
   const [events, setEvents] = useState<CrawlEventItem[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [crawlStatus, setCrawlStatus] = useState<"idle" | "running" | "pending_review" | "complete" | "error">("idle");
+  const [capturedCount, setCapturedCount] = useState(0);
+  const [capturedEndpoints, setCapturedEndpoints] = useState<DiscoveredEndpoint[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeCost, setActiveCost] = useState({
     tokens: 0,
     costUsd: 0,
@@ -84,7 +100,7 @@ export function CrawlActivityProvider({
   }, [onCrawlComplete]);
 
   const { isConnected, lastMessage } = useWebSocket(
-    sessionId ? `/ws/crawls/${sessionId}/stream` : null
+    sessionId ? `/crawls/${sessionId}/stream` : null
   );
 
   useEffect(() => {
@@ -110,9 +126,41 @@ export function CrawlActivityProvider({
       setActiveCost((prev) => ({ ...prev, cacheHits: prev.cacheHits + 1 }));
     } else if (eventType === "approval_required") {
       setPendingApproval(lastMessage);
-    } else if (eventType === "complete" || eventType === "pending_review") {
+    } else if (eventType === "endpoint_captured") {
+      setCapturedEndpoints((prev) => {
+        const route = lastMessage.template_route || lastMessage.url;
+        const exists = prev.some((e) => (e.template_route || e.url) === route && e.method === lastMessage.method);
+        if (exists) return prev;
+        return [
+          ...prev,
+          {
+            method: lastMessage.method || "GET",
+            url: lastMessage.url,
+            template_route: lastMessage.template_route,
+            status: lastMessage.status,
+            resource_type: lastMessage.resource_type,
+          },
+        ];
+      });
+      setCapturedCount((prev) => prev + 1);
+    } else if (eventType === "pending_review") {
       setIsCompleted(true);
+      setCrawlStatus("pending_review");
+      if (lastMessage.captured_count !== undefined) {
+        setCapturedCount(lastMessage.captured_count);
+      }
       if (sessionId) onCrawlCompleteRef.current?.(sessionId);
+    } else if (eventType === "complete") {
+      setIsCompleted(true);
+      setCrawlStatus("complete");
+      if (lastMessage.captured_count !== undefined) {
+        setCapturedCount(lastMessage.captured_count);
+      }
+      if (sessionId) onCrawlCompleteRef.current?.(sessionId);
+    } else if (eventType === "error") {
+      setIsCompleted(true);
+      setCrawlStatus("error");
+      setErrorMessage(lastMessage.message || "An unexpected error occurred during exploration.");
     }
   }, [lastMessage, sessionId]);
 
@@ -121,6 +169,10 @@ export function CrawlActivityProvider({
     setTargetUrl(url);
     setEvents([]);
     setIsCompleted(false);
+    setCrawlStatus("running");
+    setCapturedCount(0);
+    setCapturedEndpoints([]);
+    setErrorMessage(null);
     setPendingApproval(null);
     setApproving(false);
     setActiveCost({ tokens: 0, costUsd: 0, cacheHits: 0 });
@@ -131,6 +183,10 @@ export function CrawlActivityProvider({
     setTargetUrl("");
     setEvents([]);
     setIsCompleted(false);
+    setCrawlStatus("idle");
+    setCapturedCount(0);
+    setCapturedEndpoints([]);
+    setErrorMessage(null);
     setPendingApproval(null);
     setActiveCost({ tokens: 0, costUsd: 0, cacheHits: 0 });
   }, []);
@@ -168,6 +224,10 @@ export function CrawlActivityProvider({
         events,
         isCompleted,
         isConnected,
+        crawlStatus,
+        capturedCount,
+        capturedEndpoints,
+        errorMessage,
         activeCost,
         pendingApproval,
         approving,

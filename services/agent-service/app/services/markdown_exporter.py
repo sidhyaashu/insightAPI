@@ -144,7 +144,7 @@ class MarkdownExporter:
             ])
 
             if ep.get("related_calls"):
-                lines.append(f"* **Cascading Sub-APIs Triggered ({len(ep['related_calls'])})**:")
+                lines.append(f"* **Related Calls / Cascading Sub-APIs Triggered ({len(ep['related_calls'])})**:")
                 for rc in ep["related_calls"]:
                     rc_method = rc.get("method", "GET")
                     rc_route = rc.get("template_route", "/")

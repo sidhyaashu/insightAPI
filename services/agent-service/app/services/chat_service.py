@@ -63,36 +63,14 @@ When responding to ANY question, analysis request, API design, crawling, or secu
 Be concise, technically accurate, and structured. Always provide practical developer-grade explanations."""
 
 
-def _build_langchain_client():
-    """Build LangChain chat client using Gemini, Azure, or standard OpenAI based on config."""
-    from app.agents.nodes.llm_client import ModelRouter, ModelTier
-
-    provider = ModelRouter.get_provider()
-
-    if provider == "gemini":
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(
-            model=settings.GEMINI_MODEL_SMART,
-            google_api_key=settings.GEMINI_API_KEY,
-            streaming=True,
-            temperature=0.7,
-        )
-    elif provider == "azure":
-        from langchain_openai import AzureChatOpenAI
-        return AzureChatOpenAI(
-            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-            azure_deployment=settings.AZURE_OPENAI_DEPLOYMENT_SMART or settings.AZURE_OPENAI_DEPLOYMENT,
-            api_version=settings.AZURE_OPENAI_API_VERSION,
-            api_key=settings.AZURE_OPENAI_API_KEY,
-            streaming=True,
-            temperature=0.7,
-        )
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(
-        api_key=settings.OPENAI_API_KEY,
-        model=settings.OPENAI_MODEL_SMART,
-        streaming=True,
+def _build_langchain_client(model: str | None = None):
+    """Build LangChain chat client using unified ModelRouter."""
+    from app.core.llm import ModelRouter, ModelTier
+    return ModelRouter.get_llm(
+        tier=ModelTier.SMART,
+        model=model,
         temperature=0.7,
+        streaming=True,
     )
 
 
@@ -100,35 +78,42 @@ async def stream_chat_response(
     history: list[dict],
     user_message: str,
     crawl_context: str | None = None,
+    model: str | None = None,
 ) -> AsyncIterator[str]:
     """
-    Stream LLM chat tokens for a user message given history.
+    Stream LLM chat tokens for a user message given history and optional model override.
 
     Args:
         history: List of {"role": "user"|"assistant", "content": "..."} dicts (from DB).
         user_message: The new user message to respond to.
         crawl_context: Optional context string about the user's last crawl session.
+        model: Optional model or deployment name override selected by the user.
 
     Yields:
         Token strings as the LLM generates the response.
     """
-    client = _build_langchain_client()
-
-    messages = [SystemMessage(content=SYSTEM_PROMPT)]
-
-    if crawl_context:
-        messages.append(SystemMessage(content=f"[User's crawl context]\n{crawl_context}"))
-
-    for msg in history[-20:]:   # keep last 20 messages in context window
-        if msg["role"] == "user":
-            messages.append(HumanMessage(content=msg["content"]))
-        elif msg["role"] == "assistant":
-            messages.append(AIMessage(content=msg["content"]))
-
-    messages.append(HumanMessage(content=user_message))
-
     try:
-        from app.agents.nodes.llm_client import extract_text_content
+        from app.core.llm import ModelRouter, ModelTier, extract_text_content
+
+        client = ModelRouter.get_llm(
+            tier=ModelTier.SMART,
+            model=model,
+            temperature=0.7,
+            streaming=True,
+        )
+
+        messages = [SystemMessage(content=SYSTEM_PROMPT)]
+
+        if crawl_context:
+            messages.append(SystemMessage(content=f"[User's crawl context]\n{crawl_context}"))
+
+        for msg in history[-20:]:   # keep last 20 messages in context window
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(AIMessage(content=msg["content"]))
+
+        messages.append(HumanMessage(content=user_message))
 
         async for chunk in client.astream(messages):
             token = extract_text_content(chunk.content if hasattr(chunk, "content") else chunk)
@@ -136,4 +121,4 @@ async def stream_chat_response(
                 yield token
     except Exception as e:
         logger.error(f"Chat LLM streaming error: {e}")
-        yield f"\n\n[Error: {str(e)}]"
+        yield f"\n\n> [!WARNING]\n> **AI Chat Stream Error**: {str(e)}\n\nPlease ensure your LLM credentials (`AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, or `GEMINI_API_KEY`) are set in `.env`."

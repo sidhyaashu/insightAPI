@@ -23,14 +23,15 @@ export function useWebSocket(path: string | null) {
       onOpen: () => {
         setIsConnected(true);
       },
-      onClose: () => {
+      onClose: (event?: CloseEvent) => {
         setIsConnected(false);
-        setLastMessage({ type: "error", message: "WebSocket connection closed." });
+        if (event && !event.wasClean && event.code !== 1000 && event.code !== 1005) {
+          setLastMessage({ type: "error", message: `WebSocket disconnected (code ${event.code}).` });
+        }
       },
       onMessage: (data) => setLastMessage(data),
       onError: () => {
         setIsConnected(false);
-        setLastMessage({ type: "error", message: "WebSocket connection error." });
       },
     });
 

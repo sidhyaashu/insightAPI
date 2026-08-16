@@ -4,13 +4,19 @@ import type { CrawlSession, CrawlReport } from "@/lib/api-client/types";
 export const crawlsApi = {
   startCrawl: async (params: {
     target_url: string;
+    url?: string;
     max_pages?: number;
     goal?: string;
     require_review?: boolean;
     tos_accepted?: boolean;
     auth_profile_id?: string;
   }): Promise<CrawlSession> => {
-    const { data } = await apiClient.post<CrawlSession>("/v1/crawls/start", params);
+    const payload = {
+      ...params,
+      url: params.url || params.target_url,
+      target_url: params.target_url || params.url,
+    };
+    const { data } = await apiClient.post<CrawlSession>("/v1/crawls/start", payload);
     return data;
   },
 

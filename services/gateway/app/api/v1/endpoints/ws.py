@@ -20,9 +20,12 @@ async def ws_proxy(websocket: WebSocket, path: str):
     """
     await websocket.accept()
 
-    # Build upstream WS URL
+    # Build upstream WS URL (strip redundant leading ws/ if present in path)
     query_string = str(websocket.url.query)
-    upstream_url = f"ws://{settings.AGENT_SERVICE_URL.replace('http://', '')}/ws/{path}"
+    clean_path = path.lstrip("/")
+    if clean_path.startswith("ws/"):
+        clean_path = clean_path[3:].lstrip("/")
+    upstream_url = f"ws://{settings.AGENT_SERVICE_URL.replace('http://', '')}/ws/{clean_path}"
     if query_string:
         upstream_url += f"?{query_string}"
 

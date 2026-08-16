@@ -23,12 +23,33 @@ class Settings(BaseSettings):
     # Azure OpenAI Settings
     AZURE_OPENAI_ENDPOINT: Optional[str] = None
     AZURE_OPENAI_API_VERSION: str = "2024-12-01-preview"
-    AZURE_OPENAI_DEPLOYMENT: str = "gpt-4o"
+    AZURE_OPENAI_DEPLOYMENT: str = "gpt-4.1-mini"
     AZURE_OPENAI_API_KEY: Optional[str] = None
+    AZURE_OPENAI_DEPLOYMENT_FAST: Optional[str] = None
+    AZURE_OPENAI_DEPLOYMENT_SMART: Optional[str] = None
+    AZURE_OPENAI_DEPLOYMENT_VISION: Optional[str] = None
 
-    # Standard OpenAI Settings (Fallback)
+    # Standard OpenAI Settings
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_MODEL_FAST: str = "gpt-4o-mini"
+    OPENAI_MODEL_SMART: str = "gpt-4o"
+    OPENAI_MODEL_VISION: str = "gpt-4o-mini"
+
+    # Anthropic Claude Settings
+    ANTHROPIC_API_KEY: Optional[str] = None
+    ANTHROPIC_MODEL: str = "claude-3-7-sonnet-20250219"
+    ANTHROPIC_MODEL_FAST: str = "claude-3-5-haiku-20241022"
+    ANTHROPIC_MODEL_SMART: str = "claude-3-7-sonnet-20250219"
+    ANTHROPIC_MODEL_VISION: str = "claude-3-7-sonnet-20250219"
+
+    # Local / Ollama / OpenAI-Compatible Server Settings
+    LOCAL_OPENAI_BASE_URL: Optional[str] = None  # e.g. "http://localhost:11434/v1"
+    LOCAL_OPENAI_API_KEY: str = "ollama"
+    LOCAL_OPENAI_MODEL: str = "deepseek-r1:8b"
+    LOCAL_OPENAI_MODEL_FAST: str = "llama3.2:3b"
+    LOCAL_OPENAI_MODEL_SMART: str = "deepseek-r1:8b"
+    LOCAL_OPENAI_MODEL_VISION: str = "llava:7b"
 
     # Database Settings (shared Postgres — values come from root .env)
     POSTGRES_USER: str = "postgres"
@@ -128,9 +149,9 @@ class Settings(BaseSettings):
     OPENAI_MODEL_VISION: str = "gpt-4o-mini"
 
     # Azure model overrides per tier (if using Azure OpenAI)
-    AZURE_OPENAI_DEPLOYMENT_FAST: str = "gpt-4o-mini"
-    AZURE_OPENAI_DEPLOYMENT_SMART: str = "gpt-4o"
-    AZURE_OPENAI_DEPLOYMENT_VISION: str = "gpt-4o-mini"
+    AZURE_OPENAI_DEPLOYMENT_FAST: Optional[str] = None
+    AZURE_OPENAI_DEPLOYMENT_SMART: Optional[str] = None
+    AZURE_OPENAI_DEPLOYMENT_VISION: Optional[str] = None
 
     # ── LLM Cost Management ──────────────────────────────────────────────────
     LLM_TOKEN_BUDGET_PER_CRAWL: int = 50000

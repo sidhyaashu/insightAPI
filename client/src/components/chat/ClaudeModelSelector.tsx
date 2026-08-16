@@ -33,6 +33,8 @@ export function ClaudeModelSelector({ value, onChange }: ClaudeModelSelectorProp
     switch (modelId) {
       case "gemini-3.7-flash":
         return "Gemini 3.7 Flash";
+      case "gpt-4.1-mini":
+        return "GPT-4.1 Mini";
       case "gpt-4o":
         return "GPT-4o Pro";
       case "gpt-4o-mini":
@@ -75,6 +77,23 @@ export function ClaudeModelSelector({ value, onChange }: ClaudeModelSelectorProp
               <p className="text-[11px] text-muted-foreground">High-speed API intelligence with deep reasoning</p>
             </div>
             {value.model === "gemini-3.7-flash" && <CheckIcon className="size-4 text-primary shrink-0 mt-0.5" />}
+          </DropdownMenuItem>
+
+          {/* GPT-4.1 Mini (Azure AI Foundry) */}
+          <DropdownMenuItem
+            onClick={() => onChange({ ...value, model: "gpt-4.1-mini" })}
+            className="flex items-start justify-between p-2.5 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
+          >
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-xs text-foreground">GPT-4.1 Mini</span>
+                <Badge variant="outline" className="text-[9px] px-1 py-0 border-blue-500/40 text-blue-400 font-mono bg-blue-500/10">
+                  AZURE FOUNDRY
+                </Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground">High performance Azure OpenAI reasoning deployment</p>
+            </div>
+            {value.model === "gpt-4.1-mini" && <CheckIcon className="size-4 text-primary shrink-0 mt-0.5" />}
           </DropdownMenuItem>
 
           {/* GPT-4o Pro */}

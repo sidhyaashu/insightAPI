@@ -105,6 +105,7 @@ export default function SettingsPage() {
         type: "select",
         options: [
           { label: "Gemini 3.7 Flash (Fast Hybrid Reasoning)", value: "gemini-3.7-flash" },
+          { label: "GPT-4.1 Mini (Azure AI Foundry / OpenAI)", value: "gpt-4.1-mini" },
           { label: "Claude 3.7 Sonnet (Deep Architectural Reasoning)", value: "claude-3.7-sonnet" },
           { label: "GPT-4o (Multimodal Vision & Analysis)", value: "gpt-4o" },
           { label: "GPT-4o Mini (Cost Efficient Fast)", value: "gpt-4o-mini" },

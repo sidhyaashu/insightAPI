@@ -87,7 +87,7 @@ export function CrawlActivityDrawer({
 
   // Connect to the specific crawl WebSocket stream via Redis
   const { isConnected, lastMessage } = useWebSocket(
-    sessionId ? `/ws/crawls/${sessionId}/stream` : null
+    sessionId ? `/crawls/${sessionId}/stream` : null
   );
 
   // Reset state when a new session starts
