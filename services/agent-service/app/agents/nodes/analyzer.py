@@ -434,7 +434,11 @@ async def _enrich_endpoints_with_llm(
     if not settings.LLM_SEMANTIC_SUMMARY_ENABLED or not endpoints:
         return endpoints
 
-    if cost_manager and cost_manager.is_budget_exhausted():
+    if cost_manager is None:
+        from app.agents.nodes.llm_client import make_cost_manager
+        cost_manager = make_cost_manager()
+
+    if cost_manager.is_budget_exhausted():
         return endpoints
 
     # Build a compact batch prompt — one JSON array describing all endpoints

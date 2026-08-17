@@ -65,6 +65,7 @@ interface CrawlActivityContextValue {
   clearCrawlSession: () => void;
   handleApprove: () => Promise<void>;
   handleReject: () => Promise<void>;
+  markCrawlApproved: (session: any) => void;
 }
 
 const CrawlActivityContext = createContext<CrawlActivityContextValue | null>(null);
@@ -216,6 +217,17 @@ export function CrawlActivityProvider({
     }
   }, [pendingApproval]);
 
+  const markCrawlApproved = useCallback((session: any) => {
+    setIsCompleted(true);
+    setCrawlStatus("complete");
+    if (session?.captured_count !== undefined) {
+      setCapturedCount(session.captured_count);
+    }
+    if (sessionId) {
+      onCrawlCompleteRef.current?.(sessionId);
+    }
+  }, [sessionId]);
+
   return (
     <CrawlActivityContext.Provider
       value={{
@@ -235,6 +247,7 @@ export function CrawlActivityProvider({
         clearCrawlSession,
         handleApprove,
         handleReject,
+        markCrawlApproved,
       }}
     >
       {children}

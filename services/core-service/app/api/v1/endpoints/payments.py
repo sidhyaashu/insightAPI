@@ -163,7 +163,7 @@ async def stripe_webhook(request: Request):
 
 
 class UsageRecordRequest(BaseModel):
-    user_id: str
+    user_id: str | None = None
     crawl_id: str
     quantity: int = 1
     description: str | None = None
@@ -172,16 +172,26 @@ class UsageRecordRequest(BaseModel):
 @router.post("/usage-records")
 async def report_usage_record(
     body: UsageRecordRequest,
-    x_user_id: str | None = Header(None, alias="x-user-id"),
+    x_user_id: str = Header(..., alias="x-user-id"),
 ):
     """
     Report metered crawl usage to Stripe for a pay-per-crawl execution.
     Called on crawl completion when user has allow_overage=True or is on PAYG.
     """
-    user_target_id = x_user_id or body.user_id
-    if not user_target_id:
-        raise HTTPException(status_code=400, detail="User ID is required.")
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="Authentication required: x-user-id header missing.")
 
+    # Prevent Billing IDOR: Disallow reporting usage for a different user
+    if body.user_id and body.user_id != x_user_id:
+        logger.warning(
+            f"[ABUSE SIGNAL] Billing IDOR attempt: x-user-id header '{x_user_id}' does not match body.user_id '{body.user_id}'"
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: Cannot report usage records for a different user.",
+        )
+
+    user_target_id = x_user_id
     async with contextlib.asynccontextmanager(get_db)() as db:
         user_repo = UserRepository(db)
         user = await user_repo.get_by_id(user_target_id)

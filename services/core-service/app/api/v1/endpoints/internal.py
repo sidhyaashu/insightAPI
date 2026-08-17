@@ -14,18 +14,29 @@ router = APIRouter(prefix="/internal", tags=["Internal"])
 TIER_LEVELS = {"FREE": 0, "STARTER": 1, "PRO": 2, "ENTERPRISE": 3}
 
 
-def _verify_gateway(x_gateway_secret: str = Header(...)):
-    if x_gateway_secret != settings.GATEWAY_SECRET:
+def _verify_gateway(
+    x_gateway_secret: str = Header(...),
+    x_user_id: str | None = Header(default=None),
+    target_user_id: str | None = None,
+):
+    if not settings.GATEWAY_SECRET or x_gateway_secret != settings.GATEWAY_SECRET:
         raise HTTPException(status_code=403, detail="Unauthorized internal request.")
+    # Defense-in-depth: if an end-user header is forwarded, ensure it matches target_user_id
+    if x_user_id and target_user_id and x_user_id != target_user_id:
+        raise HTTPException(status_code=403, detail="Cross-user internal session query forbidden.")
 
 
 @router.get("/users/{user_id}/session")
-async def get_user_session(user_id: str, x_gateway_secret: str = Header(...)):
+async def get_user_session(
+    user_id: str,
+    x_gateway_secret: str = Header(...),
+    x_user_id: str | None = Header(default=None),
+):
     """
     Called by gateway to retrieve cached user tier for x-user-id injection.
     Returns {"tier": "PRO"} or 404.
     """
-    _verify_gateway(x_gateway_secret)
+    _verify_gateway(x_gateway_secret=x_gateway_secret, x_user_id=x_user_id, target_user_id=user_id)
     repo = SessionRepository()
     session = await repo.get_user_session(user_id)
     if not session:

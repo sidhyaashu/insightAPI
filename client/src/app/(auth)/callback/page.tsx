@@ -15,6 +15,7 @@ function CallbackContent() {
   useEffect(() => {
     async function processCallback() {
       const code = searchParams.get("code");
+      const state = searchParams.get("state");
       const provider = searchParams.get("provider") || sessionStorage.getItem("oauth_provider") || "google";
 
       if (!code) {
@@ -23,7 +24,7 @@ function CallbackContent() {
       }
 
       try {
-        const tokens = await authApi.exchangeOAuthCode(code, provider);
+        const tokens = await authApi.exchangeOAuthCode(code, provider, state);
         if (tokens.user && tokens.access_token) {
           dispatch(setCredentials({ user: tokens.user, accessToken: tokens.access_token }));
           router.replace("/chat");

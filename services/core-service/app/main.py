@@ -55,7 +55,7 @@ app.add_middleware(BaseHTTPMiddleware, dispatch=correlation_id_middleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.DEBUG else [settings.APP_URL],
+    allow_origins=settings.get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

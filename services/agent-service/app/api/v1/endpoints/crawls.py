@@ -12,10 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.sdk import AgentEngine
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import get_db, AsyncSessionLocal
 from app.core.redis import get_redis_client
 from app.repositories.crawl_repo import CrawlRepository
 from app.repositories.domain_repo import DomainRepository
+from app.repositories.snapshot_repo import SnapshotRepository
 from app.core.domain_verifier import normalize_domain
 
 logger = logging.getLogger(__name__)
@@ -114,14 +115,42 @@ def validate_target_url_ssrf(url: str):
         pass
 
 
-async def publish_ws_event(session_id: str, event: dict):
-    """Publish a log or status event to Redis PubSub for WebSocket streaming."""
-    try:
-        redis = await get_redis_client()
-        channel = f"crawl:{session_id}:events"
-        await redis.publish(channel, json.dumps(event))
-    except Exception as e:
-        logger.warning(f"Failed to publish WS event for {session_id}: {e}")
+CRAWL_FALLBACK_EVENT_LOGS: Dict[str, list[dict]] = {}
+CRAWL_WS_FAILURES: Dict[str, int] = {}
+
+
+async def publish_ws_event(session_id: str, event: dict, max_retries: int = 2):
+    """Publish a log or status event to Redis PubSub for WebSocket streaming with retry and fallback buffering."""
+    success = False
+    for attempt in range(max_retries + 1):
+        try:
+            redis = await get_redis_client()
+            channel = f"crawl:{session_id}:events"
+            await redis.publish(channel, json.dumps(event))
+            success = True
+            break
+        except Exception as e:
+            if attempt < max_retries:
+                await asyncio.sleep(0.05 * (attempt + 1))
+            else:
+                logger.warning(f"Failed to publish WS event for {session_id} after {max_retries + 1} attempts: {e}")
+
+    if not success:
+        # Fallback: Persist event in independent event log buffer for polling/reconnect
+        if session_id not in CRAWL_FALLBACK_EVENT_LOGS:
+            CRAWL_FALLBACK_EVENT_LOGS[session_id] = []
+        CRAWL_FALLBACK_EVENT_LOGS[session_id].append(event)
+
+        if session_id in CRAWL_SESSIONS:
+            CRAWL_SESSIONS[session_id].setdefault("event_logs", []).append(event)
+
+        # Track failure count and mark degraded_realtime if >= 3
+        failures = CRAWL_WS_FAILURES.get(session_id, 0) + 1
+        CRAWL_WS_FAILURES[session_id] = failures
+        if failures >= 3:
+            if session_id in CRAWL_SESSIONS:
+                CRAWL_SESSIONS[session_id]["degraded_realtime"] = True
+            logger.info(f"Crawl session {session_id} flagged with degraded_realtime=True ({failures} WS publish failures).")
 
 
 async def _report_metered_usage(user_id: str, session_id: str, url: str):
@@ -263,37 +292,8 @@ async def run_background_crawl(
         postman_col = result.to_postman()
         markdown_docs = result.to_markdown()
 
-        # Update memory store
-        if session_id in CRAWL_SESSIONS:
-            CRAWL_SESSIONS[session_id].update({
-                "status": "completed",
-                "captured_count": captured_count,
-                "openapi_spec": openapi_spec,
-                "postman_collection": postman_col,
-                "markdown_docs": markdown_docs,
-                "action_traces": result.action_traces,
-                "llm_metrics": result.llm_metrics,
-            })
-
-        # Update Postgres DB
-        try:
-            from app.core.database import AsyncSessionLocal
-            async with AsyncSessionLocal() as db:
-                repo = CrawlRepository(db)
-                await repo.update_status(
-                    session_id=session_id,
-                    status="completed",
-                    captured_count=captured_count,
-                    openapi_spec=openapi_spec,
-                    postman_collection=postman_col,
-                    markdown_docs=markdown_docs,
-                    action_traces=result.action_traces,
-                    llm_metrics=result.llm_metrics,
-                )
-        except Exception as db_err:
-            logger.warning(f"DB update failed for crawl {session_id}: {db_err}")
-
-        # ── Persist endpoint snapshots for drift detection ──────────────────
+        # ── Persist endpoint snapshots for drift detection FIRST ────────────
+        snapshot_success = True
         try:
             from app.core.database import AsyncSessionLocal
             from app.repositories.snapshot_repo import SnapshotRepository
@@ -306,9 +306,50 @@ async def run_background_crawl(
                 )
                 logger.info(f"Crawl {session_id}: persisted {inserted} endpoint snapshots for drift tracking.")
         except Exception as snap_err:
-            logger.warning(f"Snapshot persistence failed for crawl {session_id} (non-fatal): {snap_err}")
+            snapshot_success = False
+            logger.error(f"Snapshot persistence failed for crawl {session_id}: {snap_err}")
 
-        await publish_ws_event(session_id, {"type": "complete", "captured_count": captured_count})
+        final_status = "completed" if snapshot_success else "complete_no_snapshot"
+        warning_msg = None if snapshot_success else "Crawl completed but snapshot persistence failed. Drift tracking unavailable for this run."
+
+        # Update memory store
+        if session_id in CRAWL_SESSIONS:
+            CRAWL_SESSIONS[session_id].update({
+                "status": final_status,
+                "captured_count": captured_count,
+                "openapi_spec": openapi_spec,
+                "postman_collection": postman_col,
+                "markdown_docs": markdown_docs,
+                "action_traces": result.action_traces,
+                "llm_metrics": result.llm_metrics,
+                "error_message": warning_msg,
+            })
+
+        # Update Postgres DB
+        try:
+            from app.core.database import AsyncSessionLocal
+            async with AsyncSessionLocal() as db:
+                repo = CrawlRepository(db)
+                await repo.update_status(
+                    session_id=session_id,
+                    status=final_status,
+                    captured_count=captured_count,
+                    openapi_spec=openapi_spec,
+                    postman_collection=postman_col,
+                    markdown_docs=markdown_docs,
+                    action_traces=result.action_traces,
+                    llm_metrics=result.llm_metrics,
+                    error_message=warning_msg,
+                )
+        except Exception as db_err:
+            logger.warning(f"DB update failed for crawl {session_id}: {db_err}")
+
+        await publish_ws_event(session_id, {
+            "type": "complete",
+            "status": final_status,
+            "captured_count": captured_count,
+            "warning": warning_msg,
+        })
 
     except Exception as e:
         logger.error(f"Crawl session {session_id} failed: {e}")
@@ -521,10 +562,16 @@ async def start_crawl(
     # Dispatch to Celery worker (decoupled from web process) or fallback to local background task
     dispatched_to_queue = False
     try:
-        from app.tasks.crawl_tasks import run_crawl_task
-        run_crawl_task.delay(session_id=session_id, payload=crawl_payload)
-        dispatched_to_queue = True
-        logger.info(f"Crawl [{session_id}] dispatched to Celery worker queue.")
+        from app.tasks.crawl_tasks import run_crawl_task, is_celery_worker_active
+        if is_celery_worker_active(timeout=0.5):
+            run_crawl_task.delay(session_id=session_id, payload=crawl_payload)
+            dispatched_to_queue = True
+            logger.info(f"Crawl [{session_id}] dispatched to active Celery worker queue.")
+        else:
+            logger.warning(
+                f"No active Celery workers detected for [{session_id}]. "
+                "Falling back to BackgroundTasks execution."
+            )
     except Exception as celery_err:
         logger.warning(
             f"Celery dispatch failed for [{session_id}] ({celery_err}). "
@@ -565,7 +612,13 @@ async def get_crawl_status(
             # Enforce row-level tenant boundary
             if db_session.user_id != user_id and tier != "ADMIN":
                 raise HTTPException(status_code=404, detail="Crawl session not found.")
-            return db_session.to_dict()
+            res = db_session.to_dict()
+            res["degraded_realtime"] = (CRAWL_WS_FAILURES.get(session_id, 0) >= 3) or (
+                session_id in CRAWL_SESSIONS and CRAWL_SESSIONS[session_id].get("degraded_realtime", False)
+            )
+            if session_id in CRAWL_FALLBACK_EVENT_LOGS:
+                res["event_logs"] = CRAWL_FALLBACK_EVENT_LOGS[session_id]
+            return res
     except HTTPException:
         raise
     except Exception:
@@ -574,9 +627,13 @@ async def get_crawl_status(
     if session_id not in CRAWL_SESSIONS:
         raise HTTPException(status_code=404, detail="Crawl session not found.")
     
-    session = CRAWL_SESSIONS[session_id]
+    session = dict(CRAWL_SESSIONS[session_id])
     if session.get("user_id") and session["user_id"] != user_id and tier != "ADMIN":
         raise HTTPException(status_code=404, detail="Crawl session not found.")
+
+    session["degraded_realtime"] = (CRAWL_WS_FAILURES.get(session_id, 0) >= 3) or session.get("degraded_realtime", False)
+    if session_id in CRAWL_FALLBACK_EVENT_LOGS:
+        session["event_logs"] = CRAWL_FALLBACK_EVENT_LOGS[session_id]
 
     return session
 

@@ -156,8 +156,8 @@ async def get_drift_report(
     _require_pro_tier(x_user_tier)
 
     # Ownership guard — users may only query their own project
-    if x_user_id != project_id:
-        raise HTTPException(status_code=403, detail="You do not have access to this project.")
+    if x_user_id != project_id and (x_user_tier or "").upper() != "ADMIN":
+        raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this project.")
 
     # Auto-detect base crawl when not supplied
     resolved_base = base
@@ -188,7 +188,10 @@ async def get_drift_report(
             base_crawl_id=resolved_base,
             compare_crawl_id=compare,
             db=db,
+            project_id=project_id,
         )
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error(f"Drift comparison failed for project {project_id}: {exc}")
         raise HTTPException(status_code=500, detail=f"Drift comparison failed: {exc}")
@@ -214,8 +217,8 @@ async def trigger_drift_webhook(
     """
     _require_pro_tier(x_user_tier)
 
-    if x_user_id != project_id:
-        raise HTTPException(status_code=403, detail="You do not have access to this project.")
+    if x_user_id != project_id and (x_user_tier or "").upper() != "ADMIN":
+        raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this project.")
 
     # SSRF guard on user-supplied webhook URL
     _validate_webhook_url_ssrf(body.webhook_url)
@@ -239,7 +242,10 @@ async def trigger_drift_webhook(
             base_crawl_id=resolved_base,
             compare_crawl_id=body.compare_crawl_id,
             db=db,
+            project_id=project_id,
         )
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error(f"Drift comparison failed for webhook {project_id}: {exc}")
         raise HTTPException(status_code=500, detail=f"Drift comparison failed: {exc}")

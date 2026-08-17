@@ -9,16 +9,14 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Route table: prefix → upstream base URL
+# Route table: prefix → upstream base URL (internal routes intentionally excluded)
 ROUTE_TABLE = {
     "/api/v1/auth": settings.CORE_SERVICE_URL,
     "/api/v1/users": settings.CORE_SERVICE_URL,
     "/api/v1/payments": settings.CORE_SERVICE_URL,
-    "/api/v1/internal": settings.CORE_SERVICE_URL,
     "/api/auth": settings.CORE_SERVICE_URL,
     "/api/users": settings.CORE_SERVICE_URL,
     "/api/payments": settings.CORE_SERVICE_URL,
-    "/api/internal": settings.CORE_SERVICE_URL,
     "/api/v1/chat": settings.AGENT_SERVICE_URL,
     "/api/chat": settings.AGENT_SERVICE_URL,
     "/api/v1": settings.AGENT_SERVICE_URL,
@@ -35,7 +33,13 @@ async def get_http_client() -> httpx.AsyncClient:
     return _client
 
 
+BLOCKED_PREFIXES = ("/api/v1/internal", "/api/internal")
+
+
 def _resolve_upstream(path: str) -> str | None:
+    for blocked in BLOCKED_PREFIXES:
+        if path.startswith(blocked):
+            return None
     for prefix, base in ROUTE_TABLE.items():
         if path.startswith(prefix):
             remainder = path[len(prefix):]

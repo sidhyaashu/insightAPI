@@ -92,13 +92,14 @@ class SnapshotRepository:
         await self.db.commit()
         return len(rows)
 
-    # ── Read ─────────────────────────────────────────────────────────────────
-
-    async def get_snapshots_for_crawl(self, crawl_id: str) -> list[CrawlSnapshot]:
-        """Return all snapshot rows for a given crawl."""
-        result = await self.db.execute(
-            select(CrawlSnapshot).where(CrawlSnapshot.crawl_id == crawl_id)
-        )
+    async def get_snapshots_for_crawl(
+        self, crawl_id: str, project_id: str | None = None
+    ) -> list[CrawlSnapshot]:
+        """Return all snapshot rows for a given crawl, optionally filtered by project_id."""
+        stmt = select(CrawlSnapshot).where(CrawlSnapshot.crawl_id == crawl_id)
+        if project_id:
+            stmt = stmt.where(CrawlSnapshot.project_id == project_id)
+        result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
     async def get_latest_crawl_id_for_project(

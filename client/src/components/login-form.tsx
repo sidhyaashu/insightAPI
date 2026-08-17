@@ -30,10 +30,12 @@ export function LoginForm({
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleGithubLogin = () => {
+    sessionStorage.setItem("oauth_provider", "github");
     window.location.href = `${env.API_BASE_URL}/auth/github/login`;
   };
 
   const handleGoogleLogin = () => {
+    sessionStorage.setItem("oauth_provider", "google");
     window.location.href = `${env.API_BASE_URL}/auth/google/login`;
   };
 

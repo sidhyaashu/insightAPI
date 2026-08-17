@@ -46,7 +46,15 @@ class ReflectionNode:
         LangGraph node execution: performs holistic reasoning on current progress.
         """
         cost_manager = state.get("cost_manager")
-        if cost_manager and cost_manager.is_budget_exhausted():
+        if cost_manager is None:
+            from app.agents.nodes.llm_client import make_cost_manager
+            cost_manager = make_cost_manager(
+                crawl_id=state.get("crawl_id") or "fallback",
+                user_id=state.get("user_id"),
+            )
+            state["cost_manager"] = cost_manager
+
+        if cost_manager.is_budget_exhausted():
             logger.info("ReflectionNode: Token budget exhausted, skipping self-critique.")
             return state
 

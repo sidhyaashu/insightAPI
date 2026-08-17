@@ -77,10 +77,10 @@ app = FastAPI(
 # Distributed Tracing Correlation ID
 app.add_middleware(CorrelationIdMiddleware)
 
-# CORS — restricted in production; gateway handles cross-origin for clients
+# CORS — uses configured ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.DEBUG else [settings.APP_ENV],
+    allow_origins=settings.get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

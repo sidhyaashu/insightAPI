@@ -62,9 +62,17 @@ class LLMPlannerStrategy:
 
         # Guard: cost manager budget
         cost_manager = state.get("cost_manager")
-        if cost_manager:
-            if cost_manager.is_budget_exhausted() or cost_manager.is_planner_budget_exhausted():
-                return None
+        if cost_manager is None:
+            from app.agents.nodes.llm_client import make_cost_manager
+            cost_manager = make_cost_manager(
+                crawl_id=state.get("crawl_id") or "fallback",
+                user_id=state.get("user_id"),
+            )
+            state["cost_manager"] = cost_manager
+
+        if cost_manager.is_budget_exhausted() or cost_manager.is_planner_budget_exhausted():
+            logger.info("Planner budget exhausted or overall budget exhausted. Falling back to heuristic planner.")
+            return None
 
         if not frontier:
             return None

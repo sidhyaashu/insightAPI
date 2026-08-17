@@ -19,10 +19,15 @@
  *   page_visited / endpoint_captured -> standard ChainOfThoughtStep
  */
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useCrawlActivity } from "./CrawlActivityContext";
+import { useArtifact } from "./ArtifactContext";
+import { SchemaReviewModal } from "./SchemaReviewModal";
+import { crawlsApi } from "@/features/crawls/api/crawls.api";
+import { useAppDispatch } from "@/store";
+import { addMessage } from "@/features/chatbot/store/chatSlice";
+import { toast } from "sonner";
 import { ReasoningBlock } from "./ReasoningBlock";
 import {
   ChainOfThought,
@@ -47,6 +52,8 @@ import {
   XIcon,
   BoxIcon,
   Loader2Icon,
+  FileTextIcon,
+  SparklesIcon,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -102,7 +109,13 @@ export function CrawlReasoningMessage() {
     handleApprove,
     handleReject,
     clearCrawlSession,
+    markCrawlApproved,
   } = useCrawlActivity();
+
+  const { openPanel } = useArtifact();
+  const dispatch = useAppDispatch();
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [loadingArtifact, setLoadingArtifact] = useState(false);
 
   // Auto-scroll the event list to bottom as events arrive
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -130,6 +143,99 @@ export function CrawlReasoningMessage() {
       ),
     [capturedCount, capturedEndpoints.length, events]
   );
+
+  const handleApproveSuccess = useCallback(
+    async (session: any) => {
+      markCrawlApproved(session);
+
+      let openapiSpec = session?.openapi_spec;
+      let markdownDocs = session?.markdown_docs;
+
+      if (!openapiSpec && !markdownDocs && sessionId) {
+        try {
+          const report = await crawlsApi.getReport(sessionId);
+          if (report) {
+            openapiSpec = report.openapi_spec;
+            markdownDocs = report.markdown_docs;
+          }
+        } catch {}
+      }
+
+      if (openapiSpec) {
+        openPanel({
+          id: `openapi-${session?.session_id || session?.id || sessionId}`,
+          type: "code",
+          title: `OpenAPI 3.0.3 Spec — ${targetUrl}`,
+          content: JSON.stringify(openapiSpec, null, 2),
+          language: "json",
+        });
+      } else if (markdownDocs) {
+        openPanel({
+          id: `docs-${session?.session_id || session?.id || sessionId}`,
+          type: "document",
+          title: `API Documentation — ${targetUrl}`,
+          content: markdownDocs,
+        });
+      }
+
+      dispatch(
+        addMessage({
+          id: `crawl-approved-${Date.now()}`,
+          session_id: session?.session_id || session?.id || "chat",
+          role: "assistant",
+          content: `✅ **Autonomous Exploration Complete & Approved!**\n\nDiscovered and synthesized **${session?.captured_count || displayEndpointCount} API endpoint(s)** for \`${targetUrl}\`.\n\n* **OpenAPI 3.0.3 Specification**: Synthesized & loaded into Workspace Artifact.\n* **Postman Collection**: Built & ready for testing.\n\nYou can now ask questions about these endpoints, generate test suites, or explore their parameters directly in this chat!`,
+          created_at: new Date().toISOString(),
+        })
+      );
+    },
+    [markCrawlApproved, openPanel, dispatch, targetUrl, sessionId, displayEndpointCount]
+  );
+
+  const handleOpenOpenApiArtifact = async () => {
+    if (!sessionId) return;
+    setLoadingArtifact(true);
+    try {
+      let openapiSpec = null;
+      let markdownDocs = null;
+
+      try {
+        const report = await crawlsApi.getReport(sessionId);
+        if (report) {
+          openapiSpec = report.openapi_spec;
+          markdownDocs = report.markdown_docs;
+        }
+      } catch {}
+
+      if (!openapiSpec) {
+        const full = await crawlsApi.getCrawlById(sessionId);
+        openapiSpec = full.openapi_spec;
+        markdownDocs = full.markdown_docs;
+      }
+
+      if (openapiSpec) {
+        openPanel({
+          id: `openapi-${sessionId}`,
+          type: "code",
+          title: `OpenAPI 3.0.3 Spec — ${targetUrl}`,
+          content: JSON.stringify(openapiSpec, null, 2),
+          language: "json",
+        });
+      } else if (markdownDocs) {
+        openPanel({
+          id: `docs-${sessionId}`,
+          type: "document",
+          title: `API Documentation — ${targetUrl}`,
+          content: markdownDocs,
+        });
+      } else {
+        toast.info("Specification document is still generating.");
+      }
+    } catch {
+      toast.error("Failed to load OpenAPI artifact.");
+    } finally {
+      setLoadingArtifact(false);
+    }
+  };
 
   if (!sessionId) return null;
 
@@ -567,15 +673,15 @@ export function CrawlReasoningMessage() {
               )}
 
               <div className="flex items-center gap-2.5 pt-1">
-                <Link href={`/crawls/${sessionId}/review`}>
-                  <Button
-                    size="sm"
-                    className="h-8 text-xs px-3.5 gap-1.5 bg-amber-500 hover:bg-amber-600 text-black font-semibold cursor-pointer shadow-xs"
-                  >
-                    <span>Review & Approve Schema</span>
-                    <ArrowRightIcon className="size-3.5" />
-                  </Button>
-                </Link>
+                <Button
+                  size="sm"
+                  onClick={() => setShowReviewModal(true)}
+                  className="h-8 text-xs px-3.5 gap-1.5 bg-amber-500 hover:bg-amber-600 text-black font-semibold cursor-pointer shadow-xs"
+                >
+                  <SparklesIcon className="size-3.5" />
+                  <span>Review & Approve Schema</span>
+                  <ArrowRightIcon className="size-3.5" />
+                </Button>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -611,28 +717,27 @@ export function CrawlReasoningMessage() {
               </div>
 
               <div className="text-xs text-muted-foreground leading-relaxed">
-                Autonomous exploration finished with <strong>{displayEndpointCount} endpoint{displayEndpointCount === 1 ? "" : "s"}</strong> captured. OpenAPI 3.1 & Postman Collections are generated and ready.
+                Autonomous exploration finished with <strong>{displayEndpointCount} endpoint{displayEndpointCount === 1 ? "" : "s"}</strong> captured. OpenAPI 3.0 & Postman Collections are synthesized and ready in the workspace.
               </div>
 
               <div className="flex items-center gap-2.5 pt-1">
-                <Link href={`/reports/${sessionId}`}>
-                  <Button
-                    size="sm"
-                    className="h-8 text-xs px-3.5 gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer shadow-xs"
-                  >
-                    <span>View Intelligence Report</span>
-                    <ArrowRightIcon className="size-3.5" />
-                  </Button>
-                </Link>
-                <Link href={`/crawls/${sessionId}/review`}>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs px-3 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
-                  >
-                    Review Schema
-                  </Button>
-                </Link>
+                <Button
+                  size="sm"
+                  onClick={handleOpenOpenApiArtifact}
+                  disabled={loadingArtifact}
+                  className="h-8 text-xs px-3.5 gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer shadow-xs"
+                >
+                  <FileCodeIcon className="size-3.5" />
+                  <span>View OpenAPI Artifact</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowReviewModal(true)}
+                  className="h-8 text-xs px-3 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                >
+                  Review Endpoints
+                </Button>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -685,15 +790,14 @@ export function CrawlReasoningMessage() {
         <div className="flex items-center gap-2 shrink-0">
           <span>{displayEndpointCount} endpoints</span>
           {isCompleted && sessionId && (
-            <Link href={`/crawls/${sessionId}/review`}>
-              <Button
-                size="sm"
-                className="h-6 text-[10px] px-2.5 gap-1 bg-primary text-primary-foreground font-semibold cursor-pointer"
-              >
-                Review & Export
-                <ArrowRightIcon className="size-3" />
-              </Button>
-            </Link>
+            <Button
+              size="sm"
+              onClick={() => setShowReviewModal(true)}
+              className="h-6 text-[10px] px-2.5 gap-1 bg-primary text-primary-foreground font-semibold cursor-pointer"
+            >
+              Review & Export
+              <ArrowRightIcon className="size-3" />
+            </Button>
           )}
           {isCompleted && (
             <Button
@@ -707,6 +811,15 @@ export function CrawlReasoningMessage() {
           )}
         </div>
       </div>
+
+      {/* --- Inline Schema Review Modal --- */}
+      <SchemaReviewModal
+        open={showReviewModal}
+        onOpenChange={setShowReviewModal}
+        sessionId={sessionId}
+        targetUrl={targetUrl}
+        onApproveSuccess={handleApproveSuccess}
+      />
     </div>
   );
 }

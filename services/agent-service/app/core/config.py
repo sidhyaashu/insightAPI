@@ -9,6 +9,18 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
+    ALLOWED_ORIGINS: list[str] | str = [
+        "http://localhost:3000",
+        "http://localhost",
+        "https://app.insightapi.com",
+    ]
+
+    def get_allowed_origins(self) -> list[str]:
+        if isinstance(self.ALLOWED_ORIGINS, list):
+            return self.ALLOWED_ORIGINS
+        if isinstance(self.ALLOWED_ORIGINS, str):
+            return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+        return ["http://localhost:3000", "http://localhost", "https://app.insightapi.com"]
 
     # LLM Provider Selection ("auto", "gemini", "azure", "openai")
     LLM_PROVIDER: str = "auto"

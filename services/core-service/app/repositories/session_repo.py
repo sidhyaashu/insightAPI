@@ -52,3 +52,27 @@ class SessionRepository:
         redis = await get_redis_client()
         data = await redis.hgetall(f"user:session:{user_id}")
         return data if data else None
+
+    async def store_oauth_state(self, provider: str, ttl_seconds: int = 600) -> str:
+        """Generate and persist a cryptographically random OAuth state token in Redis."""
+        import secrets
+        state = secrets.token_urlsafe(32)
+        redis = await get_redis_client()
+        await redis.set(f"oauth:state:{state}", provider, ex=ttl_seconds)
+        return state
+
+    async def verify_and_consume_oauth_state(self, state: str, provider: str) -> bool:
+        """Verify the state token matches the expected provider and delete it (single-use)."""
+        if not state:
+            return False
+        redis = await get_redis_client()
+        key = f"oauth:state:{state}"
+        stored = await redis.get(key)
+        if not stored:
+            return False
+        if isinstance(stored, bytes):
+            stored = stored.decode("utf-8")
+        if stored != provider:
+            return False
+        await redis.delete(key)
+        return True

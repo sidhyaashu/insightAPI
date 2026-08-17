@@ -263,6 +263,7 @@ async def compare_snapshots(
     base_crawl_id: str,
     compare_crawl_id: str,
     db: AsyncSession,
+    project_id: str | None = None,
 ) -> DriftReport:
     """Load two crawl snapshot sets and return a structured :class:`DriftReport`.
 
@@ -270,14 +271,28 @@ async def compare_snapshots(
         base_crawl_id:    The reference crawl (e.g. last main-branch crawl).
         compare_crawl_id: The candidate crawl (e.g. new PR staging crawl).
         db:               Async SQLAlchemy session.
+        project_id:       Optional tenant ID to ensure cross-tenant snapshot isolation.
 
     Returns:
         A fully populated :class:`DriftReport` Pydantic model.
     """
     repo = SnapshotRepository(db)
 
-    base_rows = await repo.get_snapshots_for_crawl(base_crawl_id)
-    compare_rows = await repo.get_snapshots_for_crawl(compare_crawl_id)
+    base_rows = await repo.get_snapshots_for_crawl(base_crawl_id, project_id=project_id)
+    compare_rows = await repo.get_snapshots_for_crawl(compare_crawl_id, project_id=project_id)
+
+    if project_id is not None:
+        from fastapi import HTTPException
+        if not compare_rows:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Crawl snapshot '{compare_crawl_id}' not found for project '{project_id}'.",
+            )
+        if not base_rows:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Base crawl snapshot '{base_crawl_id}' not found for project '{project_id}'.",
+            )
 
     # Index by endpoint_key for O(1) lookup
     base_map: dict[str, dict | None] = {r.endpoint_key: r.schema_json for r in base_rows}

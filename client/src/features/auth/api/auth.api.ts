@@ -41,10 +41,11 @@ export const authApi = {
     return response.data;
   },
 
-  /** Exchange OAuth callback code for tokens via BFF */
-  exchangeOAuthCode: async (code: string, provider: string): Promise<AuthTokens> => {
+  /** Exchange OAuth callback code and CSRF state for tokens via BFF */
+  exchangeOAuthCode: async (code: string, provider: string, state?: string | null): Promise<AuthTokens> => {
+    const stateQuery = state ? `&state=${encodeURIComponent(state)}` : "";
     const response = await apiClient.get<AuthTokens>(
-      `/auth/callback?code=${code}&provider=${provider}`
+      `/auth/callback?code=${encodeURIComponent(code)}&provider=${encodeURIComponent(provider)}${stateQuery}`
     );
     return response.data;
   },

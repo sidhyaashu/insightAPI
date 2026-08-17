@@ -11,6 +11,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def build_upstream_ws_url(agent_service_url: str, path: str, query_string: str = "") -> str:
+    """Properly construct upstream WebSocket URL handling both http:// and https:// schemes."""
+    clean_path = path.lstrip("/")
+    if clean_path.startswith("ws/"):
+        clean_path = clean_path[3:].lstrip("/")
+
+    scheme = "wss" if agent_service_url.startswith("https://") else "ws"
+    host = agent_service_url.split("://", 1)[1] if "://" in agent_service_url else agent_service_url
+    upstream_url = f"{scheme}://{host}/ws/{clean_path}"
+    if query_string:
+        upstream_url += f"?{query_string}"
+    return upstream_url
+
+
 @router.websocket("/ws/{path:path}")
 async def ws_proxy(websocket: WebSocket, path: str):
     """
@@ -20,14 +34,8 @@ async def ws_proxy(websocket: WebSocket, path: str):
     """
     await websocket.accept()
 
-    # Build upstream WS URL (strip redundant leading ws/ if present in path)
     query_string = str(websocket.url.query)
-    clean_path = path.lstrip("/")
-    if clean_path.startswith("ws/"):
-        clean_path = clean_path[3:].lstrip("/")
-    upstream_url = f"ws://{settings.AGENT_SERVICE_URL.replace('http://', '')}/ws/{clean_path}"
-    if query_string:
-        upstream_url += f"?{query_string}"
+    upstream_url = build_upstream_ws_url(settings.AGENT_SERVICE_URL, path, query_string)
 
     # Forward Cookie and Auth headers to upstream
     headers = {}

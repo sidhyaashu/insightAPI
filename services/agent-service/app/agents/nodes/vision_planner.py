@@ -47,7 +47,15 @@ class VisionPlannerNode:
 
         # 2. Check cost manager budget
         cost_manager = state.get("cost_manager")
-        if cost_manager and cost_manager.is_budget_exhausted():
+        if cost_manager is None:
+            from app.agents.nodes.llm_client import make_cost_manager
+            cost_manager = make_cost_manager(
+                crawl_id=state.get("crawl_id") or "fallback",
+                user_id=state.get("user_id"),
+            )
+            state["cost_manager"] = cost_manager
+
+        if cost_manager.is_budget_exhausted():
             logger.info("VisionPlannerNode: Token budget exhausted. Falling back to primary mark.")
             first_mark = marks_registry[1]
             return cls._build_action_dict(1, first_mark, "click", "", "Fallback: Token budget exhausted.")

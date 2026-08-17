@@ -625,4 +625,28 @@ InsightAPI/
      - *Right Column*: AI Intelligence Model Selector, Quick-Select Max Pages (5, 15, 25, 50), and Engine Runtime Toggles (Playwright JS Rendering, Anti-Bot Stealth Engine, Human-in-the-Loop Gate).
    - **Instant Error Dismissal**: Clears target URL validation warnings immediately upon user input.
 
+---
 
+## 26. Resilience, Queue Reliability & Defense-in-Depth Hardening
+
+### Architectural Enhancements:
+1. **WebSocket Event Buffering & Live Stream Resiliency (F-39)**:
+   - `publish_ws_event` implements exponential retry logic with transient backoff.
+   - Buffer fallback: On persistent Redis publish failures, events are appended to `CRAWL_FALLBACK_EVENT_LOGS` to allow frontend polling recovery.
+   - If publish failures exceed threshold ($\ge 3$), the session is marked with `degraded_realtime: true` so the UI alerts the user gracefully.
+
+2. **Celery Worker Liveness Verification & BackgroundTasks Fallback (F-45)**:
+   - `crawls.py` inspects active worker heartbeats via `is_celery_worker_active()` prior to queue dispatch.
+   - If zero active workers are detected, execution falls back immediately to FastAPI `BackgroundTasks` instead of silently pushing jobs to an unmonitored queue.
+   - Added periodic/scheduled reaper task `reap_stale_queued_crawls` in `crawl_tasks.py` to auto-fail jobs stuck in `queued`/`pending` past timeout (5 min).
+
+3. **Strict Snapshot Ordering & Partial Failure Status (F-38)**:
+   - In `run_background_crawl`, snapshot persistence occurs prior to final status transitions.
+   - If snapshot upsert fails, the session is marked with `status="complete_no_snapshot"` with diagnostic warning messages rather than reporting false full success.
+
+4. **Universal LLM Budget Cap Fallback (F-35)**:
+   - In `planner.py`, `vision_planner.py`, `reflection.py`, and `analyzer.py`, if `state["cost_manager"]` is `None` (SDK/CLI direct execution), a default `CrawlCostManager` is automatically constructed and enforced to prevent unbounded token expenditure.
+
+5. **Internal Gateway Route Elimination & Multi-Layer Access Control (F-9)**:
+   - Public gateway proxy table (`proxy.py`) explicitly drops and blocks `/api/v1/internal` and `/api/internal` route prefixes.
+   - `internal.py` verifies both `X-Gateway-Secret` and cross-user ownership (`x-user-id == user_id`) for defense-in-depth.

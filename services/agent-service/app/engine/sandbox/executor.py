@@ -120,12 +120,27 @@ class SandboxExecutor:
                 "error": "Destructive test blocked by policy.",
             }
 
-        url = ep.get("url") or ep.get("template_route") or "/"
+        raw_url = ep.get("url") or ep.get("template_route") or "/"
         method = (ep.get("method") or "GET").upper()
         strategy = test_strategy.get("strategy", "")
         mutate_param = test_strategy.get("mutate_param")
         params: Dict[str, Any] = {}
         body: Optional[Dict[str, Any]] = None
+
+        # Resolve relative / template paths against target_domain if needed
+        if not raw_url.startswith(("http://", "https://")):
+            if target_domain:
+                url = f"https://{target_domain.rstrip('/')}/{raw_url.lstrip('/')}"
+            else:
+                url = raw_url
+        else:
+            url = raw_url
+
+        effective_domain = target_domain or urlparse(url).netloc
+        if not effective_domain or not effective_domain.strip():
+            raise ValueError(
+                f"SandboxExecutor: Invalid target URL '{url}'. Absolute URL or target_domain required, got empty domain."
+            )
 
         # Resolve URL mutations based on test strategy
         if strategy == "adjacent_integer" and mutate_param:
@@ -149,7 +164,6 @@ class SandboxExecutor:
         elif strategy == "mass_assign_extra_field":
             body = test_strategy.get("payload", {"__proto__": {"admin": True}})
 
-        effective_domain = target_domain or urlparse(url).netloc
         try:
             cls.validate_egress(url, effective_domain)
         except Exception as egress_err:

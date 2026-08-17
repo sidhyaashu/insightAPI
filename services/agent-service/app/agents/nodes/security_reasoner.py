@@ -1,5 +1,5 @@
 """
-SecurityReasonerNode — V2 Adaptive, memory-driven security testing.
+SecurityReasonerNode -- V2 Adaptive, memory-driven security testing.
 
 V2 Routing Logic (replaces V1)
 ------------------------------
@@ -8,25 +8,25 @@ For each captured endpoint:
 
   1. Compute domain-agnostic endpoint_signature (SHA-256, no URL/domain).
 
-  2. DB lookup → pattern found?
+  2. DB lookup -> pattern found?
 
-     ┌──────────────────────────────────────────────────────────────────────┐
-     │ pattern.is_cache_eligible():                                         │
-     │   status=learned AND NOT is_destructive                              │
-     │   AND occurrences>=20 AND distinct_target_count>=15                  │
-     │   AND confidence>=0.80                                               │
-     │ → Cache replay. No LLM call. LLM usage: cached=True.                │
-     ├──────────────────────────────────────────────────────────────────────┤
-     │ pattern found AND is_destructive=True                                │
-     │ → Queue SecurityApproval (pending). NEVER execute. Ever.             │
-     │   Even if this exact pattern succeeded 1000 times before.            │
-     ├──────────────────────────────────────────────────────────────────────┤
-     │ no pattern, OR status≠learned, OR thresholds not met                 │
-     │ → LLM (SMART tier). Propose 1-3 test cases. LLM usage: cached=False. │
-     │   Each test case tagged is_destructive=True|False by LLM.            │
-     │   Destructive proposals → queue approval, skip execution.            │
-     │   Non-destructive → execute via SandboxExecutor.                     │
-     └──────────────────────────────────────────────────────────────────────┘
+     +----------------------------------------------------------------------+
+     | pattern.is_cache_eligible():                                         |
+     |   status=learned AND NOT is_destructive                              |
+     |   AND occurrences>=20 AND distinct_target_count>=15                  |
+     |   AND confidence>=0.80                                               |
+     | -> Cache replay. No LLM call. LLM usage: cached=True.                |
+     +----------------------------------------------------------------------+
+     | pattern found AND is_destructive=True                                |
+     | -> Queue SecurityApproval (pending). NEVER execute. Ever.             |
+     |   Even if this exact pattern succeeded 1000 times before.            |
+     +----------------------------------------------------------------------+
+     | no pattern, OR status!=learned, OR thresholds not met                 |
+     | -> LLM (SMART tier). Propose 1-3 test cases. LLM usage: cached=False. |
+     |   Each test case tagged is_destructive=True|False by LLM.            |
+     |   Destructive proposals -> queue approval, skip execution.            |
+     |   Non-destructive -> execute via SandboxExecutor.                     |
+     +----------------------------------------------------------------------+
 
   3. Classify outcome (rule-based first, LLM fallback for inconclusive only).
 
@@ -73,7 +73,7 @@ _SEVERITY_MAP: Dict[str, str] = {
 def compute_endpoint_signature(ep: Dict[str, Any]) -> str:
     """
     Compute a domain-agnostic SHA-256 signature for an endpoint.
-    Excludes literal URL and domain — only structural shape is hashed.
+    Excludes literal URL and domain -- only structural shape is hashed.
     """
     method = (ep.get("method") or "GET").upper()
 
@@ -158,14 +158,14 @@ class OutcomeClassifier:
             evidence["signal"] = "adjacent_id_returned_200"
             return "vulnerable", "idor", evidence
 
-        # Injection — stack trace in body
+        # Injection -- stack trace in body
         for pattern in cls.STACK_TRACE_PATTERNS:
             if pattern in resp_body_str:
                 evidence["signal"] = f"stack_trace_pattern:{pattern}"
                 evidence["vuln_class"] = "injection"
                 return "vulnerable", "injection", evidence
 
-        # Mass assignment — extra/proto fields
+        # Mass assignment -- extra/proto fields
         if isinstance(resp_body, dict):
             original_props = set(
                 (original_ep.get("schema") or {}).get("properties", {}).keys()
@@ -315,7 +315,7 @@ class SecurityReasonerNode:
             return state
 
         if not getattr(settings, "SECURITY_TESTING_ENABLED", False):
-            logger.debug("SecurityReasonerNode skipped — SECURITY_TESTING_ENABLED=False")
+            logger.debug("SecurityReasonerNode skipped -- SECURITY_TESTING_ENABLED=False")
             return state
 
         endpoints = state.get("captured_endpoints") or []
@@ -328,12 +328,12 @@ class SecurityReasonerNode:
         target_url = state.get("target_url", "")
         target_domain = _extract_domain(target_url)
 
-        # ── Domain Verification & Active Testing Opt-in Gate ──────────────────
+        # -- Domain Verification & Active Testing Opt-in Gate ------------------
         if user_id and user_id != "unknown" and target_url:
             is_authorized = await cls._verify_domain_ownership_and_opt_in(target_url, user_id)
             if not is_authorized:
                 logger.warning(
-                    f"⛔ Security testing blocked: Domain '{target_domain}' is not verified "
+                    f"[BLOCKED] Security testing blocked: Domain '{target_domain}' is not verified "
                     f"or active_testing_opt_in is not enabled for user {user_id}."
                 )
                 state["security_error"] = (
@@ -353,10 +353,10 @@ class SecurityReasonerNode:
                 pattern = await cls._lookup_pattern(signature)
 
                 if pattern is not None and pattern.is_destructive:
-                    # ── Hard block: destructive pattern found → queue, never execute ──
+                    # -- Hard block: destructive pattern found -> queue, never execute --
                     logger.info(
-                        f"🔐 Destructive pattern found | sig={signature[:12]}… "
-                        f"→ queuing approval request (will NOT auto-execute)"
+                        f"[AUTH] Destructive pattern found | sig={signature[:12]}... "
+                        f"-> queuing approval request (will NOT auto-execute)"
                     )
                     approval = await cls._queue_approval(
                         pattern_id=pattern.id,
@@ -383,9 +383,9 @@ class SecurityReasonerNode:
                     continue
 
                 if pattern is not None and pattern.is_cache_eligible():
-                    # ── Cache replay path — no LLM ────────────────────────────
+                    # -- Cache replay path -- no LLM ----------------------------
                     logger.info(
-                        f"⚡ Cache HIT | sig={signature[:12]}… "
+                        f"[ACTIVE] Cache HIT | sig={signature[:12]}... "
                         f"| class={pattern.vuln_class} | confidence={pattern.confidence} "
                         f"| occurrences={pattern.occurrences} "
                         f"| distinct_targets={pattern.distinct_target_count}"
@@ -411,14 +411,14 @@ class SecurityReasonerNode:
                                 "tokens_saved": 450,
                             })
                 else:
-                    # ── Cache miss or thresholds not met → LLM ────────────────
+                    # -- Cache miss or thresholds not met -> LLM ----------------
                     reason = "cache miss" if pattern is None else (
                         f"thresholds not met "
                         f"(occ={getattr(pattern,'occurrences',0)}, "
                         f"dist={getattr(pattern,'distinct_target_count',0)})"
                     )
                     logger.info(
-                        f"🔍 LLM reasoning | sig={signature[:12]}… | reason={reason}"
+                        f"[PROBE] LLM reasoning | sig={signature[:12]}... | reason={reason}"
                     )
                     if crawl_id:
                         with contextlib.suppress(Exception):
@@ -436,49 +436,60 @@ class SecurityReasonerNode:
                     )
                     ran_via_cache = False
 
-                # ── Route each test case by is_destructive ────────────────────
+                # -- Route each test case by is_destructive --------------------
                 for test_case in test_cases[:3]:
                     is_destructive = test_case.get("is_destructive", True)
                     vuln_class = test_case.get("vuln_class", "other")
 
                     if is_destructive:
-                        # Queue for human approval — never execute here
+                        # Queue for human approval -- never execute here
                         logger.info(
-                            f"🔐 Destructive test proposed | sig={signature[:12]}… "
-                            f"| class={vuln_class} → queuing approval"
+                            f"[AUTH] Destructive test proposed | sig={signature[:12]}... "
+                            f"| class={vuln_class} -> queuing approval"
                         )
-                        approval = await cls._queue_approval(
-                            pattern_id=pattern.id if pattern else "unknown",
-                            crawl_id=crawl_id, user_id=user_id,
-                            ep=ep, target_domain=target_domain,
-                            test_strategy=test_case,
-                        )
-                        if approval:
-                            queued_approvals.append(approval)
-                            if crawl_id:
-                                with contextlib.suppress(Exception):
-                                    from app.api.v1.endpoints.crawls import publish_ws_event
-                                    await publish_ws_event(crawl_id, {
-                                        "type": "approval_required",
-                                        "approval_id": approval.get("id"),
-                                        "endpoint": ep.get("template_route") or ep.get("url"),
-                                        "method": ep.get("method", "GET"),
-                                        "vuln_class": vuln_class,
-                                        "test_strategy": test_case,
-                                        "reasoning_trace": reasoning_trace or "Destructive vulnerability test proposed by Security Reasoner.",
-                                    })
-
-                        # Still upsert the pattern so we track the signature
-                        await cls._upsert_pattern(
+                        # Persist pattern FIRST so we have a real UUID pattern_id for the foreign key
+                        persisted_pattern = await cls._upsert_pattern(
                             signature=signature, vuln_class=vuln_class,
                             test_strategy=test_case, is_destructive=True,
                             outcome="inconclusive",  # Not executed yet
                             target_domain=target_domain,
                             reasoning_trace=reasoning_trace,
                         )
+                        resolved_pattern_id = (
+                            persisted_pattern.get("id")
+                            if persisted_pattern
+                            else (pattern.id if pattern else None)
+                        )
+
+                        if not resolved_pattern_id:
+                            looked_up = await cls._lookup_pattern(signature)
+                            if looked_up:
+                                resolved_pattern_id = looked_up.id
+
+                        if resolved_pattern_id:
+                            approval = await cls._queue_approval(
+                                pattern_id=resolved_pattern_id,
+                                crawl_id=crawl_id, user_id=user_id,
+                                ep=ep, target_domain=target_domain,
+                                test_strategy=test_case,
+                            )
+                            if approval:
+                                queued_approvals.append(approval)
+                                if crawl_id:
+                                    with contextlib.suppress(Exception):
+                                        from app.api.v1.endpoints.crawls import publish_ws_event
+                                        await publish_ws_event(crawl_id, {
+                                            "type": "approval_required",
+                                            "approval_id": approval.get("id"),
+                                            "endpoint": ep.get("template_route") or ep.get("url"),
+                                            "method": ep.get("method", "GET"),
+                                            "vuln_class": vuln_class,
+                                            "test_strategy": test_case,
+                                            "reasoning_trace": reasoning_trace or "Destructive vulnerability test proposed by Security Reasoner.",
+                                        })
                         continue
 
-                    # ── Non-destructive → execute via SandboxExecutor ────────
+                    # -- Non-destructive -> execute via SandboxExecutor --------
                     if crawl_id:
                         with contextlib.suppress(Exception):
                             from app.api.v1.endpoints.crawls import publish_ws_event
@@ -491,8 +502,14 @@ class SecurityReasonerNode:
                                 "is_destructive": False,
                             })
 
+                    # Ensure ep has an absolute url if target_domain is known
+                    ep_to_run = dict(ep)
+                    raw_ep_url = ep.get("url") or ep.get("template_route") or "/"
+                    if not raw_ep_url.startswith(("http://", "https://")) and target_domain:
+                        ep_to_run["url"] = f"https://{target_domain.rstrip('/')}/{raw_ep_url.lstrip('/')}"
+
                     test_response = await SandboxExecutor.run_test(
-                        ep=ep,
+                        ep=ep_to_run,
                         test_strategy=test_case,
                         target_domain=target_domain,
                         allow_destructive=False,
@@ -553,12 +570,12 @@ class SecurityReasonerNode:
         state["security_findings"] = findings
         state["security_approval_queue"] = queued_approvals
         logger.info(
-            f"🔒 SecurityReasonerNode done | endpoints={len(endpoints)} "
+            f"[SECURE] SecurityReasonerNode done | endpoints={len(endpoints)} "
             f"| findings={len(findings)} | approvals_queued={len(queued_approvals)}"
         )
         return state
 
-    # ── Private helpers ────────────────────────────────────────────────────────
+    # -- Private helpers --------------------------------------------------------
 
     @staticmethod
     async def _lookup_pattern(signature: str):

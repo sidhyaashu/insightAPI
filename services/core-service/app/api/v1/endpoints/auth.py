@@ -182,17 +182,22 @@ async def reset_password(payload: ResetPasswordPayload):
 
 @router.get("/github/login")
 async def github_login():
+    session_repo = SessionRepository()
+    state = await session_repo.store_oauth_state("github")
     url = (
         f"https://github.com/login/oauth/authorize"
         f"?client_id={settings.GITHUB_CLIENT_ID}"
         f"&scope=read:user,user:email"
         f"&redirect_uri={settings.OAUTH_REDIRECT_URI}"
+        f"&state={state}"
     )
     return RedirectResponse(url)
 
 
 @router.get("/google/login")
 async def google_login():
+    session_repo = SessionRepository()
+    state = await session_repo.store_oauth_state("google")
     url = (
         f"https://accounts.google.com/o/oauth2/v2/auth"
         f"?client_id={settings.GOOGLE_CLIENT_ID}"
@@ -201,6 +206,7 @@ async def google_login():
         f"&redirect_uri={settings.OAUTH_REDIRECT_URI}"
         f"&prompt=select_account"
         f"&access_type=offline"
+        f"&state={state}"
     )
     return RedirectResponse(url)
 
@@ -210,7 +216,17 @@ async def oauth_callback(
     response: Response,
     code: str,
     provider: str,
+    state: str | None = None,
 ):
+    session_repo = SessionRepository()
+    is_valid_state = await session_repo.verify_and_consume_oauth_state(state or "", provider)
+    if not is_valid_state:
+        logger.warning(f"OAuth CSRF error: missing, expired, or mismatched state token for provider={provider}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired OAuth state parameter (CSRF protection failed). Please initiate login again.",
+        )
+
     async with contextlib.asynccontextmanager(get_db)() as db:
         try:
             if provider == "github":
@@ -221,7 +237,6 @@ async def oauth_callback(
                 raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
 
             user_repo = UserRepository(db)
-            session_repo = SessionRepository()
             token_svc = TokenService(session_repo)
 
             user = await user_repo.upsert_oauth_user(

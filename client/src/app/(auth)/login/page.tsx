@@ -286,10 +286,6 @@ function LoginForm() {
             <span>Continue with Google</span>
           </button>
         </div>
-
-        <p className="text-[11px] text-muted-foreground text-center mt-6 leading-relaxed">
-          Special Admin Account: Sign in with <span className="font-mono text-foreground font-semibold">ashutoshsidhya69@gmail.com</span> for auto ADMIN access.
-        </p>
       </div>
     </div>
   );

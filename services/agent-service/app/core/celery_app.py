@@ -22,32 +22,40 @@ Launch worker::
 
     celery -A app.core.celery_app worker --loglevel=info --concurrency=2
 """
-from __future__ import annotations
+try:
+    from celery import Celery
+    HAS_CELERY = True
+except ImportError:
+    Celery = None
+    HAS_CELERY = False
 
-from celery import Celery
 from app.core.config import settings
 
 # ── Build broker / backend URLs ──────────────────────────────────────────────
 
-_broker_url: str = settings.CELERY_BROKER_URL or settings.get_redis_url()
-_result_backend: str = settings.CELERY_RESULT_BACKEND or settings.get_redis_url()
+_broker_url: str = getattr(settings, "CELERY_BROKER_URL", None) or settings.get_redis_url()
+_result_backend: str = getattr(settings, "CELERY_RESULT_BACKEND", None) or settings.get_redis_url()
 
 # ── Celery application ────────────────────────────────────────────────────────
 
-celery_app = Celery(
-    "insightapi",
-    broker=_broker_url,
-    backend=_result_backend,
-    include=["app.tasks.crawl_tasks"],  # auto-discover task modules
-)
+if HAS_CELERY and Celery:
+    celery_app = Celery(
+        "insightapi",
+        broker=_broker_url,
+        backend=_result_backend,
+        include=["app.tasks.crawl_tasks"],  # auto-discover task modules
+    )
+else:
+    celery_app = None
 
-celery_app.conf.update(
-    broker_url=_broker_url,
-    result_backend=_result_backend,
-    # Serialisation
-    task_serializer="json",
-    result_serializer="json",
-    accept_content=["json"],
+if celery_app is not None:
+    celery_app.conf.update(
+        broker_url=_broker_url,
+        result_backend=_result_backend,
+        # Serialisation
+        task_serializer="json",
+        result_serializer="json",
+        accept_content=["json"],
 
     # Timezone
     timezone="UTC",
