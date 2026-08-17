@@ -4206,3 +4206,20 @@ RuntimeError: Event loop is closed
 [2026-08-16 23:03:39] [WARNING] [app.api.v1.endpoints.crawls:136] - Failed to publish WS event for test-resilience-session-1 after 3 attempts: Redis connection refused
 [2026-08-16 23:03:39] [WARNING] [app.api.v1.endpoints.crawls:136] - Failed to publish WS event for test-resilience-session-1 after 3 attempts: Redis connection refused
 [2026-08-16 23:03:39] [INFO] [app.api.v1.endpoints.crawls:153] - Crawl session test-resilience-session-1 flagged with degraded_realtime=True (3 WS publish failures).
+[2026-08-17 23:22:26] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:22:43] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:23:09] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:23:11] [INFO] [app.main:48] - Sentry DSN not configured — error tracking disabled.
+[2026-08-17 23:28:07] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:28:19] [WARNING] [agent.llm_cost:98] - LLMCostManager: Token budget exhausted (1100/1000). Falling back to heuristics.
+[2026-08-17 23:28:19] [INFO] [agent.llm_cost:108] - LLMCostManager: Planner call limit reached (2/2). Switching to heuristic scoring.
+[2026-08-17 23:28:19] [WARNING] [agent.llm.registry:88] - LLM_PROVIDER is configured as 'azure' but its credentials are missing. Falling back to available provider credentials.
+[2026-08-17 23:30:24] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:30:33] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:30:40] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:30:47] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:31:08] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:32:36] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:32:37] [INFO] [app.main:48] - Sentry DSN not configured — error tracking disabled.
+[2026-08-17 23:45:46] [INFO] [insightapi.system:72] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\logs\insightapi.log[/bold cyan]
+[2026-08-17 23:45:46] [INFO] [app.main:48] - Sentry DSN not configured — error tracking disabled.

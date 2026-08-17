@@ -74,7 +74,7 @@ services:
       redis:
         condition: service_healthy
 
-  # ── Agent Service (Crawl Engine + Chatbot) ────────────────────────────────
+  # ── Agent Service (AI Chat Intelligence & Analytics) ─────────────────────
   agent-service:
     build:
       context: ./services/agent-service
@@ -87,32 +87,6 @@ services:
       REDIS_HOST: redis
     expose:
       - "8002"
-    volumes:
-      - ./logs:/app/logs
-      - ./reports:/app/reports
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  # ── Celery Crawl Worker (scales independently of the API) ────────────────
-  agent-worker:
-    build:
-      context: ./services/agent-service
-      dockerfile: Dockerfile
-    restart: always
-    env_file: [.env]
-    environment:
-      POSTGRES_HOST: db
-      REDIS_HOST: redis
-      C_FORCE_ROOT: "true"
-    command: >
-      celery -A app.core.celery_app worker
-      --loglevel=info
-      --concurrency=2
-      --queues=crawls
-      --hostname=worker@%h
     volumes:
       - ./logs:/app/logs
       - ./reports:/app/reports

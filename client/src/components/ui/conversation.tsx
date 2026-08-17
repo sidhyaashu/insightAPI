@@ -6,10 +6,14 @@ import { DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { useCallback, useRef } from "react";
 
+import type { ToolCallEvent, ApprovalEvent } from "@/lib/api-client/types";
+
 export type MessageItem = {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
+  tool_calls?: ToolCallEvent[];
+  approvals?: ApprovalEvent[];
   timestamp?: string;
 };
 

@@ -394,6 +394,8 @@ async def chat_websocket(
                 user_message = payload.get("message", "").strip()
                 crawl_context = payload.get("crawl_context")
                 requested_model = payload.get("model")
+                auth_profile_id = payload.get("auth_profile_id")
+                approved_actions = payload.get("approved_actions", [])
             except json.JSONDecodeError:
                 await websocket.send_json({"type": "error", "message": "Invalid JSON payload."})
                 continue
@@ -443,11 +445,31 @@ async def chat_websocket(
             history_msgs = await chat_repo.get_history(chat_session_id, limit=40)
             history = [{"role": m.role, "content": m.content} for m in history_msgs[:-1]]
 
-            # Stream LLM tokens
+            # Resolve Auth Profile credentials if present
+            auth_headers = {}
+            if x_user_id and db:
+                from app.tools.auth_vault import resolve_auth_headers
+                auth_headers = await resolve_auth_headers(
+                    user_id=x_user_id,
+                    domain_or_url=user_message,
+                    auth_profile_id=auth_profile_id,
+                    db=db,
+                )
+
+            # Stream Agentic events (tool_start, tool_result, approval_required, token)
+            from app.services.chat_service import stream_agentic_chat
             full_response: list[str] = []
-            async for token_text in stream_chat_response(history, user_message, crawl_context, model=requested_model):
-                await websocket.send_json({"type": "token", "content": token_text})
-                full_response.append(token_text)
+            async for event in stream_agentic_chat(
+                history=history,
+                user_message=user_message,
+                crawl_context=crawl_context,
+                model=requested_model,
+                auth_headers=auth_headers,
+                approved_actions=approved_actions,
+            ):
+                await websocket.send_json(event)
+                if event.get("type") == "token":
+                    full_response.append(event.get("content", ""))
 
             # Persist assistant response
             assistant_content = "".join(full_response)

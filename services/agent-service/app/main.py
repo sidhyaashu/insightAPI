@@ -5,22 +5,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.api.v1.router import api_router
-from app.routers import stream, chat
+from app.routers import chat
 
 # Ensure all SQLAlchemy models are registered on Base.metadata
-from app.models.crawl_session import CrawlSession
-from app.models.chat_message import ChatMessage
-from app.models.chat_session import ChatSession  # noqa: F401 — registers chat_sessions table
-from app.models.crawl_snapshot import CrawlSnapshot  # noqa: F401 — registers crawl_snapshots table
-from app.models.llm_usage import LlmUsage  # noqa: F401 — registers llm_usage table
+from app.models.chat_message import ChatMessage  # noqa: F401
+from app.models.chat_session import ChatSession  # noqa: F401
+from app.models.crawl_session import CrawlSession  # noqa: F401
+from app.models.crawl_snapshot import CrawlSnapshot  # noqa: F401
+from app.models.llm_usage import LlmUsage  # noqa: F401
 from app.models.auth_profile import AuthProfile  # noqa: F401
 from app.models.domain_verification import VerifiedDomain, TosAcceptance  # noqa: F401
 from app.models.audit_log import AuditLog  # noqa: F401
-from app.models.security_test_pattern import SecurityTestPattern  # noqa: F401 — registers security_test_patterns
-from app.models.security_finding import SecurityFinding  # noqa: F401 — registers security_findings
-from app.models.security_approval import SecurityApproval  # noqa: F401 — registers security_approvals
-
-
+from app.models.security_test_pattern import SecurityTestPattern  # noqa: F401
+from app.models.security_finding import SecurityFinding  # noqa: F401
+from app.models.security_approval import SecurityApproval  # noqa: F401
 
 from app.core.observability import CorrelationIdMiddleware, metrics
 from fastapi.responses import PlainTextResponse
@@ -43,13 +41,11 @@ if settings.SENTRY_DSN:
             SqlalchemyIntegration(),
             CeleryIntegration(),
         ],
-        # Do not send PII — user IPs are already in audit_logs
         send_default_pii=False,
     )
     logger.info(f"Sentry SDK initialised (env={settings.APP_ENV}, sample_rate={settings.SENTRY_TRACES_SAMPLE_RATE})")
 else:
     logger.info("Sentry DSN not configured — error tracking disabled.")
-
 
 
 @asynccontextmanager
@@ -86,15 +82,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# REST API (v1)
+# REST API (v1) & Chat
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat")
 app.include_router(chat.router, prefix="/api/chat")
 
 # WebSocket routers (accessed via /ws/*)
-app.include_router(stream.router, prefix="/ws")
 app.include_router(chat.router, prefix="/ws")
-
 
 from datetime import datetime, timezone
 
@@ -127,5 +121,4 @@ async def health_check():
         "service": "agent-service",
         "version": "2.0.0",
         "project": settings.PROJECT_NAME,
-        "playwright_engine": "ready",
     }

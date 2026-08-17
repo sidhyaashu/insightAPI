@@ -46,14 +46,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Derive active route breadcrumb label
   let activeRoute = ROUTE_LABELS[pathname];
   if (!activeRoute) {
-    if (pathname.startsWith("/reports/") && pathname.includes("/drift")) {
-      activeRoute = { category: "Intelligence", title: "API Drift Diff" };
-    } else if (pathname.startsWith("/reports/")) {
-      activeRoute = { category: "Intelligence", title: "Report Details" };
-    } else if (pathname.startsWith("/crawls/") && pathname.includes("/review")) {
-      activeRoute = { category: "Crawl Engine", title: "Schema Review" };
+    if (pathname.startsWith("/reports/")) {
+      activeRoute = { category: "Intelligence", title: "API Artifacts" };
     } else {
-      activeRoute = { category: "Workspace", title: "InsightAPI" };
+      activeRoute = { category: "Workspace", title: "InsightAPI AI" };
     }
   }
 

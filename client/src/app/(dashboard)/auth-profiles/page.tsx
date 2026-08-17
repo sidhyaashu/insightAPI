@@ -274,10 +274,10 @@ export default function AuthProfilesPage() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Authenticated Crawl Profiles
+              Authenticated API Profiles
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Store encrypted target credentials for automated login during crawls — eliminates manual session.json capture.
+              Store encrypted credentials, Bearer tokens, and API keys for AI API intelligence and security testing.
             </p>
           </div>
         </div>

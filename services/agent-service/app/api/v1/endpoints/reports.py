@@ -2,10 +2,10 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends, Header, Request
 from fastapi.responses import Response, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.api.v1.endpoints.crawls import CRAWL_SESSIONS
 from app.core.database import get_db
 from app.core.audit import AuditLogger
+
+CRAWL_SESSIONS: dict = {}
 from app.repositories.crawl_repo import CrawlRepository
 from app.services.openapi_exporter import OpenAPIExporter
 from app.services.postman_exporter import PostmanExporter

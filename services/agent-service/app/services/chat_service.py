@@ -1,124 +1,125 @@
-"""LLM chat service for the AI chatbot (merged into agent-service)."""
+"""Agentic LLM chat service with real-time tool execution and live telemetry streaming."""
 from __future__ import annotations
 
+import re
+import uuid
+import json
 import logging
-from typing import AsyncIterator
+from typing import Any, AsyncIterator, Dict, List, Optional
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+
 from app.core.config import settings
+from app.tools import (
+    probe_http_endpoint,
+    execute_curl,
+    infer_openapi_schema,
+    security_audit_endpoint,
+)
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are InsightBot, an expert AI assistant embedded in InsightAPI AI — an Agentic Web API Intelligence Platform.
+SYSTEM_PROMPT = """You are InsightBot, a world-class Agentic AI API Intelligence Engineer embedded in InsightAPI AI.
 
-You help users explore API crawl results, inspect endpoints, understand OpenAPI 3.1 & Postman specifications, design integrations, and debug API architectures.
+You act as an autonomous API pair-programmer and API architect (inspired by advanced agentic systems like Google Antigravity, ChatGPT, and Claude). You inspect real endpoints, analyze live network traffic, debug cURL requests, design OpenAPI 3.1 & Postman specifications, validate schemas, architect microservice integrations, and perform security reasoning.
 
-When formatting your responses, leverage the full capabilities of the UI's modern Markdown renderer:
+When real network execution results are provided in the context under `[Live Network Telemetry from Agent Execution]`:
+- Use the REAL observed status code, latency, headers, and JSON fields in your response.
+- Do NOT hallucinate mock endpoints when real execution data is present.
 
-1. **HTTP & API Endpoints**:
-   - Format API endpoints in ````http```` code blocks with the HTTP method and full URL on the first line (e.g. `GET https://api.example.com/v1/users` or `POST /api/v1/checkout`). Include headers and JSON bodies where helpful.
-   - Example:
+Response Guidelines:
+1. **Chain of Thought & Step-by-Step Reasoning**:
+   - ALWAYS begin your response with an internal step-by-step reasoning block enclosed in `<think>...</think>`.
+   - In your `<think>` block, break down your real-time thought process:
+     - Analyzing the user request and the real network execution results (if any).
+     - Evaluating schema models, observed status codes, required headers, and edge cases.
+     - Planning the OpenAPI spec, Mermaid diagrams, validation rules, or code snippets.
+
+2. **Rich Markdown & Visual Delivery**:
+   - Deliver your polished response immediately following `</think>`.
+   - **HTTP & API Endpoints**: Use ````http```` blocks with the method and endpoint on line 1:
      ```http
-     GET https://api.example.com/api/v1/stocks?symbol={query}
+     POST /api/v1/checkout/sessions
      Authorization: Bearer <token>
-     ```
+     Content-Type: application/json
 
-2. **Diagrams & System Architecture**:
-   - Use ````mermaid```` blocks for sequence diagrams, flowcharts, and architecture flows when explaining API integrations, authentication flows (OAuth2/JWT), or crawl pipelines.
-   - Example:
+     {
+       "items": [{"id": "prod_1", "quantity": 1}],
+       "currency": "USD"
+     }
+     ```
+   - **Architecture & Sequence Diagrams**: Use ````mermaid```` blocks for sequence diagrams and system flows:
      ```mermaid
      sequenceDiagram
-       Client->>Gateway: GET /api/v1/data
-       Gateway->>Service: Forward Request
-       Service-->>Client: 200 JSON Response
+       Client->>API Gateway: POST /api/v1/orders
+       API Gateway->>Auth Service: Validate JWT Token
+       Auth Service-->>API Gateway: 200 OK (User Claims)
+       API Gateway->>Order Service: Process Order
+       Order Service-->>Client: 201 Created (Order Object)
      ```
+   - **Callout Alerts**: Use GitHub alerts (`> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, `> [!IMPORTANT]`, `> [!CAUTION]`).
+   - **Structured Tables**: Use clean Markdown tables for parameter dictionaries, status codes, and type schemas.
+   - **Syntax Highlighting**: Tag all code fences accurately (`json`, `yaml`, `python`, `typescript`, `bash`, `sql`).
 
-3. **Callout Alerts**:
-   - Use GitHub alert syntax for important notes, tips, warnings, or best practices:
-     > [!NOTE]
-     > Helpful contextual information or prerequisites.
-     > [!TIP]
-     > Performance tips, parameter optimization, or shortcuts.
-     > [!WARNING]
-     > Rate limits, deprecated endpoints, or breaking changes.
-     > [!IMPORTANT]
-     > Required auth headers or security considerations.
-
-4. **Structured Tables**:
-   - Present endpoint parameters, HTTP status codes, query filters, and data schemas in clean Markdown tables with column headers.
-
-5. **Code Blocks & Syntax Highlighting**:
-   - Always specify the exact language tag on code fences (`typescript`, `python`, `bash`, `json`, `sql`, `yaml`, `diff`, etc.).
-
-6. **Formulas & Complexity**:
-   - Use LaTeX math formatting `$O(1)$` or `$$\text{Rate} = \frac{\text{Requests}}{\text{Second}}$$` when discussing latency, rate limits, or algorithms.
-
-When responding to ANY question, analysis request, API design, crawling, or security task:
-1. **Chain of Thought & Step-by-Step Reasoning**:
-   - ALWAYS start your response with an internal reasoning block enclosed in `<think>...</think>`.
-   - In your `<think>` block, break down your step-by-step plan (e.g. analyzing target domain/URL, identifying authentication patterns, planning endpoints and diagrams, validating schema structure).
-2. **Delivery & Final Response**:
-   - Immediately after closing `</think>`, deliver your polished markdown explanation.
-   - Embed full ````mermaid```` diagrams, ````http```` request blocks, structured tables, or complete code blocks where applicable.
-
-Be concise, technically accurate, and structured. Always provide practical developer-grade explanations."""
+Be concise, developer-centric, technically precise, and authoritative. Provide production-grade solutions."""
 
 
-def _build_langchain_client(model: str | None = None):
-    """Build LangChain chat client using unified ModelRouter."""
-    from app.core.llm import ModelRouter, ModelTier
-    return ModelRouter.get_llm(
-        tier=ModelTier.SMART,
+def _extract_urls(text: str) -> List[str]:
+    """Extract HTTP/HTTPS URLs or bare domains from prompt text."""
+    url_pattern = r"https?://[^\s<>\"'{}|\\^`]+"
+    urls = re.findall(url_pattern, text)
+    if urls:
+        return urls
+    # Check for bare domains e.g. api.example.com/users or www.bseindia.com
+    bare_pattern = r"(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|ai|in|co|dev|app|edu|gov)(?:/[^\s<>\"']*)?"
+    matches = re.findall(bare_pattern, text)
+    return [f"https://{m}" for m in matches if not m.startswith("http")]
+
+
+def _extract_curl(text: str) -> Optional[str]:
+    """Extract raw cURL commands from user message."""
+    curl_match = re.search(r"(curl\s+(?:-[A-Za-z0-9\-_]+\s+[^\n]+|[^\n]+)+)", text, re.IGNORECASE)
+    if curl_match:
+        return curl_match.group(1).strip()
+    return None
+
+
+async def stream_agentic_chat(
+    history: list[dict],
+    user_message: str,
+    crawl_context: str | None = None,
+    model: str | None = None,
+    auth_headers: Optional[Dict[str, str]] = None,
+    approved_actions: Optional[List[str]] = None,
+) -> AsyncIterator[Dict[str, Any]]:
+    """
+    Agentic execution stream powered by ReActEngine.
+    Yields structured events:
+      - {"type": "tool_start", "tool_id": "...", "tool": "...", "input": {...}}
+      - {"type": "tool_result", "tool_id": "...", "tool": "...", "status": "completed"|"failed", "latency_ms": int, "output": {...}}
+      - {"type": "approval_required", "approval_id": "...", "action": {...}}
+      - {"type": "token", "content": "..."}
+    """
+    from app.services.react_engine import ReActEngine
+
+    async for event in ReActEngine.run(
+        history=history,
+        user_message=user_message,
+        auth_headers=auth_headers,
+        crawl_context=crawl_context,
         model=model,
-        temperature=0.7,
-        streaming=True,
-    )
+        approved_actions=approved_actions,
+    ):
+        yield event
 
 
+# Legacy compatibility alias
 async def stream_chat_response(
     history: list[dict],
     user_message: str,
     crawl_context: str | None = None,
     model: str | None = None,
 ) -> AsyncIterator[str]:
-    """
-    Stream LLM chat tokens for a user message given history and optional model override.
-
-    Args:
-        history: List of {"role": "user"|"assistant", "content": "..."} dicts (from DB).
-        user_message: The new user message to respond to.
-        crawl_context: Optional context string about the user's last crawl session.
-        model: Optional model or deployment name override selected by the user.
-
-    Yields:
-        Token strings as the LLM generates the response.
-    """
-    try:
-        from app.core.llm import ModelRouter, ModelTier, extract_text_content
-
-        client = ModelRouter.get_llm(
-            tier=ModelTier.SMART,
-            model=model,
-            temperature=0.7,
-            streaming=True,
-        )
-
-        messages = [SystemMessage(content=SYSTEM_PROMPT)]
-
-        if crawl_context:
-            messages.append(SystemMessage(content=f"[User's crawl context]\n{crawl_context}"))
-
-        for msg in history[-20:]:   # keep last 20 messages in context window
-            if msg["role"] == "user":
-                messages.append(HumanMessage(content=msg["content"]))
-            elif msg["role"] == "assistant":
-                messages.append(AIMessage(content=msg["content"]))
-
-        messages.append(HumanMessage(content=user_message))
-
-        async for chunk in client.astream(messages):
-            token = extract_text_content(chunk.content if hasattr(chunk, "content") else chunk)
-            if token:
-                yield token
-    except Exception as e:
-        logger.error(f"Chat LLM streaming error: {e}")
-        yield f"\n\n> [!WARNING]\n> **AI Chat Stream Error**: {str(e)}\n\nPlease ensure your LLM credentials (`AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, or `GEMINI_API_KEY`) are set in `.env`."
+    """Compatibility wrapper that yields plain tokens."""
+    async for event in stream_agentic_chat(history, user_message, crawl_context, model):
+        if event.get("type") == "token":
+            yield event.get("content", "")

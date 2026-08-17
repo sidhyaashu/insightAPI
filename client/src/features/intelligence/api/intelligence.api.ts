@@ -33,8 +33,8 @@ export const intelligenceApi = {
     return data;
   },
 
-  getCrawlCost: async (crawlId: string): Promise<any> => {
-    const { data } = await apiClient.get<any>(`/v1/costs/crawls/${crawlId}`);
+  getSessionCost: async (sessionId: string): Promise<any> => {
+    const { data } = await apiClient.get<any>(`/v1/costs/sessions/${sessionId}`);
     return data;
   },
 };

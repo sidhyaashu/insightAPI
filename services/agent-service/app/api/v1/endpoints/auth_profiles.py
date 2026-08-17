@@ -1,10 +1,11 @@
 """
-Auth Profiles Router — Manage stored target login credentials and automated test flows.
+Auth Profiles Router — Manage stored target API credentials and automated test flows.
 """
 from __future__ import annotations
 
 import logging
-from typing import Optional, Dict, Any, List
+import httpx
+from typing import Optional, Dict, Any, List, Tuple
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.audit import AuditLogger
 from app.repositories.auth_profile_repo import AuthProfileRepository
-from app.engine.auth.executor import AutoLoginExecutor
 from app.models.auth_profile import AuthProfile
 from app.core.domain_verifier import normalize_domain
 
@@ -21,12 +21,52 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+async def _verify_http_credentials(login_url: str, auth_type: str, creds: Dict[str, Any]) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    """
+    Lightweight HTTP credentials tester for API keys, Bearer tokens, Basic Auth, and login forms.
+    """
+    headers = {"User-Agent": "InsightAPI-Verifier/2.0"}
+    diagnostics: Dict[str, Any] = {"auth_type": auth_type, "target_url": login_url}
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+            token = creds.get("token") or creds.get("bearer_token") or creds.get("api_key")
+            username = creds.get("username") or creds.get("email")
+            password = creds.get("password")
+
+            if auth_type in ("bearer", "token") or token:
+                headers["Authorization"] = f"Bearer {token}" if not str(token).lower().startswith("bearer ") else token
+                resp = await client.get(login_url, headers=headers)
+            elif auth_type == "basic" and username and password:
+                resp = await client.get(login_url, headers=headers, auth=(username, password))
+            elif auth_type == "api_key":
+                header_name = creds.get("header_name", "X-API-Key")
+                headers[header_name] = token or password or ""
+                resp = await client.get(login_url, headers=headers)
+            else:
+                # Default / form login probe
+                resp = await client.post(login_url, headers=headers, data=creds)
+
+            diagnostics["status_code"] = resp.status_code
+            diagnostics["response_headers"] = dict(resp.headers)
+
+            if resp.status_code < 400:
+                return True, None, diagnostics
+            else:
+                return False, f"Server responded with status code {resp.status_code}", diagnostics
+    except httpx.TimeoutException:
+        return False, "Connection timed out while verifying credentials.", diagnostics
+    except Exception as e:
+        logger.warning(f"Auth verification error for {login_url}: {e}")
+        return False, str(e), diagnostics
+
+
 class CreateAuthProfileRequest(BaseModel):
     name: str = Field(..., description="Human-friendly profile name (e.g. 'Staging Admin User')")
     target_domain: Optional[str] = Field(default=None, description="Apex domain or hostname (defaults to login_url domain)")
-    login_url: str = Field(..., description="Target application login page URL")
-    auth_type: str = Field(default="form", description="Authentication type: 'form', 'oauth_google', 'oauth_github', 'saml'")
-    credentials: Dict[str, Any] = Field(..., description="Credentials dictionary (username, password, client_id, etc.)")
+    login_url: str = Field(..., description="Target application login page or API URL")
+    auth_type: str = Field(default="bearer", description="Authentication type: 'bearer', 'api_key', 'basic', 'form'")
+    credentials: Dict[str, Any] = Field(..., description="Credentials dictionary (token, username, password, api_key, etc.)")
     project_id: Optional[str] = Field(default="default", description="Optional project partition ID")
 
 
@@ -41,7 +81,7 @@ class UpdateAuthProfileRequest(BaseModel):
 
 class TestAuthProfileRequest(BaseModel):
     login_url: str
-    auth_type: str = "form"
+    auth_type: str = "bearer"
     credentials: Dict[str, Any]
 
 
@@ -174,13 +214,14 @@ async def test_auth_profile(
     x_user_id: str = Header(..., alias="x-user-id"),
     db: AsyncSession = Depends(get_db),
 ):
-    """Execute live automated login test for an existing AuthProfile."""
+    """Execute live credential verification for an existing AuthProfile."""
     repo = AuthProfileRepository(db)
     profile = await repo.get_profile(profile_id=profile_id, user_id=x_user_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Auth profile not found.")
 
-    success, error_msg, diagnostics = await AutoLoginExecutor.test_profile_login(profile, headless=True)
+    creds = profile.get_decrypted_credentials()
+    success, error_msg, diagnostics = await _verify_http_credentials(profile.login_url, profile.auth_type, creds)
     status_str = "success" if success else "failed"
     await repo.update_test_status(profile_id=profile.id, user_id=x_user_id, status=status_str, error=error_msg)
 
@@ -207,24 +248,11 @@ async def test_transient_auth_profile(
     body: TestAuthProfileRequest,
     x_user_id: str = Header(..., alias="x-user-id"),
 ):
-    """Test automated login credentials before saving to database."""
-    clean_domain = normalize_domain(body.login_url)
-    profile = AuthProfile(
-        id="transient-test",
-        user_id=x_user_id,
-        name="Transient Test",
-        target_domain=clean_domain,
-        login_url=body.login_url,
-        auth_type=body.auth_type,
-        encrypted_credentials="",
-    )
-    profile.get_decrypted_credentials = lambda: body.credentials
-
-    success, error_msg, diagnostics = await AutoLoginExecutor.test_profile_login(profile, headless=True)
+    """Test API credentials before saving to database."""
+    success, error_msg, diagnostics = await _verify_http_credentials(body.login_url, body.auth_type, body.credentials)
     return {
         "success": success,
         "status": "success" if success else "failed",
         "error": error_msg,
         "diagnostics": diagnostics or {},
     }
-

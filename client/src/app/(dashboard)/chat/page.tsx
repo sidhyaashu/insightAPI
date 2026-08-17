@@ -12,6 +12,11 @@ import {
   resetNewChat,
   updateSessionTitleLocally,
   addMessage,
+  addToolStart,
+  updateToolResult,
+  addApprovalRequired,
+  removeApproval,
+  setSelectedAuthProfileId,
   appendStreamToken,
   finalizeStreamMessage,
   setIsGenerating,
@@ -30,13 +35,10 @@ import {
   DownloadIcon,
   SparklesIcon,
   AlertTriangleIcon,
+  TerminalIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CrawlSettingsModal, CrawlSettings } from "@/components/chat/CrawlSettingsModal";
-import { CrawlActivityProvider, useCrawlActivity } from "@/components/chat/CrawlActivityContext";
-import { CrawlReasoningMessage } from "@/components/chat/CrawlReasoningMessage";
-import { crawlsApi } from "@/features/crawls/api/crawls.api";
 
 // Artifact panel
 import { ArtifactPanel } from "@/components/chat/ArtifactPanel";
@@ -92,6 +94,8 @@ function IndustryChatInner() {
     messages,
     isGenerating,
     currentStreamContent,
+    activeToolCalls,
+    activeApprovals,
     isLoadingHistory,
   } = useAppSelector((state) => state.chat);
 
@@ -102,10 +106,8 @@ function IndustryChatInner() {
     model: "gemini-3.7-flash",
     effort: "Medium",
   });
-  const [showCrawlSettingsModal, setShowCrawlSettingsModal] = useState(false);
 
   const { openPanel } = useArtifact();
-  const { openCrawlSession, sessionId: crawlSessionId } = useCrawlActivity();
   const currentStreamRef = useRef("");
   const pendingMessageRef = useRef<string | null>(null);
   const knownSessionIdRef = useRef<string | null>(null);
@@ -116,27 +118,8 @@ function IndustryChatInner() {
   }, [dispatch]);
 
   // ── URL synchronization: /chat vs /chat?session=uuid ────────────────────────
-  //
-  // PART 2 — Race condition audit (confirmed safe, no fix needed):
-  //
-  // handleSendMessage (for new sessions) does:
-  //   (A) await dispatch(createSessionThunk(title)).unwrap()  // DB call
-  //   (B) knownSessionIdRef.current = session.id             // sync ref set
-  //   (C) pendingMessageRef.current = text
-  //   (D) router.replace(`/chat?session=...`)               // URL update
-  //
-  // React 18 batching: lines B-D are synchronous in the same microtask
-  // continuation after (A) resolves — the React scheduler CANNOT interleave
-  // a re-render between B and D. The useEffect below only fires after the
-  // React commit triggered by D's URL change, by which time ref is already set.
-  //
-  // Message list key audit: <ConversationContent> and <Conversation> have no
-  // key prop tied to sessionId — messages are keyed only by message.id.
-  // Switching from /chat to /chat?session=uuid does NOT unmount/remount the
-  // message list. No skeleton flash from own-initiated session creation. ✓
   useEffect(() => {
     if (urlSessionId) {
-      // If this session was just created by this client sending a message, don't re-fetch!
       if (knownSessionIdRef.current === urlSessionId) {
         return;
       }
@@ -149,7 +132,6 @@ function IndustryChatInner() {
           router.replace("/chat");
         });
     } else {
-      // User explicitly clicked "+ New Chat" or navigated to /chat directly
       if (knownSessionIdRef.current !== null) {
         knownSessionIdRef.current = null;
         dispatch(resetNewChat());
@@ -157,9 +139,117 @@ function IndustryChatInner() {
     }
   }, [urlSessionId, dispatch, router]);
 
+  // ── Handle WebSocket stream & events directly without React state queue loss ────────
+  const handleWsMessage = useCallback(
+    (msg: any) => {
+      if (!msg) return;
+
+      if (msg.type === "connected") {
+        if (msg.quota) setQuota(msg.quota);
+
+        if (pendingMessageRef.current) {
+          const text = pendingMessageRef.current;
+          pendingMessageRef.current = null;
+          sendMessage({ message: text, model: modelSelection.model });
+        }
+      } else if (msg.type === "title") {
+        if (msg.title && msg.session_id) {
+          dispatch(
+            updateSessionTitleLocally({
+              id: msg.session_id,
+              title: msg.title,
+            })
+          );
+        }
+      } else if (msg.type === "tool_start") {
+        dispatch(
+          addToolStart({
+            tool_id: msg.tool_id,
+            tool: msg.tool,
+            title: msg.title,
+            input: msg.input,
+          })
+        );
+      } else if (msg.type === "tool_result") {
+        dispatch(
+          updateToolResult({
+            tool_id: msg.tool_id,
+            status: msg.status,
+            latency_ms: msg.latency_ms,
+            output: msg.output,
+            error: msg.error,
+          })
+        );
+      } else if (msg.type === "approval_required") {
+        dispatch(
+          addApprovalRequired({
+            approval_id: msg.approval_id,
+            action: msg.action,
+          })
+        );
+      } else if (msg.type === "token") {
+        const content = msg.content || "";
+        currentStreamRef.current += content;
+        dispatch(appendStreamToken(content));
+        setQuotaExceededMsg(null);
+      } else if (msg.type === "done") {
+        if (msg.quota) setQuota(msg.quota);
+        dispatch(finalizeStreamMessage());
+
+        // Side panel disabled for single chat pane:
+        // const detected = extractArtifact(currentStreamRef.current);
+        // if (detected) openPanel(detected);
+        currentStreamRef.current = "";
+      } else if (msg.type === "quota_exceeded") {
+        dispatch(setIsGenerating(false));
+        setQuotaExceededMsg(msg.message);
+        if (msg.quota) setQuota(msg.quota);
+      } else if (msg.type === "error") {
+        dispatch(setIsGenerating(false));
+        const errText = msg.message || "WebSocket disconnected.";
+        toast.error(errText);
+        if (!currentStreamRef.current && activeSessionId) {
+          dispatch(
+            addMessage({
+              id: `err-${Date.now()}`,
+              session_id: activeSessionId,
+              role: "assistant",
+              content: `> [!WARNING]\n> **Chat Service Alert**: ${errText}\n\n*Please ensure services are running and your LLM API keys are configured in \`.env\`.*`,
+              created_at: new Date().toISOString(),
+            })
+          );
+        }
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dispatch, modelSelection.model, openPanel, activeSessionId]
+  );
+
   // ── WebSocket (opens when activeSessionId exists) ───────────────────────────
-  const { isConnected, lastMessage, sendMessage } = useWebSocket(
-    activeSessionId ? `/chat/${activeSessionId}` : null
+  const { isConnected, sendMessage } = useWebSocket(
+    activeSessionId ? `/chat/${activeSessionId}` : null,
+    { onMessage: handleWsMessage }
+  );
+
+  const handleApproveAction = useCallback(
+    (approvalId: string, action: any) => {
+      dispatch(removeApproval(approvalId));
+      sendMessage({
+        message: `Proceed: Run ${action.method} ${action.url}`,
+        model: modelSelection.model,
+        approved_actions: [`${action.method}:${action.url}`],
+      });
+      toast.success(`Executing approved ${action.method} probe...`);
+    },
+    [dispatch, sendMessage, modelSelection.model]
+  );
+
+  const handleRejectAction = useCallback(
+    (approvalId: string, action: any) => {
+      dispatch(removeApproval(approvalId));
+      toast.info(`Action ${action.method} ${action.url} skipped.`);
+    },
+    [dispatch]
   );
 
   // Send pending queued message immediately when socket becomes connected
@@ -170,64 +260,6 @@ function IndustryChatInner() {
       sendMessage({ message: text, model: modelSelection.model });
     }
   }, [isConnected, sendMessage, modelSelection.model]);
-
-  // ── Handle WebSocket stream & events ────────────────────────────────────────
-  useEffect(() => {
-    if (!lastMessage) return;
-
-    if (lastMessage.type === "connected") {
-      if (lastMessage.quota) setQuota(lastMessage.quota);
-
-      // If a message was queued while socket was opening, send it now
-      if (pendingMessageRef.current) {
-        const text = pendingMessageRef.current;
-        pendingMessageRef.current = null;
-        sendMessage({ message: text, model: modelSelection.model });
-      }
-    } else if (lastMessage.type === "title") {
-      // Real-time title generation received from backend
-      if (lastMessage.title && lastMessage.session_id) {
-        dispatch(
-          updateSessionTitleLocally({
-            id: lastMessage.session_id,
-            title: lastMessage.title,
-          })
-        );
-      }
-    } else if (lastMessage.type === "token") {
-      const content = lastMessage.content || "";
-      currentStreamRef.current += content;
-      dispatch(appendStreamToken(content));
-      setQuotaExceededMsg(null);
-    } else if (lastMessage.type === "done") {
-      if (lastMessage.quota) setQuota(lastMessage.quota);
-      dispatch(finalizeStreamMessage());
-
-      // Auto-open artifact side panel if diagram / code artifact detected
-      const detected = extractArtifact(currentStreamRef.current);
-      if (detected) openPanel(detected);
-      currentStreamRef.current = "";
-    } else if (lastMessage.type === "quota_exceeded") {
-      dispatch(setIsGenerating(false));
-      setQuotaExceededMsg(lastMessage.message);
-      if (lastMessage.quota) setQuota(lastMessage.quota);
-    } else if (lastMessage.type === "error") {
-      dispatch(setIsGenerating(false));
-      const errText = lastMessage.message || "WebSocket disconnected.";
-      toast.error(errText);
-      if (!currentStreamRef.current && activeSessionId) {
-        dispatch(
-          addMessage({
-            id: `err-${Date.now()}`,
-            session_id: activeSessionId,
-            role: "assistant",
-            content: `> [!WARNING]\n> **Chat Service Alert**: ${errText}\n\n*Please ensure services are running and your LLM API keys are configured in \`.env\`.*`,
-            created_at: new Date().toISOString(),
-          })
-        );
-      }
-    }
-  }, [lastMessage, dispatch, modelSelection.model, openPanel, sendMessage, activeSessionId]);
 
   // ── Greeting Header ─────────────────────────────────────────────────────────
   const greetingTitle = useMemo(() => {
@@ -243,39 +275,6 @@ function IndustryChatInner() {
     async (msg: PromptInputMessage) => {
       const text = msg.text.trim();
       if (!text) return;
-
-      // ── Intelligent Crawl Intent Detection ──────────────────────────────────
-      // If user attached a Target Web App URL and asked to extract/crawl/explore:
-      const hasAttachedUrl = Boolean(msg.targetUrl?.trim());
-      const lowerText = text.toLowerCase();
-      const isCrawlIntent =
-        hasAttachedUrl &&
-        (lowerText.includes("extract") ||
-          lowerText.includes("crawl") ||
-          lowerText.includes("scrape") ||
-          lowerText.includes("page") ||
-          lowerText.includes("explore") ||
-          lowerText.includes("scan") ||
-          lowerText.includes("inspect"));
-
-      if (isCrawlIntent && msg.targetUrl) {
-        const pageMatch =
-          text.match(/(?:extract|crawl|scrape|explore|scan|limit|max)\s*(\d+)\s*(?:pages?|eps?|endpoints?)?/i) ||
-          text.match(/(\d+)\s*(?:pages?|eps?|endpoints?)/i);
-        const maxPages = pageMatch ? Math.min(Math.max(parseInt(pageMatch[1], 10), 1), 100) : 10;
-
-        await handleStartCrawl({
-          targetUrl: msg.targetUrl.trim(),
-          maxPages,
-          jsRendering: true,
-          stealthMode: true,
-          requireReview: true,
-          model: modelSelection.model,
-          authHeader: "",
-          tosAccepted: true,
-        });
-        return;
-      }
 
       if (quota?.is_exceeded && quota.tier !== "ADMIN" && quota.tier !== "ENTERPRISE") {
         setQuotaExceededMsg(
@@ -304,13 +303,8 @@ function IndustryChatInner() {
           const autoTitle = text.slice(0, 50) + (text.length > 50 ? "..." : "");
           const session = await dispatch(createSessionThunk(autoTitle)).unwrap();
 
-          // Mark session ID as known to prevent URL sync from triggering a re-fetch skeleton
           knownSessionIdRef.current = session.id;
-
-          // Queue the message to send over WebSocket once connected
           pendingMessageRef.current = text;
-
-          // Update URL seamlessly
           router.replace(`/chat?session=${session.id}`, { scroll: false });
         } catch {
           dispatch(setIsGenerating(false));
@@ -368,68 +362,6 @@ function IndustryChatInner() {
     URL.revokeObjectURL(url);
   };
 
-  // ── Crawl modal handler ─────────────────────────────────────────────────────
-  const handleStartCrawl = async (settings: CrawlSettings) => {
-    const rawUrl = settings.targetUrl.trim();
-    if (!rawUrl) {
-      toast.error("Please enter a Target Web Application URL.");
-      throw new Error("Please enter a Target Web Application URL.");
-    }
-
-    const normalizedUrl = rawUrl.startsWith("http://") || rawUrl.startsWith("https://")
-      ? rawUrl
-      : `https://${rawUrl}`;
-
-    try {
-      toast.loading("Initiating agentic exploration...");
-      const res = await crawlsApi.startCrawl({
-        target_url: normalizedUrl,
-        max_pages: settings.maxPages,
-        goal: undefined,
-        require_review: settings.requireReview,
-        tos_accepted: settings.tosAccepted,
-        auth_profile_id: settings.authProfileId !== "none" ? settings.authProfileId : undefined,
-      });
-      toast.dismiss();
-      toast.success("Autonomous exploration started!");
-
-      // 1. If at root /chat (no session yet), create in DB first and update URL smoothly
-      if (!activeSessionId) {
-        try {
-          const autoTitle = `Crawl: ${normalizedUrl.replace(/^https?:\/\//, "")}`;
-          const session = await dispatch(createSessionThunk(autoTitle)).unwrap();
-          knownSessionIdRef.current = session.id;
-          router.replace(`/chat?session=${session.id}`, { scroll: false });
-        } catch {
-          // Non-critical if session creation fails
-        }
-      }
-
-      // 2. Add an explicit user message showing the crawl request in the thread
-      dispatch(
-        addMessage({
-          id: `crawl-launch-${Date.now()}`,
-          session_id: activeSessionId || "pending",
-          role: "user",
-          content: `🌐 Autonomous Web Crawl: **${normalizedUrl}**\n\n* **Target**: \`${normalizedUrl}\`\n* **Max Pages**: \`${settings.maxPages}\`\n* **Model**: \`${settings.model}\`\n* **Review Gate**: \`${settings.requireReview ? "Enabled" : "Disabled"}\``,
-          created_at: new Date().toISOString(),
-        })
-      );
-
-      // 3. Open inline CrawlReasoningMessage in the chat thread
-      openCrawlSession(res.session_id || res.id || "", normalizedUrl);
-    } catch (err: any) {
-      toast.dismiss();
-      const errMsg = err.response?.data?.detail || err.message || "Failed to start crawl.";
-      toast.error(errMsg);
-      throw new Error(errMsg);
-    }
-  };
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Render Layout
-  // ─────────────────────────────────────────────────────────────────────────────
-
   return (
     <div className="flex flex-col flex-1 h-full w-full bg-background text-foreground font-sans overflow-hidden relative">
       {/* Quota exceeded banner */}
@@ -456,7 +388,7 @@ function IndustryChatInner() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {isLoadingHistory ? (
             <ChatHistorySkeleton />
-          ) : messages.length === 0 && !crawlSessionId ? (
+          ) : messages.length === 0 ? (
             /* ── Hero Welcome Screen (ChatGPT / Claude Style) ──────────── */
             <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-3xl mx-auto w-full overflow-y-auto no-scrollbar">
               <div className="flex items-center justify-center gap-3 mb-6">
@@ -470,7 +402,6 @@ function IndustryChatInner() {
                 <PromptInput
                   onSubmit={handleSendMessage}
                   onStop={handleStopStreaming}
-                  onOpenCrawlModal={() => setShowCrawlSettingsModal(true)}
                   onExportMarkdown={handleExportMarkdown}
                   modelSelection={modelSelection}
                   onModelSelectionChange={setModelSelection}
@@ -485,7 +416,7 @@ function IndustryChatInner() {
                   type="button"
                   onClick={() =>
                     handleActionChipClick(
-                      "Explain how OpenAPI 3.1 schema generation and parameter normalization work"
+                      "Design a comprehensive OpenAPI 3.1 specification for a modern payment and subscriptions API with Stripe webhooks"
                     )
                   }
                   className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
@@ -495,10 +426,10 @@ function IndustryChatInner() {
                   </div>
                   <div className="space-y-0.5">
                     <span className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">
-                      OpenAPI 3.1 &amp; Schema Inference
+                      OpenAPI 3.1 Specification Design
                     </span>
                     <p className="text-[11px] text-muted-foreground leading-snug">
-                      Infer route parameters (/users/&#123;id&#125;) and generate valid Swagger schemas.
+                      Generate full schemas, request/response models, and path parameters.
                     </p>
                   </div>
                 </button>
@@ -507,7 +438,7 @@ function IndustryChatInner() {
                   type="button"
                   onClick={() =>
                     handleActionChipClick(
-                      "How do Two-Tier Risk Guardrails prevent destructive API actions like delete or payments?"
+                      "How do I analyze and debug authentication tokens (OAuth2, Bearer JWT, Session Cookies) across microservices?"
                     )
                   }
                   className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
@@ -517,10 +448,10 @@ function IndustryChatInner() {
                   </div>
                   <div className="space-y-0.5">
                     <span className="font-semibold text-xs text-foreground group-hover:text-emerald-500 transition-colors">
-                      Two-Tier Action Guardrails
+                      Auth &amp; Security Analysis
                     </span>
                     <p className="text-[11px] text-muted-foreground leading-snug">
-                      Prevent dangerous clicks on deletion, billing, and account changes.
+                      Inspect JWT headers, rate limiters, CORS policies, and token scopes.
                     </p>
                   </div>
                 </button>
@@ -529,7 +460,7 @@ function IndustryChatInner() {
                   type="button"
                   onClick={() =>
                     handleActionChipClick(
-                      "How do I import and execute Postman Collections v2.1 in Postman or Newman CI/CD?"
+                      "Generate a Postman Collection v2.1 with dynamic environment variables for a multi-tenant REST API"
                     )
                   }
                   className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
@@ -539,7 +470,7 @@ function IndustryChatInner() {
                   </div>
                   <div className="space-y-0.5">
                     <span className="font-semibold text-xs text-foreground group-hover:text-blue-500 transition-colors">
-                      Postman v2.1 &amp; CI/CD Export
+                      Postman v2.1 &amp; CI/CD Collections
                     </span>
                     <p className="text-[11px] text-muted-foreground leading-snug">
                       Export collections directly into Newman automation test suites.
@@ -551,20 +482,20 @@ function IndustryChatInner() {
                   type="button"
                   onClick={() =>
                     handleActionChipClick(
-                      "What is AXTree Accessibility DOM Distillation and how does it reduce token consumption?"
+                      "Parse and test this cURL command, extract its JSON schema, and generate a Mermaid sequence flow:\n\ncurl -X POST 'https://api.example.com/v1/orders' -H 'Authorization: Bearer test_token' -H 'Content-Type: application/json' -d '{\"item_id\": \"item_456\", \"quantity\": 2, \"currency\": \"USD\"}'"
                     )
                   }
                   className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card hover:bg-muted/60 text-left transition-all cursor-pointer shadow-xs hover:border-primary/40 group"
                 >
                   <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20 shrink-0 mt-0.5">
-                    <SparklesIcon className="size-4" />
+                    <TerminalIcon className="size-4" />
                   </div>
                   <div className="space-y-0.5">
                     <span className="font-semibold text-xs text-foreground group-hover:text-purple-500 transition-colors">
-                      AXTree DOM Architecture
+                      cURL &amp; Request Debugging
                     </span>
                     <p className="text-[11px] text-muted-foreground leading-snug">
-                      Distill 100k+ HTML nodes into compact 500-token semantic trees.
+                      Parse raw cURL requests, infer payloads, and draw architecture diagrams.
                     </p>
                   </div>
                 </button>
@@ -582,6 +513,10 @@ function IndustryChatInner() {
                       ) : (
                         <MessageResponse
                           content={m.content}
+                          toolCalls={m.tool_calls}
+                          approvals={m.approvals}
+                          onApproveAction={handleApproveAction}
+                          onRejectAction={handleRejectAction}
                           onRegenerate={handleRegenerate}
                         />
                       )}
@@ -593,20 +528,12 @@ function IndustryChatInner() {
                       <MessageContent from="assistant">
                         <MessageResponse
                           content={currentStreamContent}
+                          toolCalls={activeToolCalls}
+                          approvals={activeApprovals}
+                          onApproveAction={handleApproveAction}
+                          onRejectAction={handleRejectAction}
                           isStreaming={isGenerating}
                         />
-                      </MessageContent>
-                    </Message>
-                  )}
-
-                  {/* ── Inline CrawlReasoningMessage (Claude.ai style) ───────
-                      Live crawl/security execution steps appear as a left-side
-                      collapsible reasoning block in the chat thread.
-                      RIGHT panel (ArtifactPanel) shows final output only. */}
-                  {crawlSessionId && (
-                    <Message from="assistant">
-                      <MessageContent from="assistant">
-                        <CrawlReasoningMessage />
                       </MessageContent>
                     </Message>
                   )}
@@ -619,7 +546,6 @@ function IndustryChatInner() {
                   <PromptInput
                     onSubmit={handleSendMessage}
                     onStop={handleStopStreaming}
-                    onOpenCrawlModal={() => setShowCrawlSettingsModal(true)}
                     onExportMarkdown={handleExportMarkdown}
                     modelSelection={modelSelection}
                     onModelSelectionChange={setModelSelection}
@@ -632,16 +558,11 @@ function IndustryChatInner() {
           )}
         </div>
 
-        {/* ── Right Artifact Side Panel ─────────────────────────────────── */}
-        <ArtifactPanel />
+        {/* 
+          Right Artifact Side Panel (Commented out - all content renders inline in chat):
+          <ArtifactPanel />
+        */}
       </div>
-
-      {/* ── Modals ─────────────────────────────────────────────────────────── */}
-      <CrawlSettingsModal
-        open={showCrawlSettingsModal}
-        onOpenChange={setShowCrawlSettingsModal}
-        onSave={handleStartCrawl}
-      />
     </div>
   );
 }
@@ -651,11 +572,9 @@ function IndustryChatInner() {
 export default function IndustryChatPage() {
   return (
     <ArtifactProvider>
-      <CrawlActivityProvider>
-        <Suspense fallback={<ChatHistorySkeleton />}>
-          <IndustryChatInner />
-        </Suspense>
-      </CrawlActivityProvider>
+      <Suspense fallback={<ChatHistorySkeleton />}>
+        <IndustryChatInner />
+      </Suspense>
     </ArtifactProvider>
   );
 }

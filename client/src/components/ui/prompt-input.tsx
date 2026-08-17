@@ -6,33 +6,28 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
   PlusIcon,
   ArrowUpIcon,
-  GlobeIcon,
   SquareIcon,
   MicIcon,
-  SparklesIcon,
-  TerminalIcon,
-  PaperclipIcon,
   DownloadIcon,
+  PaperclipIcon,
+  FileCodeIcon,
 } from "lucide-react";
 import { ClaudeModelSelector, ModelSelection } from "@/components/chat/ClaudeModelSelector";
+import { toast } from "sonner";
 
 export interface PromptInputMessage {
   text: string;
-  targetUrl?: string;
 }
 
 export type PromptInputProps = Omit<ComponentProps<"form">, "onSubmit"> & {
   onSubmit: (message: PromptInputMessage, e: FormEvent) => void;
   onStop?: () => void;
-  onOpenPasteUrl?: () => void;
-  onOpenCrawlModal?: () => void;
   onExportMarkdown?: () => void;
   disabled?: boolean;
   isStreaming?: boolean;
@@ -45,26 +40,66 @@ export const PromptInput = ({
   className,
   onSubmit,
   onStop,
-  onOpenPasteUrl,
-  onOpenCrawlModal,
   onExportMarkdown,
   disabled = false,
   isStreaming = false,
-  placeholder = "Ask about API endpoints, OpenAPI specs, auth flows...",
+  placeholder = "Ask about API endpoints, OpenAPI specs, auth flows, cURL commands...",
   modelSelection,
   onModelSelectionChange,
   ...props
 }: PromptInputProps) => {
   const [text, setText] = useState("");
-  const [targetUrl, setTargetUrl] = useState("");
-  const [showUrlInput, setShowUrlInput] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto focus input on mount
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (content) {
+        setText((prev) =>
+          prev
+            ? `${prev}\n\n[Attached File: ${file.name}]\n${content}`
+            : `Please analyze this attached ${file.name} API network traffic and generate an OpenAPI 3.1 specification:\n\n${content}`
+        );
+        toast.success(`Attached ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -74,15 +109,8 @@ export const PromptInput = ({
     }
     if (!text.trim() || disabled) return;
 
-    let fullText = text.trim();
-    if (targetUrl.trim()) {
-      fullText = `Target URL: ${targetUrl.trim()}\n\n${fullText}`;
-    }
-
-    onSubmit({ text: fullText, targetUrl: targetUrl.trim() || undefined }, e);
+    onSubmit({ text: text.trim() }, e);
     setText("");
-    setTargetUrl("");
-    setShowUrlInput(false);
 
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -103,7 +131,7 @@ export const PromptInput = ({
     setText(e.target.value);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
   };
 
@@ -143,37 +171,23 @@ export const PromptInput = ({
   return (
     <form
       onSubmit={handleSubmit}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       className={cn(
         "relative flex flex-col w-full rounded-3xl border border-border/60 bg-muted/25 hover:bg-muted/35 focus-within:bg-card focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 p-3 shadow-lg transition-all backdrop-blur-md",
+        isDragging && "border-primary bg-primary/10 ring-2 ring-primary/30",
         className
       )}
       {...props}
     >
-      {/* Optional Attached Target URL Chip */}
-      {showUrlInput && (
-        <div className="flex items-center gap-2 px-2 py-1.5 mb-2 bg-muted/40 rounded-xl border border-border/60 text-xs">
-          <GlobeIcon className="size-3.5 text-primary shrink-0" />
-          <input
-            type="url"
-            value={targetUrl}
-            onChange={(e) => setTargetUrl(e.target.value)}
-            placeholder="https://example.com/api"
-            className="flex-1 bg-transparent font-mono text-xs focus:outline-none text-foreground placeholder:text-muted-foreground/60"
-            autoFocus
-          />
-          <button
-            type="button"
-            onClick={() => {
-              setTargetUrl("");
-              setShowUrlInput(false);
-            }}
-            className="text-muted-foreground hover:text-foreground text-xs px-1 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".har,.json,.yaml,.yml,.txt"
+        onChange={handleFileChange}
+        className="hidden"
+      />
       {/* Top Text Area */}
       <textarea
         ref={textareaRef}
@@ -183,59 +197,38 @@ export const PromptInput = ({
         placeholder={placeholder}
         disabled={disabled && !isStreaming}
         rows={1}
-        className="w-full resize-none bg-transparent px-2 py-1 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none max-h-48 min-h-[44px] leading-relaxed"
+        className="w-full resize-none bg-transparent px-2 py-1 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none max-h-52 min-h-[44px] leading-relaxed font-sans"
       />
 
       {/* Bottom Action Bar */}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40 px-1 mt-1">
-        {/* Left: Quick Attachment Actions */}
+        {/* Left: Model Selector & Actions */}
         <div className="flex items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger
               className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer transition-colors focus:outline-none"
-              title="Add Target URL or cURL"
+              title="Options & Attachments"
             >
               <PlusIcon className="size-4" />
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="start" className="w-64 p-1.5 shadow-2xl rounded-xl bg-card border border-border">
-              {onOpenCrawlModal && (
-                <DropdownMenuItem
-                  onClick={onOpenCrawlModal}
-                  className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg font-semibold text-primary"
-                >
-                  <SparklesIcon className="size-4 text-primary" />
-                  <span>Launch Agentic Web Crawl</span>
-                </DropdownMenuItem>
-              )}
-
+            <DropdownMenuContent align="start" className="w-56 p-1.5 shadow-2xl rounded-xl bg-card border border-border">
               <DropdownMenuItem
-                onClick={() => setShowUrlInput(true)}
-                className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg"
+                onClick={() => fileInputRef.current?.click()}
+                className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg text-foreground"
               >
-                <GlobeIcon className="size-4 text-muted-foreground" />
-                <span>Attach Target Web App URL</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onClick={() => setText((prev) => `${prev ? prev + "\n" : ""}curl -X GET "https://api.example.com/v1/users" -H "Authorization: Bearer token"`)}
-                className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg"
-              >
-                <TerminalIcon className="size-4 text-emerald-400" />
-                <span>Insert cURL Template</span>
+                <PaperclipIcon className="size-4 text-purple-500" />
+                <span>Attach .HAR or Spec File</span>
               </DropdownMenuItem>
 
               {onExportMarkdown && (
-                <>
-                  <DropdownMenuSeparator className="my-1" />
-                  <DropdownMenuItem
-                    onClick={onExportMarkdown}
-                    className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg text-foreground"
-                  >
-                    <DownloadIcon className="size-4 text-primary" />
-                    <span>Export to Markdown (.md)</span>
-                  </DropdownMenuItem>
-                </>
+                <DropdownMenuItem
+                  onClick={onExportMarkdown}
+                  className="cursor-pointer text-xs flex items-center gap-2 py-2 rounded-lg text-foreground"
+                >
+                  <DownloadIcon className="size-4 text-primary" />
+                  <span>Export to Markdown (.md)</span>
+                </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
-import type { ChatMessage, ChatSession } from "@/lib/api-client/types";
+import type { ChatMessage, ChatSession, ToolCallEvent, ApprovalEvent } from "@/lib/api-client/types";
 import { chatSessionsApi } from "@/features/chatbot/api/chat-sessions.api";
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -15,6 +15,12 @@ interface ChatState {
   isGenerating: boolean;
   /** Accumulated streaming content for the current response. */
   currentStreamContent: string;
+  /** Active live tool executions for the current in-flight assistant response. */
+  activeToolCalls: ToolCallEvent[];
+  /** Active pending approvals requiring human confirmation. */
+  activeApprovals: ApprovalEvent[];
+  /** Selected Auth Profile ID to attach to probes. */
+  selectedAuthProfileId: string | null;
   /** Loading states. */
   isCreatingSession: boolean;
   isLoadingSessions: boolean;
@@ -29,6 +35,9 @@ const initialState: ChatState = {
   messages: [],
   isGenerating: false,
   currentStreamContent: "",
+  activeToolCalls: [],
+  activeApprovals: [],
+  selectedAuthProfileId: null,
   isCreatingSession: false,
   isLoadingSessions: false,
   isLoadingHistory: false,
@@ -89,6 +98,51 @@ const chatSlice = createSlice({
     addMessage(state, action: PayloadAction<ChatMessage>) {
       state.messages.push(action.payload);
     },
+    /** Start a live tool execution (shows real-time Antigravity card). */
+    addToolStart(
+      state,
+      action: PayloadAction<{ tool_id: string; tool: string; title?: string; input?: Record<string, unknown> }>
+    ) {
+      state.isGenerating = true;
+      const existing = state.activeToolCalls.find((t) => t.tool_id === action.payload.tool_id);
+      if (!existing) {
+        state.activeToolCalls.push({
+          tool_id: action.payload.tool_id,
+          tool: action.payload.tool,
+          title: action.payload.title,
+          input: action.payload.input,
+          status: "running",
+        });
+      }
+    },
+    /** Update tool result on completion. */
+    updateToolResult(
+      state,
+      action: PayloadAction<{
+        tool_id: string;
+        status: "completed" | "failed";
+        latency_ms?: number;
+        output?: Record<string, unknown>;
+        error?: string | null;
+      }>
+    ) {
+      const target = state.activeToolCalls.find((t) => t.tool_id === action.payload.tool_id);
+      if (target) {
+        target.status = action.payload.status;
+        target.latency_ms = action.payload.latency_ms;
+        target.output = action.payload.output;
+        target.error = action.payload.error;
+      }
+    },
+    addApprovalRequired(state, action: PayloadAction<ApprovalEvent>) {
+      state.activeApprovals.push(action.payload);
+    },
+    removeApproval(state, action: PayloadAction<string>) {
+      state.activeApprovals = state.activeApprovals.filter((a) => a.approval_id !== action.payload);
+    },
+    setSelectedAuthProfileId(state, action: PayloadAction<string | null>) {
+      state.selectedAuthProfileId = action.payload;
+    },
     /** Accumulate a streaming token. */
     appendStreamToken(state, action: PayloadAction<string>) {
       state.currentStreamContent += action.payload;
@@ -96,16 +150,20 @@ const chatSlice = createSlice({
     },
     /** Finalize the stream — push the assembled message and clear the buffer. */
     finalizeStreamMessage(state) {
-      if (state.currentStreamContent && state.activeSessionId) {
+      if ((state.currentStreamContent || state.activeToolCalls.length > 0 || state.activeApprovals.length > 0) && state.activeSessionId) {
         state.messages.push({
           id: `msg-${Date.now()}`,
           session_id: state.activeSessionId,
           role: "assistant",
           content: state.currentStreamContent,
+          tool_calls: [...state.activeToolCalls],
+          approvals: [...state.activeApprovals],
           created_at: new Date().toISOString(),
         });
       }
       state.currentStreamContent = "";
+      state.activeToolCalls = [];
+      state.activeApprovals = [];
       state.isGenerating = false;
     },
     setIsGenerating(state, action: PayloadAction<boolean>) {
@@ -118,6 +176,8 @@ const chatSlice = createSlice({
       state.activeSessionId = null;
       state.messages = [];
       state.currentStreamContent = "";
+      state.activeToolCalls = [];
+      state.activeApprovals = [];
       state.isGenerating = false;
       state.isLoadingHistory = false;
       state.sessionError = null;
@@ -224,6 +284,11 @@ const chatSlice = createSlice({
 
 export const {
   addMessage,
+  addToolStart,
+  updateToolResult,
+  addApprovalRequired,
+  removeApproval,
+  setSelectedAuthProfileId,
   appendStreamToken,
   finalizeStreamMessage,
   setIsGenerating,

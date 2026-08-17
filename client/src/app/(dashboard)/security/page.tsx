@@ -264,13 +264,13 @@ export default function SecurityCenterPage() {
             <div className="p-4 border-b border-border/40">
               <h2 className="text-sm font-semibold text-foreground">Discovered Security Findings</h2>
               <p className="text-xs text-muted-foreground">
-                Confirmed API vulnerabilities identified during autonomous crawl runs.
+                Confirmed API vulnerabilities and security test results identified during analysis.
               </p>
             </div>
 
             {findings.length === 0 ? (
               <div className="p-12 text-center text-xs text-muted-foreground font-mono">
-                No security vulnerabilities discovered yet. Run crawls on verified domains with active testing enabled.
+                No security vulnerabilities discovered yet. Run security analysis in AI Chat on verified domains.
               </div>
             ) : (
               <div className="divide-y divide-border/40">

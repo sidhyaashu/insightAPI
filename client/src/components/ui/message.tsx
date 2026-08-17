@@ -19,6 +19,9 @@ import { useArtifact } from "@/components/chat/ArtifactContext";
 import { extractArtifact } from "@/components/chat/artifact-utils";
 import { ReasoningBlock } from "@/components/chat/ReasoningBlock";
 import { ArtifactCard } from "@/components/chat/ArtifactCard";
+import { ToolExecutionCard } from "@/components/chat/ToolExecutionCard";
+import { ApprovalCard, ApprovalAction } from "@/components/chat/ApprovalCard";
+import type { ToolCallEvent, ApprovalEvent } from "@/lib/api-client/types";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: "user" | "assistant" | "system";
@@ -138,16 +141,28 @@ UserMessage.displayName = "UserMessage";
 
 export type MessageResponseProps = {
   content: string;
+  toolCalls?: ToolCallEvent[];
+  approvals?: ApprovalEvent[];
   isStreaming?: boolean;
+  onApproveAction?: (approvalId: string, action: ApprovalAction) => void;
+  onRejectAction?: (approvalId: string, action: ApprovalAction) => void;
   onRegenerate?: () => void;
 };
 
 /**
  * Enhanced modern AI assistant response renderer with reasoning steps,
- * full Markdown, syntax highlighting, KaTeX math, HTTP API blocks, and diagrams.
+ * live Antigravity tool execution cards, approvals, full Markdown, and diagrams.
  */
 export const MessageResponse = memo(
-  ({ content, isStreaming, onRegenerate }: MessageResponseProps) => {
+  ({
+    content,
+    toolCalls,
+    approvals,
+    isStreaming,
+    onApproveAction,
+    onRejectAction,
+    onRegenerate,
+  }: MessageResponseProps) => {
     const [copied, setCopied] = useState(false);
     const [liked, setLiked] = useState<boolean | null>(null);
     const { openPanel } = useArtifact();
@@ -177,7 +192,7 @@ export const MessageResponse = memo(
         }
       }
 
-      return { reasoning: "", mainContent: content, isThinkingNow: false };
+      return { reasoning: "", mainContent: content.trim(), isThinkingNow: false };
     }, [content, isStreaming]);
 
     // Detect if this message contains a panel-worthy artifact
@@ -187,7 +202,8 @@ export const MessageResponse = memo(
     }, [mainContent, isStreaming]);
 
     const handleCopyMessage = () => {
-      navigator.clipboard.writeText(mainContent || content);
+      const plainText = mainContent || content;
+      navigator.clipboard.writeText(plainText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     };
@@ -197,7 +213,7 @@ export const MessageResponse = memo(
     };
 
     // If streaming and not a single token received yet
-    if (isStreaming && !content) {
+    if (isStreaming && !content && (!toolCalls || toolCalls.length === 0) && (!approvals || approvals.length === 0)) {
       return (
         <div className="w-full">
           <ReasoningBlock reasoning="" isStreaming={true} />
@@ -207,24 +223,48 @@ export const MessageResponse = memo(
 
     return (
       <div className="relative w-full space-y-2 font-sans min-w-0">
+        {/* Antigravity-Style Live Tool Execution Cards */}
+        {toolCalls && toolCalls.length > 0 && (
+          <div className="space-y-1.5 my-1.5">
+            {toolCalls.map((tc) => (
+              <ToolExecutionCard key={tc.tool_id} toolCall={tc} />
+            ))}
+          </div>
+        )}
+
+        {/* Human-in-the-Loop Approval Confirmation Cards */}
+        {approvals && approvals.length > 0 && (
+          <div className="space-y-1.5 my-1.5">
+            {approvals.map((appr) => (
+              <ApprovalCard
+                key={appr.approval_id}
+                approvalId={appr.approval_id}
+                action={appr.action}
+                onApprove={onApproveAction}
+                onReject={onRejectAction}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Dynamic Reasoning / Thought Collapsible Box (Claude / ChatGPT style) */}
         {(reasoning || isThinkingNow) && (
           <ReasoningBlock reasoning={reasoning} isStreaming={isThinkingNow} />
         )}
 
-        {/* Main Response Markdown */}
+        {/* Main Response Markdown (renders everything inline directly in chat) */}
         {mainContent && (
           <MarkdownRenderer
             content={mainContent}
             isStreaming={isStreaming && !isThinkingNow}
-            suppressInlineArtifacts={!!artifact}
+            suppressInlineArtifacts={false}
           />
         )}
 
-        {/* Inline Artifact Tile (Claude.ai style) */}
-        {!isStreaming && artifact && (
-          <ArtifactCard artifact={artifact} />
-        )}
+        {/* 
+          Optional Artifact Tile (Commented out - side panel disabled for single-pane chat experience):
+          {!isStreaming && artifact && <ArtifactCard artifact={artifact} />}
+        */}
 
         {/* Assistant Message action buttons (ChatGPT style) */}
         {!isStreaming && (mainContent || content) && (
@@ -285,19 +325,21 @@ export const MessageResponse = memo(
               </Button>
             )}
 
-            {/* Open in Artifact Panel */}
-            {artifact && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-[11px] text-muted-foreground hover:text-primary cursor-pointer flex items-center gap-1 ml-auto"
-                onClick={handleOpenPanel}
-                title="Open in side panel"
-              >
-                <PanelRightOpenIcon className="size-3.5" />
-                <span>Open in panel</span>
-              </Button>
-            )}
+            {/* 
+              Open in Artifact Side Panel (Commented out for now):
+              {artifact && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-[11px] text-muted-foreground hover:text-primary cursor-pointer flex items-center gap-1 ml-auto"
+                  onClick={handleOpenPanel}
+                  title="Open in side panel"
+                >
+                  <PanelRightOpenIcon className="size-3.5" />
+                  <span>Open in panel</span>
+                </Button>
+              )}
+            */}
           </div>
         )}
       </div>

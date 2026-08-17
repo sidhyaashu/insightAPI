@@ -140,7 +140,7 @@ export default function SettingsPage() {
         category: "Commonly Used",
         labelPrefix: "Security",
         name: "Two-Tier Action Guardrails",
-        description: "Automatically intercepts and skips destructive UI actions (delete, payment, billing, password changes) during crawls.",
+        description: "Automatically intercepts and flags destructive API actions (delete, payment, billing, password changes) during AI security analysis.",
         type: "toggle",
       },
 

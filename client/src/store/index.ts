@@ -1,13 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, type TypedUseSelectorHook } from "react-redux";
 import authReducer from "@/features/auth/store/authSlice";
-import crawlsReducer from "@/features/crawls/store/crawlsSlice";
 import chatReducer from "@/features/chatbot/store/chatSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    crawls: crawlsReducer,
     chat: chatReducer,
   },
   middleware: (getDefaultMiddleware) =>
