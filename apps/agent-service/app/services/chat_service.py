@@ -60,25 +60,42 @@ async def stream_agentic_chat(
     session_id: Optional[str] = None,
 ) -> AsyncIterator[Dict[str, Any]]:
     """
-    Agentic execution stream powered by ReActEngine.
-    Yields structured events:
+    Unified agentic execution stream powered by InvestigationRuntime (with ReActEngine fallback).
+    Yields structured wire events:
       - {"type": "tool_start", "tool_id": "...", "tool": "...", "input": {...}}
       - {"type": "tool_result", "tool_id": "...", "tool": "...", "status": "completed"|"failed", "latency_ms": int, "output": {...}}
       - {"type": "approval_required", "approval_id": "...", "action": {...}}
       - {"type": "token", "content": "..."}
     """
-    from app.services.react_engine import ReActEngine
+    detected_urls = _extract_urls(user_message)
+    effective_session_id = session_id or f"sess-{uuid.uuid4().hex[:12]}"
 
-    async for event in ReActEngine.run(
-        history=history,
-        user_message=user_message,
-        auth_headers=auth_headers,
-        crawl_context=crawl_context,
-        model=model,
-        approved_actions=approved_actions,
-        session_id=session_id,
-    ):
-        yield event
+    if detected_urls:
+        from app.runtime.service import InvestigationRequest, runtime_service
+        target_url = detected_urls[0]
+        req = InvestigationRequest(
+            session_id=effective_session_id,
+            target_url=target_url,
+            goal_description=user_message,
+            auth_headers=auth_headers or {},
+            approved_actions=approved_actions or [],
+            model=model,
+            crawl_context=crawl_context,
+        )
+        async for event in runtime_service.stream_investigation(req, history=history):
+            yield event
+    else:
+        from app.services.react_engine import ReActEngine
+        async for event in ReActEngine.run(
+            history=history,
+            user_message=user_message,
+            auth_headers=auth_headers,
+            crawl_context=crawl_context,
+            model=model,
+            approved_actions=approved_actions,
+            session_id=effective_session_id,
+        ):
+            yield event
 
 
 # Legacy compatibility alias

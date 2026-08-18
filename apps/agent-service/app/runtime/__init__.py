@@ -64,6 +64,7 @@ from app.runtime.persistence import AgentStateStore, state_store
 from app.runtime.observability import SessionTelemetryTracker, SessionMetrics, telemetry
 from app.runtime.artifacts import ArtifactGenerator
 from app.runtime.supervisor import Supervisor
+from app.runtime.service import InvestigationRuntime, InvestigationRequest, runtime_service
 
 __all__ = [
     # Enumerations
@@ -114,6 +115,10 @@ __all__ = [
     "NetworkAgent",
     "VerificationAgent",
     "Supervisor",
+    # Service Entrypoint
+    "InvestigationRuntime",
+    "InvestigationRequest",
+    "runtime_service",
     # Event bus & bridge
     "AgentEventBus",
     "event_bus",

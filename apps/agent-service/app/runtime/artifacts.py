@@ -47,6 +47,16 @@ class ArtifactGenerator:
         """
         endpoints_data = []
         for ep in inventory:
+            # Build example response from inferred schema properties if available
+            sample_body = None
+            if ep.inferred_schema and isinstance(ep.inferred_schema, dict):
+                props = ep.inferred_schema.get("properties", {})
+                if props:
+                    sample_body = {
+                        k: (1 if v.get("type") == "integer" else ("sample" if v.get("type") == "string" else True))
+                        for k, v in list(props.items())[:5]
+                    }
+
             endpoints_data.append({
                 "method": ep.method,
                 "template_route": ep.template_path,
@@ -56,10 +66,10 @@ class ArtifactGenerator:
                 "url": ep.example_url or f"{target_url.rstrip('/')}{ep.template_path}",
                 "examples": [
                     {
-                        "response_body": ep.example_url,
+                        "response_body": sample_body,
                         "request_payload": None,
                     }
-                ] if ep.example_url else [],
+                ] if sample_body else [],
             })
 
         return OpenAPIExporter.generate_spec(

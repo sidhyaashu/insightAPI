@@ -131,10 +131,26 @@ This directory documents the foundational architectural decisions made for the *
 
 ---
 
+12. [ADR-012: Evaluation Strategy & Deterministic Verification](#adr-012-evaluation-strategy--deterministic-verification)
+13. [ADR-013: Single Authoritative InvestigationRuntime & Durable DB Persistence](#adr-013-single-authoritative-investigationruntime--durable-db-persistence)
+
+---
+
 ### ADR-012: Evaluation Strategy & Deterministic Verification
 - **Problem**: Testing against live public websites led to non-deterministic test failures and network flakiness.
 - **Decision**: Build comprehensive unit and integration test fixtures covering SPA state, dynamic parameters, GraphQL, auth protection, and error recovery.
 - **Alternatives**: End-to-end testing exclusively on external websites.
 - **Reason**: Ensures deterministic CI/CD validation with 100% reproducible results.
-- **Consequences**: 117 tests passing cleanly in <25 seconds.
+- **Consequences**: Fast deterministic CI execution.
 - **Future Migration Path**: Synthetic target app Docker container for automated benchmarking.
+
+---
+
+### ADR-013: Single Authoritative InvestigationRuntime & Durable DB Persistence
+- **Problem**: Multiple competing execution loops (`ReActEngine.run()`, background tasks, direct HTTP routers) existed simultaneously, with in-process only memory dictionaries.
+- **Decision**: Establish `InvestigationRuntime` as the single authoritative service-level entrypoint across WebSocket Chat, HTTP APIs, and CLI, backed by durable PostgreSQL persistence via `CrawlSession` models.
+- **Alternatives**: Retain distinct ReAct and Supervisor execution paths or introduce a new database migration.
+- **Reason**: Guarantees a single unified source of truth and full investigation resumability across process restarts without schema migration overhead.
+- **Consequences**: Zero competing agent loops, complete backward compatibility with WebSocket streaming, and durable PostgreSQL state recovery.
+- **Future Migration Path**: Direct CLI invocation `python -m app.cli` and background worker task dispatch.
+

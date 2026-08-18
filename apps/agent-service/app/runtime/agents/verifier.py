@@ -156,3 +156,29 @@ class VerificationAgent(BaseAgent):
         )
 
         return result
+
+    async def verify_endpoint(
+        self,
+        method: str,
+        url: str,
+        auth_headers: Optional[Dict[str, str]] = None,
+    ) -> Observation:
+        """
+        Direct programmatic probe for hypothesis testing and evidence production.
+        """
+        res = await probe_http_endpoint(
+            url=url,
+            method=method.upper(),
+            headers=auth_headers or {},
+        )
+        return Observation(
+            session_id=self.agent_id,
+            source=ObservationSource.VERIFICATION,
+            request_method=method.upper(),
+            request_url=url,
+            response_status=res.data.get("status_code", 0) if res.status == "success" else 0,
+            response_body=res.data if res.status == "success" else None,
+            timing_ms=res.latency_ms,
+            error=res.error,
+            confidence=ConfidenceLevel.TESTED,
+        )
