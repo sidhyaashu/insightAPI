@@ -466,6 +466,7 @@ async def chat_websocket(
                 model=requested_model,
                 auth_headers=auth_headers,
                 approved_actions=approved_actions,
+                session_id=chat_session_id,
             ):
                 await websocket.send_json(event)
                 if event.get("type") == "token":

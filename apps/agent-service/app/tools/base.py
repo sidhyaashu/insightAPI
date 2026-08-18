@@ -30,6 +30,65 @@ class ToolResult(BaseModel):
             "error": self.error,
         }
 
+    def to_observation(
+        self,
+        session_id: str,
+        source: Optional[str] = None,
+        action_id: Optional[str] = None,
+    ) -> "Any":
+        """
+        Convert this ToolResult into a typed ``Observation`` for the agent runtime.
+
+        Importing here (deferred) avoids a circular import between the tools layer
+        and the runtime layer. The ``source`` defaults to the tool name.
+
+        Parameters
+        ----------
+        session_id:  Active investigation session ID.
+        source:      ObservationSource string (defaults to tool-derived source).
+        action_id:   ID of the Action that triggered this tool (if known).
+
+        Returns
+        -------
+        app.runtime.models.Observation
+        """
+        from app.runtime.models import Observation, ObservationSource, ConfidenceLevel
+
+        # Map common tool names to their canonical ObservationSource
+        _source_map = {
+            "probe_http_endpoint": ObservationSource.HTTP,
+            "execute_curl": ObservationSource.HTTP,
+            "explore_web_app_browser": ObservationSource.BROWSER,
+            "parse_har_traffic": ObservationSource.NETWORK,
+            "infer_openapi_schema": ObservationSource.SCHEMA,
+            "security_audit_endpoint": ObservationSource.SECURITY,
+            "parse_graphql_payload": ObservationSource.GRAPHQL,
+        }
+        resolved_source = (
+            ObservationSource(source)
+            if source
+            else _source_map.get(self.tool_name, ObservationSource.HTTP)
+        )
+
+        confidence = (
+            ConfidenceLevel.TESTED if self.status == "success"
+            else ConfidenceLevel.UNOBSERVED
+        )
+
+        return Observation(
+            session_id=session_id,
+            source=resolved_source,
+            action_id=action_id,
+            request_url=self.data.get("url"),
+            request_method=self.data.get("method"),
+            response_status=self.data.get("status_code"),
+            response_body=self.data.get("body"),
+            latency_ms=self.latency_ms,
+            confidence=confidence,
+            error=self.error,
+            raw_tool_result=self.to_dict(),
+        )
+
 
 def truncate_payload(data: Any, max_length: int = 25000) -> Any:
     """Ensure response payload size does not overflow LLM context window."""

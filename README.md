@@ -1,3 +1,21 @@
+InsightAPI = an autonomous computer-use intelligence layer for discovering hidden, undocumented APIs and understanding how modern web applications actually communicate.
+---
+An autonomous intelligence runtime that builds a behavioral model of a web application.
+---
+You have built:
+
+InsightAPI v1 — an intelligent API discovery system.
+
+The next architectural generation should become:
+
+InsightAPI v2 — an autonomous application intelligence runtime.
+
+And eventually:
+
+InsightAPI Platform — autonomous computer-use intelligence for web/API/security technology.
+---
+
+
 <div align="center">
 
 # 🤖 InsightAPI AI

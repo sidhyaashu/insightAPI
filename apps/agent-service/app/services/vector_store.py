@@ -50,7 +50,12 @@ class EndpointVectorStore:
     """
     Cross-session endpoint memory and semantic search engine.
     Supports optional ChromaDB local vector embeddings with TF-IDF fallback.
+
+    Memory is bounded to MAX_STORE_SIZE entries. When the limit is reached the
+    oldest entries are evicted (FIFO) to prevent unbounded growth on long-running
+    processes. Persist via Phase 8 (AgentEvent DB) for cross-restart durability.
     """
+    MAX_STORE_SIZE: int = 10_000
     _store: List[Dict[str, Any]] = []
     _chroma_client: Optional[Any] = None
     _chroma_collection: Optional[Any] = None
@@ -103,6 +108,12 @@ class EndpointVectorStore:
             }
             cls._store.append(record)
             added_count += 1
+
+        # Evict oldest entries if store exceeds MAX_STORE_SIZE
+        overflow = len(cls._store) - cls.MAX_STORE_SIZE
+        if overflow > 0:
+            cls._store = cls._store[overflow:]
+            logger.debug(f"VectorStore: Evicted {overflow} oldest entries (store at MAX_STORE_SIZE={cls.MAX_STORE_SIZE}).")
 
         cls._init_chroma()
         if cls._chroma_collection:

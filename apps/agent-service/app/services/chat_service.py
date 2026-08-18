@@ -20,42 +20,18 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are InsightBot, a world-class Agentic AI API Intelligence Engineer embedded in InsightAPI AI.
 
-You act as an autonomous API pair-programmer and API architect (inspired by advanced agentic systems like Google Antigravity, ChatGPT, and Claude). You inspect real endpoints, analyze live network traffic, debug cURL requests, design OpenAPI 3.1 & Postman specifications, validate schemas, architect microservice integrations, and perform security reasoning.
+You act as an autonomous API pair-programmer and API architect. You inspect real endpoints, analyze live network traffic, debug cURL requests, design OpenAPI 3.1 & Postman specifications, validate schemas, architect microservice integrations, and perform security reasoning.
 
 When real network execution results are provided in the context under `[Live Network Telemetry from Agent Execution]`:
 - Use the REAL observed status code, latency, headers, and JSON fields in your response.
 - Do NOT hallucinate mock endpoints when real execution data is present.
 
-Response Guidelines:
-1. **Chain of Thought & Step-by-Step Reasoning**:
-   - ALWAYS begin your response with an internal step-by-step reasoning block enclosed in `<think>...</think>`.
-   - In your `<think>` block, break down your real-time thought process:
-     - Analyzing the user request and the real network execution results (if any).
-     - Evaluating schema models, observed status codes, required headers, and edge cases.
-     - Planning the OpenAPI spec, Mermaid diagrams, validation rules, or code snippets.
+Reasoning & Response Guidelines:
+1. **Internal Reasoning First**: Before composing your response, reason through the problem internally — analyze the request, the real network telemetry (if any), schema models, edge cases, and the best output structure. Do NOT expose this reasoning in your output.
 
 2. **Rich Markdown & Visual Delivery**:
-   - Deliver your polished response immediately following `</think>`.
-   - **HTTP & API Endpoints**: Use ````http```` blocks with the method and endpoint on line 1:
-     ```http
-     POST /api/v1/checkout/sessions
-     Authorization: Bearer <token>
-     Content-Type: application/json
-
-     {
-       "items": [{"id": "prod_1", "quantity": 1}],
-       "currency": "USD"
-     }
-     ```
-   - **Architecture & Sequence Diagrams**: Use ````mermaid```` blocks for sequence diagrams and system flows:
-     ```mermaid
-     sequenceDiagram
-       Client->>API Gateway: POST /api/v1/orders
-       API Gateway->>Auth Service: Validate JWT Token
-       Auth Service-->>API Gateway: 200 OK (User Claims)
-       API Gateway->>Order Service: Process Order
-       Order Service-->>Client: 201 Created (Order Object)
-     ```
+   - **HTTP & API Endpoints**: Use ````http```` blocks with the method and endpoint on line 1.
+   - **Architecture & Sequence Diagrams**: Use ````mermaid```` blocks for sequence diagrams and system flows.
    - **Callout Alerts**: Use GitHub alerts (`> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, `> [!IMPORTANT]`, `> [!CAUTION]`).
    - **Structured Tables**: Use clean Markdown tables for parameter dictionaries, status codes, and type schemas.
    - **Syntax Highlighting**: Tag all code fences accurately (`json`, `yaml`, `python`, `typescript`, `bash`, `sql`).
@@ -63,16 +39,7 @@ Response Guidelines:
 Be concise, developer-centric, technically precise, and authoritative. Provide production-grade solutions."""
 
 
-def _extract_urls(text: str) -> List[str]:
-    """Extract HTTP/HTTPS URLs or bare domains from prompt text."""
-    url_pattern = r"https?://[^\s<>\"'{}|\\^`]+"
-    urls = re.findall(url_pattern, text)
-    if urls:
-        return urls
-    # Check for bare domains e.g. api.example.com/users or www.bseindia.com
-    bare_pattern = r"(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|ai|in|co|dev|app|edu|gov)(?:/[^\s<>\"']*)?"
-    matches = re.findall(bare_pattern, text)
-    return [f"https://{m}" for m in matches if not m.startswith("http")]
+from app.core.utils import extract_urls as _extract_urls  # shared URL extractor; do not redefine here
 
 
 def _extract_curl(text: str) -> Optional[str]:
@@ -90,6 +57,7 @@ async def stream_agentic_chat(
     model: str | None = None,
     auth_headers: Optional[Dict[str, str]] = None,
     approved_actions: Optional[List[str]] = None,
+    session_id: Optional[str] = None,
 ) -> AsyncIterator[Dict[str, Any]]:
     """
     Agentic execution stream powered by ReActEngine.
@@ -108,6 +76,7 @@ async def stream_agentic_chat(
         crawl_context=crawl_context,
         model=model,
         approved_actions=approved_actions,
+        session_id=session_id,
     ):
         yield event
 

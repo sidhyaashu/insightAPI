@@ -92,218 +92,81 @@ async def explore_web_app_browser(
     visited_states: Set[str] = set()
 
     # ──────────────────────────────────────────────────────────────────────────
-    # Try Headless Playwright Browser with Stealth Evasions
+    # Headless Playwright Browser with Stealth Evasions via BrowserAdapter
     # ──────────────────────────────────────────────────────────────────────────
     try:
-        from playwright.async_api import async_playwright
+        from app.runtime.browser.playwright_adapter import PlaywrightBrowserAdapter
 
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                    "--single-process",
-                    "--disable-blink-features=AutomationControlled",
-                ],
-            )
-
-            context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 InsightAPI-Agent/2.0",
-                viewport={"width": 1440, "height": 900},
-                extra_http_headers=auth_headers or {},
-            )
-
-            # Apply Anti-Bot Stealth Evasions
-            await apply_stealth_evasion(context)
-
-            page = await context.new_page()
-
-            # Attach Multi-Protocol Network Interceptor (REST & GraphQL)
-            async def handle_response(response):
-                try:
-                    req = response.request
-                    resource_type = req.resource_type
-                    req_url = req.url
-
-                    # Filter out static web assets and 3rd party telemetry
-                    parsed_req = urllib.parse.urlparse(req_url)
-                    req_host = parsed_req.hostname or ""
-                    req_path = parsed_req.path or "/"
-                    lower_path = req_path.lower()
-
-                    if any(t in req_host for t in TELEMETRY_DOMAINS):
-                        return
-                    if any(lower_path.endswith(ext) for ext in STATIC_EXTENSIONS):
-                        return
-
-                    # Only capture XHR, Fetch, or API-like requests
-                    is_api_type = resource_type in ("fetch", "xhr") or "/api/" in req_path or "/v1/" in req_path or "/v2/" in req_path or "/graphql" in req_path
-                    if not is_api_type:
-                        return
-
-                    method = req.method.upper()
-                    template_path = _normalize_route_template(req_path)
-
-                    # Try to capture response body (capped)
-                    resp_json = None
-                    try:
-                        resp_json = await response.json()
-                    except Exception:
-                        pass
-
-                    # ── Multi-Protocol: GraphQL Disaggregation ────────────────
-                    if "/graphql" in req_path and req.post_data:
-                        ops = parse_graphql_payload(req.post_data)
-                        for op in ops:
-                            op_key = op["virtual_endpoint"]
-                            if op_key not in intercepted_requests:
-                                intercepted_requests[op_key] = {
-                                    "method": "POST",
-                                    "template_path": f"/graphql?op={op['operation_name']}",
-                                    "example_url": req_url,
-                                    "status_code": response.status,
-                                    "content_type": response.headers.get("content-type", "application/json"),
-                                    "is_graphql": True,
-                                    "graphql_operation": op["operation_name"],
-                                    "graphql_type": op["operation_type"],
-                                    "sample_response": truncate_payload(resp_json, 1000) if resp_json else None,
-                                    "occurrences": 1,
-                                }
-                            else:
-                                intercepted_requests[op_key]["occurrences"] += 1
-                        return
-
-                    # ── Standard REST Interception ────────────────────────────
-                    endpoint_key = f"{method} {template_path}"
-                    if endpoint_key not in intercepted_requests:
-                        intercepted_requests[endpoint_key] = {
-                            "method": method,
-                            "template_path": template_path,
-                            "example_url": req_url,
-                            "status_code": response.status,
-                            "content_type": response.headers.get("content-type", ""),
-                            "is_graphql": False,
-                            "sample_response": truncate_payload(resp_json, 1000) if resp_json else None,
-                            "occurrences": 1,
-                        }
-                    else:
-                        intercepted_requests[endpoint_key]["occurrences"] += 1
-
-                except Exception as e:
-                    logger.debug(f"Error intercepting response: {e}")
-
-            page.on("response", handle_response)
-
-            # ── 1. Navigate to URL ────────────────────────────────────────────
+        async with PlaywrightBrowserAdapter(auth_headers=auth_headers) as adapter:
             actions_taken.append({"action": "stealth_navigate", "target": url})
-            try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=timeout_sec * 1000)
-                await page.wait_for_timeout(1000)  # SPA hydration pause
-            except Exception as e:
-                logger.warning(f"Page goto timeout/warning for {url}: {e}")
+            page_state = await adapter.navigate(url, timeout_sec=timeout_sec)
+            if page_state.state_hash:
+                visited_states.add(page_state.state_hash)
 
-            # ── 2. Auto-dismiss Cookie/Modal Overlays ─────────────────────────
+            # ── 2. Contextual Form Injection ──────────────────────────────────
             try:
-                dismiss_btn = page.locator("button:has-text('Accept'), button:has-text('Allow'), button:has-text('Close'), button:has-text('Got it'), button:has-text('I Agree')").first
-                if await dismiss_btn.is_visible(timeout=1000):
-                    await dismiss_btn.click(timeout=1000)
-                    await page.wait_for_timeout(500)
-            except Exception:
-                pass
-
-            # ── 3. Semantic Contextual Form Injection ────────────────────────
-            try:
-                forms_filled = await fill_page_forms(page, max_forms=3)
-                for ff in forms_filled:
-                    actions_taken.append({
-                        "action": "form_fill_and_submit",
-                        "details": ff["fields_populated"],
-                    })
+                if adapter.page:
+                    forms_filled = await fill_page_forms(adapter.page, max_forms=3)
+                    for ff in forms_filled:
+                        actions_taken.append({
+                            "action": "form_fill_and_submit",
+                            "details": ff["fields_populated"],
+                        })
             except Exception as e:
                 logger.debug(f"Form filler step warning: {e}")
 
-            # ── 4. Virtual Scrolling Pass for Lazy-Loaded Items ──────────────
+            # ── 3. Virtual Scrolling Pass ─────────────────────────────────────
+            await adapter.scroll("down", 400)
+            actions_taken.append({"action": "virtual_scroll_pass", "status": "completed"})
+
+            # ── 4. Shadow DOM Piercing & Interactive Element Exploration ──────
             try:
-                await page.evaluate("""async () => {
-                    const scrollStep = 400;
-                    for (let i = 0; i < 4; i++) {
-                        window.scrollBy(0, scrollStep);
-                        await new Promise(r => setTimeout(r, 200));
-                    }
-                    window.scrollTo(0, 0);
-                }""")
-                await page.wait_for_timeout(600)
-                actions_taken.append({"action": "virtual_scroll_pass", "status": "completed"})
-            except Exception:
-                pass
-
-            # ── 5. Recursive Shadow DOM Piercing & Safe Click Navigation ─────
-            try:
-                # Pierce open shadow DOM roots to find encapsulated interactive controls
-                pierced_selectors = await page.evaluate("""() => {
-                    const results = [];
-                    function collectElements(root) {
-                        const candidates = root.querySelectorAll('button, a[href], [role="button"], [role="tab"], select');
-                        candidates.forEach(el => {
-                            const text = el.innerText || el.getAttribute('aria-label') || el.tagName;
-                            results.push(text.trim());
-                        });
-                        // Recurse into shadow roots
-                        const all = root.querySelectorAll('*');
-                        all.forEach(el => {
-                            if (el.shadowRoot) {
-                                collectElements(el.shadowRoot);
-                            }
-                        });
-                    }
-                    collectElements(document);
-                    return results;
-                }""")
-
-                # State Hash Loop Detection
-                state_hash = _compute_dom_state_hash(url, pierced_selectors)
-                visited_states.add(state_hash)
-
-                clickables = await page.query_selector_all("button, a[href], [role='button'], [role='tab'], select")
+                ax_nodes = await adapter.get_accessibility_tree()
                 clicks_done = 0
+                if adapter.page:
+                    clickables = await adapter.page.query_selector_all("button, a[href], [role='button'], [role='tab'], select")
+                    for el in clickables[:30]:
+                        if clicks_done >= max_clicks:
+                            break
+                        try:
+                            if not await el.is_visible():
+                                continue
+                            text = (await el.inner_text()).strip()
+                            tag_name = await el.evaluate("el => el.tagName.toLowerCase()")
+                            aria_label = (await el.get_attribute("aria-label")) or ""
+                            el_desc = text or aria_label or tag_name
 
-                for el in clickables[:30]:
-                    if clicks_done >= max_clicks:
-                        break
+                            if not _is_safe_element_to_click(el_desc, tag_name):
+                                continue
 
-                    try:
-                        is_visible = await el.is_visible()
-                        if not is_visible:
+                            await humanized_click(el)
+                            clicks_done += 1
+                            actions_taken.append({
+                                "action": "click",
+                                "element": tag_name,
+                                "label": el_desc[:40],
+                            })
+                            await adapter.wait(600)
+                        except Exception:
                             continue
-
-                        text = (await el.inner_text()).strip()
-                        tag_name = await el.evaluate("el => el.tagName.toLowerCase()")
-                        aria_label = (await el.get_attribute("aria-label")) or ""
-                        el_desc = text or aria_label or tag_name
-
-                        if not _is_safe_element_to_click(el_desc, tag_name):
-                            continue
-
-                        # Perform humanized click
-                        await humanized_click(el)
-                        clicks_done += 1
-                        actions_taken.append({
-                            "action": "click",
-                            "element": tag_name,
-                            "label": el_desc[:40],
-                        })
-                        await page.wait_for_timeout(600)  # allow AJAX responses
-
-                    except Exception:
-                        continue
-
             except Exception as e:
                 logger.debug(f"Click iteration notice: {e}")
 
-            await browser.close()
+            # Collect intercepted network events from adapter
+            for evt in adapter.get_network_events():
+                key = f"{evt.method} {evt.template_path}"
+                intercepted_requests[key] = {
+                    "method": evt.method,
+                    "template_path": evt.template_path,
+                    "example_url": evt.url,
+                    "status_code": evt.status_code,
+                    "content_type": evt.content_type,
+                    "is_graphql": evt.is_graphql,
+                    "graphql_operation": evt.graphql_operation,
+                    "graphql_type": evt.graphql_type,
+                    "sample_response": evt.sample_response,
+                    "occurrences": evt.occurrences,
+                }
 
         latency_ms = int((time.perf_counter() - start_time) * 1000)
         raw_discovered = list(intercepted_requests.values())
