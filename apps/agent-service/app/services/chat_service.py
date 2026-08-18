@@ -58,6 +58,7 @@ async def stream_agentic_chat(
     auth_headers: Optional[Dict[str, str]] = None,
     approved_actions: Optional[List[str]] = None,
     session_id: Optional[str] = None,
+    db: Optional[Any] = None,
 ) -> AsyncIterator[Dict[str, Any]]:
     """
     Unified agentic execution stream powered by InvestigationRuntime (with ReActEngine fallback).
@@ -67,12 +68,32 @@ async def stream_agentic_chat(
       - {"type": "approval_required", "approval_id": "...", "action": {...}}
       - {"type": "token", "content": "..."}
     """
-    detected_urls = _extract_urls(user_message)
-    effective_session_id = session_id or f"sess-{uuid.uuid4().hex[:12]}"
+    from app.runtime.service import InvestigationRequest, runtime_service
+    from app.runtime.persistence import state_store
 
-    if detected_urls:
-        from app.runtime.service import InvestigationRequest, runtime_service
-        target_url = detected_urls[0]
+    effective_session_id = session_id or f"sess-{uuid.uuid4().hex[:12]}"
+    detected_urls = _extract_urls(user_message)
+
+    target_url = detected_urls[0] if detected_urls else None
+
+    # Context Resolution: Fall back to existing active session or crawl context
+    if not target_url and session_id:
+        cached_state = await state_store.load_state(session_id, db=db)
+        if cached_state and cached_state.current_url:
+            target_url = cached_state.current_url
+
+    if not target_url and crawl_context:
+        ctx_urls = _extract_urls(crawl_context)
+        if ctx_urls:
+            target_url = ctx_urls[0]
+
+    # Intent Detection: Check if user expresses autonomous discovery intent
+    is_investigation_intent = bool(target_url) or any(
+        kw in user_message.lower()
+        for kw in ["discover", "crawl", "explore", "hidden", "undocumented", "map api", "investigate", "endpoints"]
+    )
+
+    if is_investigation_intent and target_url:
         req = InvestigationRequest(
             session_id=effective_session_id,
             target_url=target_url,
@@ -82,7 +103,7 @@ async def stream_agentic_chat(
             model=model,
             crawl_context=crawl_context,
         )
-        async for event in runtime_service.stream_investigation(req, history=history):
+        async for event in runtime_service.stream_investigation(req, history=history, db=db):
             yield event
     else:
         from app.services.react_engine import ReActEngine

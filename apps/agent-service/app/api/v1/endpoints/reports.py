@@ -31,7 +31,22 @@ async def get_report_by_id(
     """Retrieve full generated documentation (OpenAPI, Postman, Markdown) for a crawl session with tenant isolation."""
     user_id = _clean_header(x_user_id, "default-user")
     tier = _clean_header(x_user_tier, "FREE").upper()
-    # 1. Try DB
+    # 1. Try DB-backed InvestigationRuntime artifacts
+    try:
+        from app.runtime.service import runtime_service
+        artifacts = await runtime_service.get_artifacts(session_id, db=db)
+        if artifacts and artifacts.get("openapi_spec") and artifacts["openapi_spec"].get("paths"):
+            return {
+                "session_id": session_id,
+                "openapi_spec": artifacts.get("openapi_spec"),
+                "postman_collection": artifacts.get("postman_collection"),
+                "markdown_docs": artifacts.get("discovery_report"),
+                "action_traces": artifacts.get("action_traces", []),
+            }
+    except Exception:
+        pass
+
+    # 2. Try DB CrawlRepository
     try:
         repo = CrawlRepository(db)
         db_session = await repo.get_by_id(session_id)
@@ -87,12 +102,24 @@ async def export_report(
             detail=f"Exporting in {format.upper()} format requires STARTER tier or higher. Upgrade to unlock.",
         )
 
-    # 1. Check memory store
-    session = CRAWL_SESSIONS.get(session_id)
-    if session and session.get("user_id") and session["user_id"] != user_id and user_tier != "ADMIN":
-        raise HTTPException(status_code=404, detail="Crawl session not found.")
+    session = None
+    # 1. Try DB-backed InvestigationRuntime artifacts
+    try:
+        from app.runtime.service import runtime_service
+        artifacts = await runtime_service.get_artifacts(session_id, db=db)
+        if artifacts and artifacts.get("openapi_spec") and artifacts["openapi_spec"].get("paths"):
+            session = {
+                "target_url": artifacts.get("openapi_spec", {}).get("servers", [{}])[0].get("url", "https://example.com"),
+                "captured_endpoints": [],
+                "openapi_spec": artifacts.get("openapi_spec"),
+                "postman_collection": artifacts.get("postman_collection"),
+                "markdown_docs": artifacts.get("discovery_report"),
+                "action_traces": artifacts.get("action_traces", []),
+            }
+    except Exception:
+        pass
 
-    # 2. Check DB fallback if memory store misses
+    # 2. Check DB CrawlRepository
     if not session:
         try:
             repo = CrawlRepository(db)
@@ -112,6 +139,12 @@ async def export_report(
             raise
         except Exception:
             pass
+
+    # 3. Check memory store fallback
+    if not session:
+        session = CRAWL_SESSIONS.get(session_id)
+        if session and session.get("user_id") and session["user_id"] != user_id and user_tier != "ADMIN":
+            raise HTTPException(status_code=404, detail="Crawl session not found.")
 
     if not session:
         raise HTTPException(status_code=404, detail="Crawl session not found.")

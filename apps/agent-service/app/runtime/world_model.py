@@ -255,8 +255,20 @@ class ApplicationGraph(BaseModel):
         if not obs.request_url and not obs.request_method:
             return None
 
+        import urllib.parse
+        import re
+
         method = obs.request_method or "GET"
-        template_path = obs.request_template or obs.request_url or "/"
+        parsed = urllib.parse.urlparse(obs.request_url) if obs.request_url else None
+        raw_path = obs.request_template or (parsed.path if parsed and parsed.path else "/")
+        
+        # Dynamic path normalization (e.g. /projects/1 -> /projects/{id})
+        template_path = raw_path
+        if "{" not in template_path:
+            template_path = re.sub(r"/(\d+)(?=/|$)", r"/{id}", template_path)
+            template_path = re.sub(r"/(org-\d+|user-\d+|item-\d+)(?=/|$)", r"/{id}", template_path)
+
+        is_auth = (obs.response_status in (401, 403)) or bool("authorization" in [h.lower() for h in (obs.request_headers or {}).keys()])
 
         ep_id = self.add_endpoint(
             method=method,
@@ -264,6 +276,7 @@ class ApplicationGraph(BaseModel):
             example_url=obs.request_url,
             status_code=obs.response_status,
             inferred_schema=obs.inferred_schema,
+            auth_required=is_auth if is_auth else None,
         )
 
         if obs.page_url:
@@ -289,6 +302,28 @@ class ApplicationGraph(BaseModel):
             "node_counts": type_counts,
             "relation_counts": rel_counts,
         }
+
+    def get_endpoints(self) -> List[DiscoveredEndpoint]:
+        """Returns all discovered endpoints as typed DiscoveredEndpoint models."""
+        from app.runtime.models import DiscoveredEndpoint
+        results = []
+        for n in self.nodes.values():
+            if n.node_type == NodeType.ENDPOINT:
+                results.append(
+                    DiscoveredEndpoint(
+                        session_id=self.session_id,
+                        method=n.attributes.get("method", "GET"),
+                        template_path=n.attributes.get("template_path", n.label),
+                        example_url=n.attributes.get("example_url"),
+                        status_code=n.attributes.get("status_code", 200),
+                        is_graphql=n.attributes.get("is_graphql", False),
+                        graphql_operation=n.attributes.get("graphql_operation"),
+                        auth_required=bool(n.attributes.get("auth_required", False)),
+                        inferred_schema=n.attributes.get("inferred_schema"),
+                        confidence=ConfidenceLevel(n.attributes.get("confidence", ConfidenceLevel.TESTED.value)),
+                    )
+                )
+        return results
 
     def to_dict(self) -> Dict[str, Any]:
         """Full JSON-serializable representation of the graph."""

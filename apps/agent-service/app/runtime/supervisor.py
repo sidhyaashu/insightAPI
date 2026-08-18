@@ -165,7 +165,12 @@ class Supervisor:
 
         # 2. Delegate to specialized agent
         self.state.add_recent_action(action)
+        await self.emit_event(
+            event_type=AgentEventType.TOOL_STARTED,
+            data={"tool": action.action_type.value, "target": action.target, "input": action.parameters},
+        )
 
+        res: AgentResult
         if action.action_type == ActionType.NAVIGATE:
             task = AgentTask(
                 parent_agent_id="supervisor",
@@ -174,7 +179,7 @@ class Supervisor:
                 target=action.target,
                 parameters=action.parameters,
             )
-            return await self.explorer.execute(task, self.state)
+            res = await self.explorer.execute(task, self.state)
 
         elif action.action_type == ActionType.VERIFY_ENDPOINT:
             task = AgentTask(
@@ -188,7 +193,6 @@ class Supervisor:
             ep_id = action.parameters.get("endpoint_id")
             if ep_id and res.status == "completed":
                 self.state.verified_endpoint_ids.append(ep_id)
-            return res
 
         elif action.action_type in (ActionType.PROBE_HTTP, ActionType.EXECUTE_CURL, ActionType.PARSE_HAR):
             task = AgentTask(
@@ -198,15 +202,26 @@ class Supervisor:
                 target=action.target,
                 parameters=action.parameters,
             )
-            return await self.network.execute(task, self.state)
+            res = await self.network.execute(task, self.state)
+        else:
+            res = AgentResult(
+                task_id=action.id,
+                agent_id="supervisor",
+                role="supervisor",
+                status="completed",
+                summary=f"Action {action.action_type.value} completed.",
+            )
 
-        return AgentResult(
-            task_id=action.id,
-            agent_id="supervisor",
-            role="supervisor",
-            status="completed",
-            summary=f"Action {action.action_type.value} completed.",
+        await self.emit_event(
+            event_type=AgentEventType.TOOL_COMPLETED,
+            data={
+                "tool": action.action_type.value,
+                "status": res.status,
+                "latency_ms": res.latency_ms,
+                "output": {"summary": res.summary, "error": res.error},
+            },
         )
+        return res
 
     async def run(self, max_iterations: Optional[int] = None) -> AsyncIterator[AgentEvent]:
         """
