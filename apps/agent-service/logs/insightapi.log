@@ -1,2 +1,0 @@
-[2026-08-18 01:18:46] [INFO] [insightapi.system:80] - Production logging initialized. Log file: [bold cyan]C:\Users\ashut\Devlopments\InsightAPI\services\agent-service\logs\insightapi.log[/bold cyan]
-[2026-08-18 01:18:46] [INFO] [app.main:48] - Sentry DSN not configured — error tracking disabled.

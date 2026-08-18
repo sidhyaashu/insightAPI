@@ -1,33 +1,119 @@
-# Python
+# ==============================================================================
+# InsightAPI Monorepo .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Logs & Diagnostics
+# ------------------------------------------------------------------------------
+*.log
+*.log.*
+**/*.log
+logs/
+**/logs/
+apps/logs/
+apps/*/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ------------------------------------------------------------------------------
+# 2. Testing, Test Caches & Reports
+# ------------------------------------------------------------------------------
+tests/
+**/tests/
+.pytest_cache/
+**/.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+test-results/
+playwright-report/
+.playwright/
+reports/
+**/reports/
+
+# ------------------------------------------------------------------------------
+# 3. Scraping, Crawling, Browser Dumps & Data Storage
+# ------------------------------------------------------------------------------
+scrapes/
+**/scrapes/
+crawl_output/
+**/crawl_output/
+recordings/
+**/recordings/
+screenshots/
+**/screenshots/
+*.sqlite
+*.sqlite3
+*.db
+*.har
+*.dump
+.insightapi/
+
+# ------------------------------------------------------------------------------
+# 4. Python Environment & Build Artifacts
+# ------------------------------------------------------------------------------
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 env/
+**/env/
 venv/
+**/venv/
 .venv/
+**/.venv/
 ENV/
-build/
+**/ENV/
+/build/
 develop-eggs/
 dist/
+**/dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
-parts/
+/lib/
+/lib64/
+/parts/
 sdist/
-var/
+/var/
 wheels/
 *.egg-info/
+**/*.egg-info/
 .installed.cfg
 *.egg
 
-# Environment variables & Credentials
+# ------------------------------------------------------------------------------
+# 5. Node, Next.js & Frontend Build Artifacts
+# ------------------------------------------------------------------------------
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+**/out/
+.vercel/
+**/.vercel/
+*.tsbuildinfo
+**/*.tsbuildinfo
+next-env.d.ts
+**/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ------------------------------------------------------------------------------
+# 6. Environment Variables, Certificates & Secrets
+# ------------------------------------------------------------------------------
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 *.env
 *.pem
 *.key
@@ -37,37 +123,24 @@ wheels/
 id_rsa
 id_ed25519
 
-# Gitleaks & Security Reports
+# ------------------------------------------------------------------------------
+# 7. Security Scanner Reports
+# ------------------------------------------------------------------------------
 .gitleaks-report.json
 gitleaks-report.json
 
-# Playwright & Browsers
-.playwright/
-test-results/
-playwright-report/
-
-# Databases & Cache
-*.sqlite3
-*.db
+# ------------------------------------------------------------------------------
+# 8. Databases & In-Memory Services
+# ------------------------------------------------------------------------------
 .redis/
 .postgres/
 
-# IDE / Editors
+# ------------------------------------------------------------------------------
+# 9. IDEs, Editors & OS Files
+# ------------------------------------------------------------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Testing & Reports
-.pytest_cache/
-.coverage
-htmlcov/
-reports/*
-!reports/.gitkeep
-logs/*
-!logs/.gitkeep
-
-# Node / Next.js (for future phase)
-node_modules/
-.next/
-out/
+.DS_Store
+Thumbs.db
