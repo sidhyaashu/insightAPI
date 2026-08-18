@@ -40,7 +40,6 @@ from app.runtime.persistence import AgentStateStore, state_store
 from app.runtime.artifacts import ArtifactGenerator
 from app.runtime.observability import SessionMetrics, telemetry
 from app.runtime.events import event_bus
-from app.runtime.event_bridge import publish_raw
 from app.runtime.supervisor import Supervisor
 from app.core.utils import extract_urls
 
@@ -79,7 +78,6 @@ class InvestigationRuntime:
         """
         existing = await self.store.load_state(request.session_id, db=db)
         if existing:
-            # Refresh goal allowed domains or budget if updated
             if request.allowed_domains and not existing.goal.allowed_domains:
                 existing.goal.allowed_domains = request.allowed_domains
             return existing
@@ -112,10 +110,54 @@ class InvestigationRuntime:
             goal=goal,
             current_url=request.target_url,
             budget=budget,
-            authentication_context=request.auth_headers,
+            auth_context=request.auth_headers,
         )
 
         await self.store.save_state(state, db=db)
+        return state
+
+    async def start_investigation(
+        self,
+        request: InvestigationRequest,
+        db: Optional[AsyncSession] = None,
+    ) -> AgentState:
+        """
+        Run an autonomous investigation synchronously to completion and return final AgentState.
+        """
+        session_id = request.session_id
+        state = await self.initialize_state(request, db=db)
+
+        world_model = await self.store.load_world_model(session_id, db=db)
+        if not world_model:
+            world_model = ApplicationGraph(session_id=session_id)
+
+        supervisor = Supervisor(state=state, world_model=world_model, approved_actions=request.approved_actions)
+
+        # Run canonical supervisor loop
+        async for _ in supervisor.run(max_iterations=request.max_pages):
+            pass
+
+        # Formulate and test hypotheses
+        hyps = HypothesisEngine.generate_hypotheses(world_model, session_id=session_id)
+        for h in hyps[:5]:
+            experiments = HypothesisEngine.design_experiment(h, request.target_url)
+            exp_observations = []
+            for exp_action in experiments:
+                exp_obs = await supervisor.verifier.verify_endpoint(
+                    method=exp_action.parameters.get("method", "GET"),
+                    url=exp_action.target,
+                    auth_headers=state.auth_context,
+                )
+                exp_observations.append(exp_obs)
+                world_model.record_observation(exp_obs)
+            HypothesisEngine.evaluate_observations(h, exp_observations)
+
+        # Build inventory and save durable state
+        inventory = HypothesisEngine.build_evidence_backed_inventory(world_model, hyps)
+        await self.store.save_world_model(world_model, db=db)
+        await self.store.save_hypotheses(session_id, hyps, db=db)
+        await self.store.save_state(state, db=db)
+
         return state
 
     async def stream_investigation(
@@ -136,18 +178,9 @@ class InvestigationRuntime:
         if not world_model:
             world_model = ApplicationGraph(session_id=session_id)
 
-        # Publish SESSION_STARTED event
-        await event_bus.publish(
-            AgentEvent(
-                session_id=session_id,
-                event_type=AgentEventType.SESSION_STARTED,
-                data={"target_url": request.target_url, "goal": request.goal_description},
-            )
-        )
-
         supervisor = Supervisor(state=state, world_model=world_model, approved_actions=request.approved_actions)
 
-        # Initial UI notification
+        # Initial UI planning notification
         yield {
             "type": "tool_start",
             "tool_id": f"tool-init-{session_id[:8]}",
@@ -156,14 +189,14 @@ class InvestigationRuntime:
             "input": {"target_url": request.target_url, "max_pages": request.max_pages},
         }
 
-        # ── Step 1: Autonomous Supervisor Exploration Loop ─────────────────
-        max_loop_steps = min(5, request.max_pages)
-        step_count = 0
+        # ── Step 1: Execute Supervisor Loop with Dynamic Event Streaming ───
+        iteration = 0
+        limit = request.max_pages
 
-        while step_count < max_loop_steps and not state.budget.is_exhausted:
-            step_count += 1
+        while iteration < limit and not state.budget.is_exhausted and not state.budget.is_timed_out:
+            iteration += 1
             action = supervisor.plan_next_action()
-            if action.action_type == ActionType.FINISH:
+            if not action or action.action_type == ActionType.FINISH:
                 break
 
             # Policy check
@@ -182,7 +215,7 @@ class InvestigationRuntime:
                     }
                 break
 
-            # Execute action via appropriate agent
+            # Stream tool start
             tool_id = f"tool-{uuid.uuid4().hex[:8]}"
             yield {
                 "type": "tool_start",
@@ -195,6 +228,10 @@ class InvestigationRuntime:
             agent_res = await supervisor.execute_action(action)
             state.budget.tool_calls_used += 1
 
+            # Update world model with every observation
+            for obs in agent_res.observations:
+                world_model.record_observation(obs)
+
             yield {
                 "type": "tool_result",
                 "tool_id": tool_id,
@@ -204,7 +241,10 @@ class InvestigationRuntime:
                 "output": {"summary": agent_res.summary, "status": agent_res.status},
             }
 
-        # ── Step 2: Hypothesis Generation & Verification ──────────────────
+            if agent_res.status == "blocked":
+                break
+
+        # ── Step 2: Hypothesis Generation & Multi-Parameter Verification ───
         hyps = HypothesisEngine.generate_hypotheses(world_model, session_id=session_id)
         if hyps:
             yield {
@@ -219,12 +259,13 @@ class InvestigationRuntime:
                 experiments = HypothesisEngine.design_experiment(h, request.target_url)
                 exp_observations = []
                 for exp_action in experiments:
-                    exp_obs = await supervisor.verification_agent.verify_endpoint(
+                    exp_obs = await supervisor.verifier.verify_endpoint(
                         method=exp_action.parameters.get("method", "GET"),
                         url=exp_action.target,
-                        auth_headers=state.authentication_context,
+                        auth_headers=state.auth_context,
                     )
                     exp_observations.append(exp_obs)
+                    world_model.record_observation(exp_obs)
 
                 HypothesisEngine.evaluate_observations(h, exp_observations)
 
@@ -233,7 +274,7 @@ class InvestigationRuntime:
         metrics = telemetry.get_metrics(session_id)
         report_md = ArtifactGenerator.generate_discovery_report(world_model, inventory, metrics)
 
-        # Persist everything
+        # Durable persistence
         await self.store.save_world_model(world_model, db=db)
         await self.store.save_hypotheses(session_id, hyps, db=db)
         await self.store.save_state(state, db=db)
@@ -253,7 +294,6 @@ class InvestigationRuntime:
         )
 
         # ── Step 4: Stream Structured Synthesis Tokens ────────────────────
-        # Stream summary chunks to client
         tokens = [
             f"### Investigation Summary for {request.target_url}\n\n",
             f"- **Discovered Endpoints**: {len(inventory)}\n",

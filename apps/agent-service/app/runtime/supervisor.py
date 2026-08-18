@@ -208,16 +208,26 @@ class Supervisor:
             summary=f"Action {action.action_type.value} completed.",
         )
 
-    async def run(self, max_iterations: int = 10) -> AsyncIterator[AgentEvent]:
+    async def run(self, max_iterations: Optional[int] = None) -> AsyncIterator[AgentEvent]:
         """
-        Execute the full stateful supervisor loop until completion or budget exhaustion.
+        Execute the canonical stateful supervisor loop until completion or budget exhaustion.
+        Architecture (AGENTS.md §4, §13, §29, §30).
         """
         await self.emit_event(
             event_type=AgentEventType.SESSION_STARTED,
-            data={"goal": self.state.goal.model_dump()},
+            data={"goal": self.state.goal.model_dump(), "target_url": self.state.current_url},
         )
 
-        for step in range(max_iterations):
+        iteration = 0
+        limit = max_iterations if max_iterations is not None else self.state.budget.max_tool_calls
+
+        while (
+            iteration < limit
+            and not self.state.budget.is_exhausted
+            and not self.state.budget.is_timed_out
+        ):
+            iteration += 1
+
             # 1. Information-Gain Action Planning
             action = self.plan_next_action()
             if not action or action.action_type == ActionType.FINISH:
@@ -232,7 +242,7 @@ class Supervisor:
             # 2. Execute Action via Specialized Agent
             result = await self.execute_action(action)
 
-            # 3. World Model & Graph Update
+            # 3. World Model & Graph Update — ensure every observation reaches ApplicationGraph
             for obs in result.observations:
                 self.world_model.record_observation(obs)
 

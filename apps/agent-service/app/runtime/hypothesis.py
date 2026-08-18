@@ -87,7 +87,31 @@ class HypothesisEngine:
         method = parts[0] if len(parts) > 0 else "GET"
 
         if "parameterized" in hypothesis.claim.lower():
-            # Action A: Probe with invalid ID (expect 404)
+            # Action A: Probe with sample ID (expect 200/404)
+            valid_sample_url = f"{base_url.rstrip('/')}/1"
+            actions.append(
+                Action(
+                    session_id=hypothesis.session_id,
+                    action_type=ActionType.PROBE_HTTP,
+                    target=valid_sample_url,
+                    parameters={"method": method, "hypothesis_id": hypothesis.id, "probe_type": "sample_id_1"},
+                    rationale=f"Test sample identifier (ID=1) on {endpoint_key}.",
+                )
+            )
+
+            # Action B: Probe with alternate sample ID (expect 200/404)
+            alt_sample_url = f"{base_url.rstrip('/')}/2"
+            actions.append(
+                Action(
+                    session_id=hypothesis.session_id,
+                    action_type=ActionType.PROBE_HTTP,
+                    target=alt_sample_url,
+                    parameters={"method": method, "hypothesis_id": hypothesis.id, "probe_type": "sample_id_2"},
+                    rationale=f"Test alternate identifier (ID=2) on {endpoint_key}.",
+                )
+            )
+
+            # Action C: Probe with non-existent ID (expect 404/400)
             invalid_url = f"{base_url.rstrip('/')}/99999999"
             actions.append(
                 Action(
@@ -95,7 +119,7 @@ class HypothesisEngine:
                     action_type=ActionType.PROBE_HTTP,
                     target=invalid_url,
                     parameters={"method": method, "hypothesis_id": hypothesis.id, "probe_type": "invalid_id"},
-                    rationale=f"Test invalid resource ID on {endpoint_key} (expect 404).",
+                    rationale=f"Test non-existent resource ID on {endpoint_key} (expect 404).",
                 )
             )
 

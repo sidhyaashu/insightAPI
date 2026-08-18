@@ -146,56 +146,10 @@ class ReActEngine:
                     )
 
             # ──────────────────────────────────────────────────────────────────────
-            # Step 3: Detect & Execute Endpoint Probes or Browser Exploration
+            # Step 3: Single Direct HTTP Probe (Ad-Hoc Pair-Programming Testing)
             # ──────────────────────────────────────────────────────────────────────
             urls = _extract_all_urls(user_message)
-            is_browser_req = any(w in user_message.lower() for w in [
-                "explore", "browser", "playwright", "hidden", "undocumented",
-                "click", "navigate", "spa", "crawl", "find all", "discover"
-            ])
-
             for target_url in urls[:MAX_REACT_STEPS]:  # enforce MAX_REACT_STEPS budget
-                # ──────────────────────────────────────────────────────────────────
-                # Mode A: Autonomous Headless Browser Navigation & Interception
-                # ──────────────────────────────────────────────────────────────────
-                if is_browser_req:
-                    browser_tool_id = f"tool-{uuid.uuid4().hex[:8]}"
-                    yield {
-                        "type": "tool_start",
-                        "tool_id": browser_tool_id,
-                        "tool": "browser_explore_app",
-                        "title": f"Navigating Web App & Intercepting Hidden APIs ({target_url})",
-                        "input": {"url": target_url, "engine": "Playwright Headless Chromium", "max_clicks": 10},
-                    }
-                    browser_res = await explore_web_app_browser(
-                        url=target_url,
-                        max_clicks=10,
-                        auth_headers=auth_headers,
-                    )
-                    yield {
-                        "type": "tool_result",
-                        "tool_id": browser_tool_id,
-                        "tool": "browser_explore_app",
-                        "status": "completed" if browser_res.status == "success" else "failed",
-                        "latency_ms": browser_res.latency_ms,
-                        "output": browser_res.data,
-                        "error": browser_res.error,
-                    }
-                    if browser_res.status == "success":
-                        eps = browser_res.data.get("endpoints", [])
-                        discovered_endpoints.extend(eps)
-                        telemetry_log.append(
-                            f"[Playwright Headless Browser Exploration Telemetry]\n"
-                            f"Target: {target_url}\n"
-                            f"Actions Executed: {browser_res.data.get('actions_executed')} clicks/navigations\n"
-                            f"Hidden APIs Discovered: {len(eps)}\n"
-                            f"Discovered Endpoints: {json.dumps(eps[:15])}\n"
-                        )
-                    continue
-
-                # ──────────────────────────────────────────────────────────────────
-                # Mode B: Standard Async Direct HTTP Probe
-                # ──────────────────────────────────────────────────────────────────
                 method = "GET"
                 # Check for explicit method mention e.g. "POST https://..." or "DELETE https://..."
                 method_match = re.search(r"\b(POST|PUT|DELETE|PATCH|OPTIONS|HEAD)\s+" + re.escape(target_url), user_message, re.IGNORECASE)
