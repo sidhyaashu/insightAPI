@@ -102,7 +102,6 @@ class PlaywrightBrowserAdapter(BrowserAdapter):
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
-                "--single-process",
                 "--disable-blink-features=AutomationControlled",
             ],
         )
@@ -149,12 +148,13 @@ class PlaywrightBrowserAdapter(BrowserAdapter):
                 return
 
             # Capture XHR, Fetch, and API-like requests
+            content_type = (response.headers.get("content-type") or "").lower()
             is_api = (
-                resource_type in ("fetch", "xhr")
-                or "/api/" in req_path
-                or "/v1/" in req_path
-                or "/v2/" in req_path
-                or "/graphql" in req_path
+                resource_type in ("fetch", "xhr", "eventsource", "websocket")
+                or "application/json" in content_type
+                or "application/xml" in content_type
+                or "text/json" in content_type
+                or any(k in lower_path for k in ("/api/", "/v1/", "/v2/", "/v3/", "/graphql", "/rest/", "/data/", "/services/", "/json/", "/bseindiaapi/"))
             )
             if not is_api:
                 return

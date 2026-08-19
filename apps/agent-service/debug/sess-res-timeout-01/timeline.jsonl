@@ -1,0 +1,6 @@
+{"entry": "[00:00.000] SESSION_START Goal: Discover undocumented APIs, routes, and relationships in the target application. -> https://demo.insightapi.io"}
+{"entry": "[00:00.057] POLICY       act-d1f0ae315c02 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.058] ACTION       act-d1f0ae315c02 navigate -> https://demo.insightapi.io [FAILED] (1ms)"}
+{"entry": "[00:00.059] POLICY       act-32f76161be66 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.060] ACTION       act-32f76161be66 navigate -> https://demo.insightapi.io [FAILED] (0ms)"}
+{"entry": "[00:00.060] SESSION_DONE Status: COMPLETED (RootCause=network_capture)"}

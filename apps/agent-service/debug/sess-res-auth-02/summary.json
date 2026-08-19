@@ -1,0 +1,104 @@
+{
+  "session": {
+    "debug_session_id": "dbg-e666130f4c17",
+    "session_id": "sess-res-auth-02",
+    "investigation_id": null,
+    "user_id": null,
+    "target_url": "https://demo.insightapi.io/api/v1/protected",
+    "goal_description": "Discover undocumented APIs, routes, and relationships in the target application.",
+    "debug_level": "normal",
+    "start_time": "2026-08-18 21:38:26.043445+00:00",
+    "end_time": "2026-08-18 21:38:26.060095+00:00",
+    "duration_ms": 16,
+    "final_status": "completed",
+    "final_reason": "Investigation finished successfully",
+    "metrics": {}
+  },
+  "report": {
+    "session_id": "sess-res-auth-02",
+    "target_url": "https://demo.insightapi.io/api/v1/protected",
+    "goal": "Discover undocumented APIs, routes, and relationships in the target application.",
+    "status": "completed",
+    "duration_seconds": 0.016,
+    "total_actions": 10,
+    "successful_actions": 10,
+    "failed_actions": 0,
+    "retries_count": 0,
+    "pages_explored": [
+      "https://demo.insightapi.io/api/v1/protected"
+    ],
+    "endpoints_discovered_count": 0,
+    "endpoints_verified_count": 0,
+    "unresolved_hypotheses_count": 0,
+    "unexplored_regions": [],
+    "last_successful_progress": null,
+    "stopping_reason": "Investigation finished successfully",
+    "root_cause": "network_capture",
+    "root_cause_confidence": 0.8,
+    "root_cause_evidence": [
+      "Executed 10 actions across pages but captured 0 API network requests."
+    ],
+    "recommended_next_experiment": "Target may use embedded WebSockets, custom AJAX protocols, or static hydration. Verify network interceptor filters."
+  },
+  "profile": {
+    "session_id": "sess-res-auth-02",
+    "total_duration_ms": 17,
+    "phases": {
+      "planning": {
+        "count": 0,
+        "total_ms": 0,
+        "min_ms": 0,
+        "p50_ms": 0,
+        "p95_ms": 0,
+        "max_ms": 0
+      },
+      "browser": {
+        "count": 0,
+        "total_ms": 0,
+        "min_ms": 0,
+        "p50_ms": 0,
+        "p95_ms": 0,
+        "max_ms": 0
+      },
+      "network": {
+        "count": 0,
+        "total_ms": 0,
+        "min_ms": 0,
+        "p50_ms": 0,
+        "p95_ms": 0,
+        "max_ms": 0
+      },
+      "model": {
+        "count": 0,
+        "total_ms": 0,
+        "min_ms": 0,
+        "p50_ms": 0,
+        "p95_ms": 0,
+        "max_ms": 0
+      },
+      "persistence": {
+        "count": 0,
+        "total_ms": 0,
+        "min_ms": 0,
+        "p50_ms": 0,
+        "p95_ms": 0,
+        "max_ms": 0
+      },
+      "artifact": {
+        "count": 0,
+        "total_ms": 0,
+        "min_ms": 0,
+        "p50_ms": 0,
+        "p95_ms": 0,
+        "max_ms": 0
+      }
+    },
+    "resource_counters": {
+      "browser_actions": 0,
+      "network_requests": 0,
+      "model_calls": 0,
+      "graph_mutations": 0,
+      "db_persists": 0
+    }
+  }
+}

@@ -178,6 +178,15 @@ class InvestigationRuntime:
         if not world_model:
             world_model = ApplicationGraph(session_id=session_id)
 
+        from app.runtime.debug import recorder, HypothesisTrace
+
+        # Initialize debug recorder session
+        recorder.start_session(
+            session_id=session_id,
+            target_url=request.target_url or "unknown",
+            goal_description=request.goal_description or "Autonomous API discovery investigation",
+        )
+
         supervisor = Supervisor(state=state, world_model=world_model, approved_actions=request.approved_actions)
 
         # Initial UI planning notification
@@ -269,10 +278,43 @@ class InvestigationRuntime:
 
                 HypothesisEngine.evaluate_observations(h, exp_observations)
 
+                # Record hypothesis trace
+                try:
+                    recorder.record_hypothesis(
+                        session_id=session_id,
+                        trace=HypothesisTrace(
+                            hypothesis_id=h.id,
+                            session_id=session_id,
+                            template_path=h.template_path,
+                            method=h.method,
+                            creation_reason=h.statement,
+                            supporting_observations=[obs.id for obs in exp_observations],
+                            confidence=h.confidence.score if hasattr(h.confidence, "score") else 0.9,
+                            status=h.status.value,
+                            experiments_designed=len(experiments),
+                            experiments_run=len(exp_observations),
+                            experiments_passed=sum(1 for o in exp_observations if (o.response_status or 500) < 400),
+                            conclusion=f"Evaluated status: {h.status.value}",
+                        ),
+                    )
+                except Exception:
+                    pass
+
         # ── Step 3: Produce Evidence-Backed Inventory & Artifacts ─────────
         inventory = HypothesisEngine.build_evidence_backed_inventory(world_model, hyps)
         metrics = telemetry.get_metrics(session_id)
         report_md = ArtifactGenerator.generate_discovery_report(world_model, inventory, metrics)
+
+        # Finalize debug recorder and write AI_DIAGNOSTIC.md
+        try:
+            recorder.complete_session(
+                session_id=session_id,
+                final_status="completed",
+                final_reason="Investigation finished successfully",
+                world_model=world_model,
+            )
+        except Exception:
+            pass
 
         # Durable persistence
         await self.store.save_world_model(world_model, db=db)
@@ -299,11 +341,14 @@ class InvestigationRuntime:
             f"- **Discovered Endpoints**: {len(inventory)}\n",
             f"- **Verified with Evidence**: {sum(1 for ep in inventory if ep.confidence == ConfidenceLevel.VERIFIED)}\n",
             f"- **Application Graph Nodes**: {len(world_model.nodes)} ({len(world_model.edges)} relationships)\n\n",
-            f"```http\n",
         ]
-        for ep in inventory[:5]:
-            tokens.append(f"{ep.method} {ep.template_path} -> {ep.status_code or 200} [{ep.confidence.value.upper()}]\n")
-        tokens.append(f"```\n\n")
+        if inventory:
+            tokens.append("```http\n")
+            for ep in inventory[:10]:
+                tokens.append(f"{ep.method} {ep.template_path} -> {ep.status_code or 200} [{ep.confidence.value.upper()}]\n")
+            tokens.append("```\n\n")
+        else:
+            tokens.append("> [!TIP]\n> Target application was explored. No active REST or GraphQL API endpoints were triggered during this exploration session.\n\n")
 
         if hyps:
             tokens.append(f"> [!NOTE]\n> **Hypotheses Tested**: {len(hyps)} behavioral hypotheses evaluated.\n\n")

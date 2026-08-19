@@ -189,6 +189,22 @@ class ApplicationGraph(BaseModel):
         )
         self.nodes[ep_id] = node
         self._endpoint_key_to_id[endpoint_key] = ep_id
+
+        try:
+            from app.runtime.debug import recorder, GraphMutationTrace
+            recorder.record_graph_mutation(
+                session_id=self.session_id,
+                trace=GraphMutationTrace(
+                    session_id=self.session_id,
+                    mutation_type="NODE_ADDED",
+                    target_id=ep_id,
+                    new_value={"endpoint": endpoint_key, "method": method},
+                    reason=f"Added endpoint {endpoint_key} to world model",
+                ),
+            )
+        except Exception:
+            pass
+
         return ep_id
 
     def add_entity(self, name: str, fields: List[str], identifier_field: Optional[str] = None) -> str:
@@ -222,6 +238,22 @@ class ApplicationGraph(BaseModel):
             metadata=metadata or {},
         )
         self.edges.append(edge)
+
+        try:
+            from app.runtime.debug import recorder, GraphMutationTrace
+            recorder.record_graph_mutation(
+                session_id=self.session_id,
+                trace=GraphMutationTrace(
+                    session_id=self.session_id,
+                    mutation_type="EDGE_ADDED",
+                    target_id=edge.id,
+                    new_value={"source": source_id, "target": target_id, "relation": relation.value},
+                    reason=f"Linked {source_id} -> {relation.value} -> {target_id}",
+                ),
+            )
+        except Exception:
+            pass
+
         return edge
 
     def link_ui_to_endpoint(self, ui_element_id: str, endpoint_id: str) -> GraphEdge:

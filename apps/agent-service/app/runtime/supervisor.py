@@ -74,67 +74,172 @@ class Supervisor:
         )
         await event_bus.publish(event)
 
-    def plan_next_action(self) -> Optional[Action]:
+    def plan_next_action(self) -> Action:
         """
-        Information-Gain Action Selection Heuristic (AGENTS.md §14).
+        Stateful planning heuristic (AGENTS.md §13, §14).
 
         Ranks potential actions based on:
         - Novelty: Unvisited pages score highest for exploration.
         - Verification need: Discovered unverified endpoints require verification.
         - Budget limits: Selects FINISH if budget exhausted or goal satisfied.
         """
+        from app.runtime.debug import (
+            recorder,
+            PlannerDecisionTrace,
+            CandidateActionScore,
+        )
+
+        candidates: List[CandidateActionScore] = []
+        selected_action_obj: Action
+
         if self.state.budget.is_exhausted or self.state.budget.is_timed_out:
-            return Action(
+            selected_action_obj = Action(
                 session_id=self.state.session_id,
                 action_type=ActionType.FINISH,
                 rationale="Budget or time limit reached.",
             )
+            candidates.append(CandidateActionScore(
+                action_type="finish",
+                target="session",
+                score=1.0,
+                reason="Budget or time limit exhausted",
+            ))
+        else:
+            # 1. Root page exploration candidate
+            target_url = self.state.goal.target_url
+            if target_url and target_url not in self.state.visited_urls:
+                candidates.append(CandidateActionScore(
+                    action_type="navigate",
+                    target=target_url,
+                    score=0.95,
+                    information_gain=0.90,
+                    reason="Root target page has not been explored yet.",
+                ))
 
-        # 1. If target URL hasn't been explored yet, prioritize browser exploration
-        target_url = self.state.goal.target_url
-        if target_url and target_url not in self.state.visited_urls:
-            return Action(
+            # 2. Unverified endpoints
+            for node in self.world_model.nodes.values():
+                if node.node_type.value == "endpoint":
+                    conf = node.attributes.get("confidence")
+                    if conf in (ConfidenceLevel.INFERRED.value, ConfidenceLevel.TESTED.value):
+                        endpoint_key = node.label
+                        ep_url = node.attributes.get("example_url")
+                        method = node.attributes.get("method", "GET")
+                        if ep_url and node.id not in self.state.verified_endpoint_ids:
+                            candidates.append(CandidateActionScore(
+                                action_type="verify_endpoint",
+                                target=ep_url,
+                                score=0.85,
+                                information_gain=0.75,
+                                reason=f"Endpoint {endpoint_key} discovered but unverified.",
+                            ))
+
+            if not candidates:
+                selected_action_obj = Action(
+                    session_id=self.state.session_id,
+                    action_type=ActionType.FINISH,
+                    rationale="Exploration and verification goals achieved.",
+                )
+                candidates.append(CandidateActionScore(
+                    action_type="finish",
+                    target="session",
+                    score=1.0,
+                    reason="All reachable routes explored and verified",
+                ))
+            else:
+                best = max(candidates, key=lambda c: c.score)
+                if best.action_type == "navigate":
+                    selected_action_obj = Action(
+                        session_id=self.state.session_id,
+                        action_type=ActionType.NAVIGATE,
+                        target=best.target,
+                        parameters={"max_clicks": 15},
+                        rationale=f"Explore root target application {best.target} to discover interactive API surface.",
+                    )
+                elif best.action_type == "verify_endpoint":
+                    # Find matching node id
+                    matching_node_id = None
+                    for n in self.world_model.nodes.values():
+                        if n.attributes.get("example_url") == best.target:
+                            matching_node_id = n.id
+                            break
+                    selected_action_obj = Action(
+                        session_id=self.state.session_id,
+                        action_type=ActionType.VERIFY_ENDPOINT,
+                        target=best.target,
+                        parameters={"endpoint_key": best.target, "endpoint_id": matching_node_id},
+                        rationale=best.reason,
+                    )
+                else:
+                    selected_action_obj = Action(
+                        session_id=self.state.session_id,
+                        action_type=ActionType.FINISH,
+                        rationale="Goal satisfied.",
+                    )
+
+        # Record planner decision trace
+        try:
+            recorder.record_planner_decision(
                 session_id=self.state.session_id,
-                action_type=ActionType.NAVIGATE,
-                target=target_url,
-                parameters={"max_clicks": 15},
-                rationale=f"Explore root target application {target_url} to discover interactive API surface.",
+                trace=PlannerDecisionTrace(
+                    session_id=self.state.session_id,
+                    current_url=self.state.current_url,
+                    known_endpoints_count=len(self.world_model.get_endpoints()),
+                    verified_endpoints_count=len(self.state.verified_endpoint_ids),
+                    hypotheses_count=len(self.state.hypotheses),
+                    candidate_actions=candidates,
+                    selected_action=selected_action_obj.action_type.value,
+                    selected_target=selected_action_obj.target,
+                    selection_rationale=selected_action_obj.rationale or "",
+                ),
             )
+        except Exception:
+            pass
 
-        # 2. Check for open hypotheses or unverified endpoints to verify
-        for node in self.world_model.nodes.values():
-            if node.node_type.value == "endpoint":
-                conf = node.attributes.get("confidence")
-                if conf in (ConfidenceLevel.INFERRED.value, ConfidenceLevel.TESTED.value):
-                    endpoint_key = node.label
-                    ep_url = node.attributes.get("example_url")
-                    method = node.attributes.get("method", "GET")
-                    if ep_url and node.id not in self.state.verified_endpoint_ids:
-                        return Action(
-                            session_id=self.state.session_id,
-                            action_type=ActionType.VERIFY_ENDPOINT,
-                            target=ep_url,
-                            parameters={"endpoint_key": endpoint_key, "method": method, "endpoint_id": node.id},
-                            rationale=f"Skeptically verify endpoint {endpoint_key} with auth and parameter checks.",
-                        )
-
-        # 3. If everything current is explored and verified, finish
-        return Action(
-            session_id=self.state.session_id,
-            action_type=ActionType.FINISH,
-            rationale="Exploration and verification goals achieved.",
-        )
+        return selected_action_obj
 
     async def execute_action(self, action: Action) -> AgentResult:
         """
         Enforce policy check, route action to appropriate specialized agent, and record outcome.
         """
+        from app.runtime.debug import (
+            recorder,
+            tracer,
+            stuck_detector,
+            SpanType,
+            ActionTrace,
+            ActionState,
+            PolicyEvaluationTrace,
+        )
+
+        start_time = time.perf_counter()
+
         # 1. Policy & Scope evaluation (AGENTS.md §22)
         policy_res = PolicyEngine.evaluate(
             action=action,
             state=self.state,
             approved_action_keys=self.approved_actions,
         )
+
+        # Record policy trace
+        try:
+            recorder.record_policy_evaluation(
+                session_id=self.state.session_id,
+                trace=PolicyEvaluationTrace(
+                    session_id=self.state.session_id,
+                    action_id=action.id,
+                    action_type=action.action_type.value,
+                    target=action.target or "",
+                    risk_level=action.risk_level.value,
+                    scope_allowed=policy_res.decision != PolicyDecision.DENY or "scope" not in policy_res.reason.lower(),
+                    ssrf_safe=policy_res.decision != PolicyDecision.DENY or "ssrf" not in policy_res.reason.lower(),
+                    budget_allowed=not self.state.budget.is_exhausted,
+                    approval_required=policy_res.decision == PolicyDecision.REQUIRE_APPROVAL,
+                    decision=policy_res.decision.value,
+                    reason=policy_res.reason,
+                ),
+            )
+        except Exception:
+            pass
 
         if policy_res.decision == PolicyDecision.DENY:
             return AgentResult(
@@ -211,6 +316,41 @@ class Supervisor:
                 status="completed",
                 summary=f"Action {action.action_type.value} completed.",
             )
+
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+        # Record action trace and stuck check
+        try:
+            action_state_val = ActionState.SUCCEEDED if res.status == "completed" else ActionState.FAILED
+            recorder.record_action(
+                session_id=self.state.session_id,
+                trace=ActionTrace(
+                    action_id=action.id,
+                    session_id=self.state.session_id,
+                    agent_id=res.agent_id or "supervisor",
+                    action_type=action.action_type.value,
+                    target=action.target or "",
+                    parameters=action.parameters,
+                    risk_level=action.risk_level.value,
+                    policy_decision=policy_res.decision.value,
+                    policy_reason=policy_res.reason,
+                    state=action_state_val,
+                    duration_ms=duration_ms,
+                    failure_reason=res.error,
+                    observation_ids=[obs.id for obs in res.observations],
+                ),
+            )
+
+            stuck_eval = stuck_detector.record_step(
+                session_id=self.state.session_id,
+                action_type=action.action_type.value,
+                target=action.target or "",
+                new_observations_count=len(res.observations),
+            )
+            if stuck_eval.is_stuck:
+                recorder.record_stuck(self.state.session_id, stuck_eval)
+        except Exception:
+            pass
 
         await self.emit_event(
             event_type=AgentEventType.TOOL_COMPLETED,

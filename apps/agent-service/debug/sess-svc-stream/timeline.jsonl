@@ -1,0 +1,4 @@
+{"entry": "[00:00.000] SESSION_START Goal: Explore dashboard -> https://api.example.com"}
+{"entry": "[00:00.061] POLICY       act-bccb6a9bd6d9 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:02.681] ACTION       act-bccb6a9bd6d9 navigate -> https://api.example.com [SUCCEEDED] (2620ms)"}
+{"entry": "[00:02.681] SESSION_DONE Status: COMPLETED (RootCause=network_capture)"}

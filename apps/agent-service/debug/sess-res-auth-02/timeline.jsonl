@@ -1,0 +1,31 @@
+{"entry": "[00:00.000] SESSION_START Goal: Discover undocumented APIs, routes, and relationships in the target application. -> https://demo.insightapi.io/api/v1/protected"}
+{"entry": "[00:00.001] POLICY       act-41ec679f2b28 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.002] ACTION       act-41ec679f2b28 navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.002] GRAPH_MUT    NODE_ADDED on ep-4940514b (Added endpoint GET /api/v1/protected to world model)"}
+{"entry": "[00:00.003] POLICY       act-358ab6835ad1 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.003] ACTION       act-358ab6835ad1 navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.005] POLICY       act-6f0af70dc1b2 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.005] ACTION       act-6f0af70dc1b2 navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.005] STUCK_ALERT  Repeated identical action 'navigate' on 'https://demo.insightapi.io/api/v1/protected' 3 times consecutively."}
+{"entry": "[00:00.006] POLICY       act-f017e3fc7f94 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.007] ACTION       act-f017e3fc7f94 navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.007] STUCK_ALERT  Repeated identical action 'navigate' on 'https://demo.insightapi.io/api/v1/protected' 3 times consecutively."}
+{"entry": "[00:00.008] POLICY       act-27c6a9a94ca9 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.008] ACTION       act-27c6a9a94ca9 navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.008] STUCK_ALERT  Repeated identical action 'navigate' on 'https://demo.insightapi.io/api/v1/protected' 3 times consecutively."}
+{"entry": "[00:00.009] POLICY       act-c77efdb040b1 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.010] ACTION       act-c77efdb040b1 navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.010] STUCK_ALERT  Repeated identical action 'navigate' on 'https://demo.insightapi.io/api/v1/protected' 3 times consecutively."}
+{"entry": "[00:00.011] POLICY       act-80afd6a4088c Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.011] ACTION       act-80afd6a4088c navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.011] STUCK_ALERT  Repeated identical action 'navigate' on 'https://demo.insightapi.io/api/v1/protected' 3 times consecutively."}
+{"entry": "[00:00.012] POLICY       act-98a70a6315df Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.012] ACTION       act-98a70a6315df navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.013] STUCK_ALERT  Repeated identical action 'navigate' on 'https://demo.insightapi.io/api/v1/protected' 3 times consecutively."}
+{"entry": "[00:00.013] POLICY       act-c24ad2cbd451 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.014] ACTION       act-c24ad2cbd451 navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.014] STUCK_ALERT  Repeated identical action 'navigate' on 'https://demo.insightapi.io/api/v1/protected' 3 times consecutively."}
+{"entry": "[00:00.015] POLICY       act-0a6edfdfeec5 Decision=ALLOW Risk=read_only (Action permitted under current policy and scope.)"}
+{"entry": "[00:00.016] ACTION       act-0a6edfdfeec5 navigate -> https://demo.insightapi.io/api/v1/protected [SUCCEEDED] (0ms)"}
+{"entry": "[00:00.016] STUCK_ALERT  Repeated identical action 'navigate' on 'https://demo.insightapi.io/api/v1/protected' 3 times consecutively."}
+{"entry": "[00:00.017] SESSION_DONE Status: COMPLETED (RootCause=network_capture)"}

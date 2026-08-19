@@ -1,0 +1,1 @@
+{"evaluation_id": "pol-46ef4903", "session_id": "sess-svc-stream", "action_id": "act-bccb6a9bd6d9", "action_type": "navigate", "target": "https://api.example.com", "risk_level": "read_only", "scope_allowed": true, "ssrf_safe": true, "budget_allowed": true, "approval_required": false, "decision": "allow", "reason": "Action permitted under current policy and scope."}

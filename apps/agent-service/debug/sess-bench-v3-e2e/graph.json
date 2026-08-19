@@ -1,0 +1,253 @@
+{
+  "session_id": "sess-bench-v3-e2e",
+  "nodes": [
+    {
+      "id": "ep-f1a5be0a",
+      "node_type": "endpoint",
+      "label": "POST /api/v1/auth/login",
+      "attributes": {
+        "method": "POST",
+        "template_path": "/api/v1/auth/login",
+        "example_url": "https://demo.insightapi.io/api/v1/auth/login",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.095976Z"
+    },
+    {
+      "id": "ep-07bb2eba",
+      "node_type": "endpoint",
+      "label": "GET /api/v1/projects",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/api/v1/projects",
+        "example_url": "https://demo.insightapi.io/api/v1/projects?status=active&page=1&limit=10",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096108Z"
+    },
+    {
+      "id": "ep-df37bc55",
+      "node_type": "endpoint",
+      "label": "GET /api/v1/projects/{id}",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/api/v1/projects/{id}",
+        "example_url": "https://demo.insightapi.io/api/v1/projects/1",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096203Z"
+    },
+    {
+      "id": "ep-029c5531",
+      "node_type": "endpoint",
+      "label": "POST /api/v1/projects/{id}/export",
+      "attributes": {
+        "method": "POST",
+        "template_path": "/api/v1/projects/{id}/export",
+        "example_url": "https://demo.insightapi.io/api/v1/projects/1/export",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096299Z"
+    },
+    {
+      "id": "ep-4cfbf636",
+      "node_type": "endpoint",
+      "label": "GET /api/v1/orgs/{id}/members",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/api/v1/orgs/{id}/members",
+        "example_url": "https://demo.insightapi.io/api/v1/orgs/org-100/members",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096416Z"
+    },
+    {
+      "id": "ep-b9b302b2",
+      "node_type": "endpoint",
+      "label": "POST /api/v1/orders",
+      "attributes": {
+        "method": "POST",
+        "template_path": "/api/v1/orders",
+        "example_url": "https://demo.insightapi.io/api/v1/orders",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096516Z"
+    },
+    {
+      "id": "ep-1e624bfc",
+      "node_type": "endpoint",
+      "label": "DELETE /api/v1/projects/{id}",
+      "attributes": {
+        "method": "DELETE",
+        "template_path": "/api/v1/projects/{id}",
+        "example_url": "https://demo.insightapi.io/api/v1/projects/1",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096600Z"
+    },
+    {
+      "id": "ep-74a970f3",
+      "node_type": "endpoint",
+      "label": "POST /graphql",
+      "attributes": {
+        "method": "POST",
+        "template_path": "/graphql",
+        "example_url": "https://demo.insightapi.io/graphql",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096686Z"
+    },
+    {
+      "id": "ep-ac8bac23",
+      "node_type": "endpoint",
+      "label": "GET /api/v1/stream/events",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/api/v1/stream/events",
+        "example_url": "https://demo.insightapi.io/api/v1/stream/events",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096767Z"
+    },
+    {
+      "id": "ep-9f95825b",
+      "node_type": "endpoint",
+      "label": "GET /api/v1/internal/health",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/api/v1/internal/health",
+        "example_url": "https://demo.insightapi.io/api/v1/internal/health",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.096918Z"
+    },
+    {
+      "id": "ep-bf2f050c",
+      "node_type": "endpoint",
+      "label": "GET /api/v1/hidden/debug-info",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/api/v1/hidden/debug-info",
+        "example_url": "https://demo.insightapi.io/api/v1/hidden/debug-info",
+        "status_code": 200,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.097006Z"
+    },
+    {
+      "id": "ep-68ff60dc",
+      "node_type": "endpoint",
+      "label": "POST /",
+      "attributes": {
+        "method": "POST",
+        "template_path": "/",
+        "example_url": "https://demo.insightapi.io",
+        "status_code": 0,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "inferred"
+      },
+      "created_at": "2026-08-18T21:38:26.110038Z"
+    },
+    {
+      "id": "ep-078223eb",
+      "node_type": "endpoint",
+      "label": "GET /",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/",
+        "example_url": "https://demo.insightapi.io",
+        "status_code": 0,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "inferred"
+      },
+      "created_at": "2026-08-18T21:38:26.116940Z"
+    },
+    {
+      "id": "ep-6f30e266",
+      "node_type": "endpoint",
+      "label": "GET /{id}",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/{id}",
+        "example_url": "https://demo.insightapi.io/1",
+        "status_code": 0,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": null,
+        "inferred_schema": null,
+        "confidence": "inferred"
+      },
+      "created_at": "2026-08-18T21:38:26.121213Z"
+    }
+  ],
+  "edges": [],
+  "summary": {
+    "session_id": "sess-bench-v3-e2e",
+    "total_nodes": 14,
+    "total_edges": 0,
+    "node_counts": {
+      "endpoint": 14
+    },
+    "relation_counts": {}
+  }
+}

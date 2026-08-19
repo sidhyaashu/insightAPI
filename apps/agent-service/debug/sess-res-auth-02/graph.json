@@ -1,0 +1,32 @@
+{
+  "session_id": "sess-res-auth-02",
+  "nodes": [
+    {
+      "id": "ep-4940514b",
+      "node_type": "endpoint",
+      "label": "GET /api/v1/protected",
+      "attributes": {
+        "method": "GET",
+        "template_path": "/api/v1/protected",
+        "example_url": "https://demo.insightapi.io/api/v1/protected",
+        "status_code": 401,
+        "is_graphql": false,
+        "graphql_operation": null,
+        "auth_required": true,
+        "inferred_schema": null,
+        "confidence": "tested"
+      },
+      "created_at": "2026-08-18T21:38:26.045323Z"
+    }
+  ],
+  "edges": [],
+  "summary": {
+    "session_id": "sess-res-auth-02",
+    "total_nodes": 1,
+    "total_edges": 0,
+    "node_counts": {
+      "endpoint": 1
+    },
+    "relation_counts": {}
+  }
+}

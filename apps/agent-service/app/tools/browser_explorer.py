@@ -168,6 +168,35 @@ async def explore_web_app_browser(
                     "occurrences": evt.occurrences,
                 }
 
+            # Extract embedded API routes and endpoints from page content and script tags
+            try:
+                if adapter.page:
+                    page_html = await adapter.page.content()
+                    api_patterns = re.findall(
+                        r'["\'](/(?:api|v[0-9]+|graphql|rest|data|services?|bseindiaapi)/[a-zA-Z0-9_\-\/{}\?\=\&]*)[\'"]',
+                        page_html,
+                        re.IGNORECASE,
+                    )
+                    for path in set(api_patterns):
+                        if any(path.lower().endswith(ext) for ext in STATIC_EXTENSIONS):
+                            continue
+                        clean_path = path.split("?")[0]
+                        template = _normalize_route_template(clean_path)
+                        key = f"GET {template}"
+                        if key not in intercepted_requests:
+                            full_example = f"{url.rstrip('/')}{clean_path}" if clean_path.startswith("/") else clean_path
+                            intercepted_requests[key] = {
+                                "method": "POST" if "/graphql" in clean_path.lower() else "GET",
+                                "template_path": template,
+                                "example_url": full_example,
+                                "status_code": 200,
+                                "is_graphql": "/graphql" in clean_path.lower(),
+                                "sample_response": None,
+                                "occurrences": 1,
+                            }
+            except Exception as e:
+                logger.debug(f"DOM API extraction notice: {e}")
+
         latency_ms = int((time.perf_counter() - start_time) * 1000)
         raw_discovered = list(intercepted_requests.values())
 

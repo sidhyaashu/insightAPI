@@ -47,11 +47,12 @@ class ExplorerAgent(BaseAgent):
         max_clicks = task.parameters.get("max_clicks", 15)
         timeout_sec = task.parameters.get("timeout_sec", 25.0)
 
+        auth_hdrs = state.auth_context if (isinstance(state.auth_context, dict) and not state.auth_context.get("headers")) else (state.auth_context.get("headers") if isinstance(state.auth_context, dict) else None)
         tool_result = await explore_web_app_browser(
             url=target_url,
             max_clicks=max_clicks,
             timeout_sec=timeout_sec,
-            auth_headers=state.auth_context.get("headers"),
+            auth_headers=auth_hdrs,
         )
 
         state.budget.browser_actions_used += tool_result.data.get("actions_executed", 1)

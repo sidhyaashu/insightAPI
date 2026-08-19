@@ -1,0 +1,12 @@
+{
+  "session_id": "sess-svc-stream",
+  "nodes": [],
+  "edges": [],
+  "summary": {
+    "session_id": "sess-svc-stream",
+    "total_nodes": 0,
+    "total_edges": 0,
+    "node_counts": {},
+    "relation_counts": {}
+  }
+}
