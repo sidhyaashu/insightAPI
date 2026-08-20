@@ -17,7 +17,8 @@ from typing import List
 
 _URL_PATTERN = re.compile(r"https?://[^\s<>\"'{}|\\^`]+")
 _BARE_DOMAIN_PATTERN = re.compile(
-    r"(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|ai|in|co|dev|app|edu|gov)(?:/[^\s<>\"']*)?"
+    r"\b(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|ai|co|dev|app|edu|gov|xyz|tech|online|me)(?:/[^\s<>\"'()]*[a-zA-Z0-9/])?",
+    re.IGNORECASE
 )
 
 
@@ -34,9 +35,15 @@ def extract_urls(text: str) -> List[str]:
     """
     urls = _URL_PATTERN.findall(text)
     if urls:
-        return urls
+        # Strip trailing punctuation often attached from sentences
+        return [re.sub(r"[.,;:!?'\")]*$", "", u) for u in urls if len(u) > 8]
     matches = _BARE_DOMAIN_PATTERN.findall(text)
-    return [f"https://{m}" for m in matches if not m.startswith("http")]
+    clean_matches = []
+    for m in matches:
+        clean_m = re.sub(r"[.,;:!?'\")]*$", "", m).strip()
+        if "." in clean_m and len(clean_m) > 4:
+            clean_matches.append(f"https://{clean_m}")
+    return clean_matches
 
 
 # ── Text / Payload Hashing ────────────────────────────────────────────────────

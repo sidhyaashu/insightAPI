@@ -7,9 +7,15 @@ from app.tools.security_checker import security_audit_endpoint
 
 from app.tools.browser_explorer import explore_web_app_browser
 from app.tools.stealth import apply_stealth_evasion, humanized_click, humanized_type
-from app.tools.form_filler import fill_page_forms, get_contextual_value_for_input
 from app.tools.graphql_parser import parse_graphql_payload
 from app.tools.dependency_chainer import chain_api_dependencies, extract_identifiers_from_payload
+from app.tools.js_ast_parser import JsAstParser
+from app.tools.recon import resolve_subdomains_and_dns, recon_website
+from app.tools.contract_validator import (
+    validate_payload_against_schema,
+    validate_openapi_spec_structure,
+    run_schemathesis_invariant_checks,
+)
 
 __all__ = [
     "ToolResult",
@@ -28,4 +34,10 @@ __all__ = [
     "parse_graphql_payload",
     "chain_api_dependencies",
     "extract_identifiers_from_payload",
+    "JsAstParser",
+    "resolve_subdomains_and_dns",
+    "recon_website",
+    "validate_payload_against_schema",
+    "validate_openapi_spec_structure",
+    "run_schemathesis_invariant_checks",
 ]

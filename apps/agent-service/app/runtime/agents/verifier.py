@@ -178,7 +178,99 @@ class VerificationAgent(BaseAgent):
             request_url=url,
             response_status=res.data.get("status_code", 0) if res.status == "success" else 0,
             response_body=res.data if res.status == "success" else None,
-            timing_ms=res.latency_ms,
+            latency_ms=res.latency_ms,
             error=res.error,
             confidence=ConfidenceLevel.TESTED,
         )
+
+    async def fuzz_endpoint_contract(
+        self,
+        method: str,
+        url: str,
+        auth_headers: Optional[Dict[str, str]] = None,
+    ) -> List[Observation]:
+        """
+        Execute boundary mutation and contract fuzzing tests against the endpoint.
+        Tests:
+        1. Boundary types (negative IDs, extreme limits).
+        2. Type mutations (string where int expected).
+        3. Validation checks (proper 400/422 vs unhandled 500 error).
+        """
+        fuzz_observations: List[Observation] = []
+        method = method.upper()
+
+        # Fuzz 1: Boundary query parameters
+        delim = "&" if "?" in url else "?"
+        fuzz_url_neg = f"{url}{delim}id=-1&limit=999999999"
+        res_neg = await probe_http_endpoint(url=fuzz_url_neg, method=method, headers=auth_headers or {})
+        if res_neg.status == "success":
+            status = res_neg.data.get("status_code", 0)
+            fuzz_observations.append(Observation(
+                session_id=self.agent_id,
+                source=ObservationSource.VERIFICATION,
+                request_method=method,
+                request_url=fuzz_url_neg,
+                response_status=status,
+                confidence=ConfidenceLevel.VERIFIED if status in (200, 400, 404, 422) else ConfidenceLevel.TESTED,
+                tags=["contract_fuzz", "boundary_test"],
+                metadata={"test_type": "negative_boundary", "validated_properly": status != 500},
+            ))
+
+        # Fuzz 2: Type mutation
+        fuzz_url_type = f"{url}{delim}id=invalid_type_str&offset=null"
+        res_type = await probe_http_endpoint(url=fuzz_url_type, method=method, headers=auth_headers or {})
+        if res_type.status == "success":
+            status = res_type.data.get("status_code", 0)
+            fuzz_observations.append(Observation(
+                session_id=self.agent_id,
+                source=ObservationSource.VERIFICATION,
+                request_method=method,
+                request_url=fuzz_url_type,
+                response_status=status,
+                confidence=ConfidenceLevel.VERIFIED if status in (200, 400, 404, 422) else ConfidenceLevel.TESTED,
+                tags=["contract_fuzz", "type_mutation"],
+                metadata={"test_type": "type_mutation", "validated_properly": status != 500},
+            ))
+
+        return fuzz_observations
+
+    async def validate_contract_conformance(
+        self,
+        method: str,
+        url: str,
+        expected_schema: Optional[Dict[str, Any]] = None,
+        auth_headers: Optional[Dict[str, str]] = None,
+    ) -> Observation:
+        """
+        Probe endpoint and validate response payload against the inferred OpenAPI / JSON Schema.
+        """
+        from app.tools.contract_validator import validate_payload_against_schema
+        res = await probe_http_endpoint(url=url, method=method.upper(), headers=auth_headers or {})
+
+        status = res.data.get("status_code", 0) if res.status == "success" else 0
+        resp_body = res.data.get("body") if res.status == "success" else None
+
+        val_report = {"is_valid": True, "errors": []}
+        if expected_schema and resp_body:
+            val_report = validate_payload_against_schema(resp_body, expected_schema)
+
+        confidence = ConfidenceLevel.VERIFIED if (status == 200 and val_report.get("is_valid")) else ConfidenceLevel.TESTED
+
+        return Observation(
+            session_id=self.agent_id,
+            source=ObservationSource.VERIFICATION,
+            request_method=method.upper(),
+            request_url=url,
+            response_status=status,
+            response_body=resp_body,
+            inferred_schema=expected_schema,
+            confidence=confidence,
+            tags=["contract_validation", "schema_conformance"],
+            metadata={
+                "schema_valid": val_report.get("is_valid"),
+                "schema_errors": val_report.get("errors", []),
+                "drift_detected": val_report.get("drift_detected", False),
+            },
+        )
+
+

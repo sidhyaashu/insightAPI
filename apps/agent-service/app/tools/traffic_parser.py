@@ -138,3 +138,59 @@ def parse_har_traffic(har_content: Any) -> ToolResult:
             error=f"HAR parsing failed: {str(e)}",
             data={},
         )
+
+
+API_ROUTE_PATTERNS = [
+    # fetch("/api/v1/users") or axios.get('/api/users')
+    r"""(?:fetch|axios(?:\.[a-z]+)?|\$\.ajax)\s*\(\s*['"`]([a-zA-Z0-9_\-/\.\?=&]+)['"`]""",
+    # Relative API route literals ("/api/...", "/v1/...", "/graphql")
+    r"""['"`](/(?:api|v[0-9]|graphql|auth|rest|admin|users|products|orders|payments|items|cart)[a-zA-Z0-9_\-/\.\?=&]*)['"`]""",
+    # Full API endpoint URLs
+    r"""['"`](https?://[a-zA-Z0-9_\-\.]+(?:/[a-zA-Z0-9_\-/\.\?=&]*)?)['"`]""",
+]
+
+
+def extract_endpoints_from_javascript(js_text: str, base_url: str = "") -> List[Dict[str, Any]]:
+    """
+    Statically inspect JavaScript source code or bundle chunks to extract hardcoded API routes.
+    """
+    discovered: Dict[str, Dict[str, Any]] = {}
+    parsed_base = urllib.parse.urlparse(base_url) if base_url else None
+    base_origin = f"{parsed_base.scheme}://{parsed_base.netloc}" if parsed_base and parsed_base.scheme else ""
+
+    for pattern in API_ROUTE_PATTERNS:
+        matches = re.findall(pattern, js_text)
+        for match in matches:
+            match_clean = match.strip()
+            if not match_clean or len(match_clean) < 3:
+                continue
+            # Skip static file assets
+            if any(match_clean.lower().endswith(ext) for ext in STATIC_EXTENSIONS):
+                continue
+
+            # Infer method and template
+            method = "GET"
+            if "graphql" in match_clean.lower():
+                method = "POST"
+
+            if match_clean.startswith("http://") or match_clean.startswith("https://"):
+                full_url = match_clean
+                parsed_m = urllib.parse.urlparse(match_clean)
+                template_path = _normalize_route_template(parsed_m.path or "/")
+            else:
+                path = match_clean if match_clean.startswith("/") else f"/{match_clean}"
+                template_path = _normalize_route_template(path)
+                full_url = f"{base_origin}{path}" if base_origin else path
+
+            key = f"{method} {template_path}"
+            if key not in discovered and template_path != "/" and not template_path.startswith("//"):
+                discovered[key] = {
+                    "method": method,
+                    "template_path": template_path,
+                    "example_url": full_url,
+                    "source": "javascript_static_analysis",
+                    "confidence": "inferred",
+                }
+
+    return list(discovered.values())
+

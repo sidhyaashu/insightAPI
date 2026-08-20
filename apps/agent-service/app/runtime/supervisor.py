@@ -31,6 +31,7 @@ from app.runtime.models import (
 from app.runtime.world_model import ApplicationGraph
 from app.runtime.policy import PolicyEngine
 from app.runtime.agents.base import AgentTask, AgentResult
+from app.runtime.agents.recon import ReconAgent
 from app.runtime.agents.explorer import ExplorerAgent
 from app.runtime.agents.network import NetworkAgent
 from app.runtime.agents.verifier import VerificationAgent
@@ -54,7 +55,8 @@ class Supervisor:
         self.world_model = world_model or ApplicationGraph(session_id=state.session_id)
         self.approved_actions = set(approved_actions or [])
 
-        # Child agents
+        # Specialized child agents (AGENTS.md §15)
+        self.recon = ReconAgent()
         self.explorer = ExplorerAgent()
         self.network = NetworkAgent()
         self.verifier = VerificationAgent()
@@ -105,8 +107,19 @@ class Supervisor:
                 reason="Budget or time limit exhausted",
             ))
         else:
-            # 1. Root page exploration candidate
+            # 0. Phase 1 Reconnaissance candidate (highest priority for novel target)
+            recon_done = getattr(self.state, "recon_done", False)
             target_url = self.state.goal.target_url
+            if not recon_done and target_url:
+                candidates.append(CandidateActionScore(
+                    action_type="reconnaissance",
+                    target=target_url,
+                    score=0.99,
+                    information_gain=0.98,
+                    reason="Execute Phase 1 reconnaissance to detect tech stack, sitemaps, and WAF profile.",
+                ))
+
+            # 1. Root page exploration candidate
             if target_url and target_url not in self.state.visited_urls:
                 candidates.append(CandidateActionScore(
                     action_type="navigate",
@@ -116,7 +129,21 @@ class Supervisor:
                     reason="Root target page has not been explored yet.",
                 ))
 
-            # 2. Unverified endpoints
+            # 2. Unvisited internal discovered pages candidate
+            max_pages_limit = self.state.goal.max_pages if self.state.goal else 10
+            for node in self.world_model.nodes.values():
+                if node.node_type.value == "page":
+                    p_url = node.attributes.get("url") or (node.label if node.label.startswith("http") else None)
+                    if p_url and p_url not in self.state.visited_urls and len(self.state.visited_urls) < max_pages_limit:
+                        candidates.append(CandidateActionScore(
+                            action_type="navigate",
+                            target=p_url,
+                            score=0.90,
+                            information_gain=0.85,
+                            reason=f"Discovered internal route {p_url} has not been explored yet.",
+                        ))
+
+            # 3. Unverified endpoints candidate
             for node in self.world_model.nodes.values():
                 if node.node_type.value == "endpoint":
                     conf = node.attributes.get("confidence")
@@ -147,7 +174,15 @@ class Supervisor:
                 ))
             else:
                 best = max(candidates, key=lambda c: c.score)
-                if best.action_type == "navigate":
+                if best.action_type == "reconnaissance":
+                    selected_action_obj = Action(
+                        session_id=self.state.session_id,
+                        action_type=ActionType.RECONNAISSANCE,
+                        target=best.target,
+                        parameters={},
+                        rationale="Fingerprint tech stack, extract sitemaps, and analyze edge security profile.",
+                    )
+                elif best.action_type == "navigate":
                     selected_action_obj = Action(
                         session_id=self.state.session_id,
                         action_type=ActionType.NAVIGATE,
@@ -185,7 +220,7 @@ class Supervisor:
                     current_url=self.state.current_url,
                     known_endpoints_count=len(self.world_model.get_endpoints()),
                     verified_endpoints_count=len(self.state.verified_endpoint_ids),
-                    hypotheses_count=len(self.state.hypotheses),
+                    hypotheses_count=len(self.state.open_hypothesis_ids),
                     candidate_actions=candidates,
                     selected_action=selected_action_obj.action_type.value,
                     selected_target=selected_action_obj.target,
@@ -276,7 +311,18 @@ class Supervisor:
         )
 
         res: AgentResult
-        if action.action_type == ActionType.NAVIGATE:
+        if action.action_type == ActionType.RECONNAISSANCE:
+            task = AgentTask(
+                parent_agent_id="supervisor",
+                role="recon",
+                goal=action.rationale or "Reconnaissance",
+                target=action.target,
+                parameters=action.parameters,
+            )
+            res = await self.recon.execute(task, self.state)
+            self.state.recon_done = True
+
+        elif action.action_type == ActionType.NAVIGATE:
             task = AgentTask(
                 parent_agent_id="supervisor",
                 role="explorer",

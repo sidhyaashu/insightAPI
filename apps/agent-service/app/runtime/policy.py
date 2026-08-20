@@ -76,6 +76,7 @@ class PolicyEngine:
 
         # 4. Safe read-only actions
         if action.action_type in (
+            ActionType.RECONNAISSANCE,
             ActionType.NAVIGATE,
             ActionType.SCROLL,
             ActionType.WAIT,

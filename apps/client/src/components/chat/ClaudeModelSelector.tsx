@@ -34,15 +34,8 @@ export function ClaudeModelSelector({ value, onChange }: ClaudeModelSelectorProp
       case "gemini-3.7-flash":
         return "Gemini 3.7 Flash";
       case "gpt-4.1-mini":
-        return "GPT-4.1 Mini";
-      case "gpt-4o":
-        return "GPT-4o Pro";
-      case "gpt-4o-mini":
-        return "GPT-4o Mini";
-      case "ollama-local":
-        return "Ollama Local";
       default:
-        return "Gemini 3.7 Flash";
+        return "GPT-4.1 Mini";
     }
   };
 
@@ -62,7 +55,7 @@ export function ClaudeModelSelector({ value, onChange }: ClaudeModelSelectorProp
       <DropdownMenuContent align="start" className="w-80 p-2 shadow-2xl rounded-2xl bg-card border border-border">
         {/* Model Tiers */}
         <div className="space-y-1 p-1">
-          {/* Gemini 3.7 Flash (Default) */}
+          {/* Gemini 3.7 Flash */}
           <DropdownMenuItem
             onClick={() => onChange({ ...value, model: "gemini-3.7-flash" })}
             className="flex items-start justify-between p-2.5 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
@@ -71,7 +64,7 @@ export function ClaudeModelSelector({ value, onChange }: ClaudeModelSelectorProp
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-xs text-foreground">Gemini 3.7 Flash</span>
                 <Badge variant="outline" className="text-[9px] px-1 py-0 border-primary/40 text-primary font-mono bg-primary/10">
-                  ULTRA FAST
+                  HYBRID REASONING
                 </Badge>
               </div>
               <p className="text-[11px] text-muted-foreground">High-speed API intelligence with deep reasoning</p>
@@ -91,57 +84,9 @@ export function ClaudeModelSelector({ value, onChange }: ClaudeModelSelectorProp
                   AZURE FOUNDRY
                 </Badge>
               </div>
-              <p className="text-[11px] text-muted-foreground">High performance Azure OpenAI reasoning deployment</p>
+              <p className="text-[11px] text-muted-foreground">High performance Azure AI Foundry deployment</p>
             </div>
             {value.model === "gpt-4.1-mini" && <CheckIcon className="size-4 text-primary shrink-0 mt-0.5" />}
-          </DropdownMenuItem>
-
-          {/* GPT-4o Pro */}
-          <DropdownMenuItem
-            onClick={() => onChange({ ...value, model: "gpt-4o" })}
-            className="flex items-start justify-between p-2.5 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
-          >
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-xs text-foreground">GPT-4o Pro</span>
-                <Badge variant="outline" className="text-[9px] px-1 py-0 border-purple-500/40 text-purple-400 font-mono">
-                  PRO
-                </Badge>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Advanced reasoning for complex authentication & SPAs</p>
-            </div>
-            {value.model === "gpt-4o" && <CheckIcon className="size-4 text-primary shrink-0 mt-0.5" />}
-          </DropdownMenuItem>
-
-          {/* GPT-4o Mini */}
-          <DropdownMenuItem
-            onClick={() => onChange({ ...value, model: "gpt-4o-mini" })}
-            className="flex items-start justify-between p-2.5 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
-          >
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-xs text-foreground">GPT-4o Mini</span>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Lightweight model for everyday queries</p>
-            </div>
-            {value.model === "gpt-4o-mini" && <CheckIcon className="size-4 text-primary shrink-0 mt-0.5" />}
-          </DropdownMenuItem>
-
-          {/* Ollama Local */}
-          <DropdownMenuItem
-            onClick={() => onChange({ ...value, model: "ollama-local" })}
-            className="flex items-start justify-between p-2.5 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
-          >
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-xs text-foreground">Ollama Local</span>
-                <Badge variant="outline" className="text-[9px] px-1 py-0 font-mono text-muted-foreground">
-                  LOCAL
-                </Badge>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Air-gapped on-device model execution</p>
-            </div>
-            {value.model === "ollama-local" && <CheckIcon className="size-4 text-primary shrink-0 mt-0.5" />}
           </DropdownMenuItem>
         </div>
 

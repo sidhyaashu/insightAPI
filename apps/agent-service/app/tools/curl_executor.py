@@ -20,7 +20,13 @@ def parse_curl_command(curl_str: str) -> Dict[str, Any]:
     # Normalize multiline backslashes
     clean = re.sub(r"\\\s*\n", " ", curl_str.strip())
     # Remove leading 'curl' or 'curl.exe'
-    tokens = shlex.split(clean)
+    try:
+        tokens = shlex.split(clean)
+    except ValueError:
+        # Fallback: strip unmatched outer quotes and split with regex
+        tokens = re.findall(r'[^\s"\'=]+|"[^"]*"|\'[^\']*\'', clean)
+        tokens = [t.strip("\"'") for t in tokens]
+
     if tokens and tokens[0].lower() in {"curl", "curl.exe"}:
         tokens = tokens[1:]
 

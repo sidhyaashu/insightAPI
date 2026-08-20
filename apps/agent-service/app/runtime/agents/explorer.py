@@ -64,6 +64,20 @@ class ExplorerAgent(BaseAgent):
         # Record page navigation in state
         state.record_url_visited(target_url)
 
+        # Record navigated page node in observations
+        is_waf = tool_result.data.get("is_waf_blocked", False)
+        page_title = tool_result.data.get("waf_details") or ("Access Denied" if is_waf else "Landing Page")
+        obs_page_node = Observation(
+            session_id=state.session_id,
+            source=ObservationSource.BROWSER,
+            page_url=target_url,
+            page_title=page_title,
+            response_status=403 if is_waf else 200,
+            confidence=ConfidenceLevel.TESTED,
+            tags=["navigated_page", "waf_blocked"] if is_waf else ["navigated_page"],
+        )
+        observations.append(obs_page_node)
+
         if tool_result.status == "success":
             for ep in discovered_endpoints:
                 obs = Observation(
@@ -92,6 +106,18 @@ class ExplorerAgent(BaseAgent):
                         "status_code": ep.get("status_code"),
                     },
                 )
+
+            # Record discovered in-scope internal pages for multi-page frontier queue
+            for p_url in tool_result.data.get("discovered_pages", []):
+                if p_url not in state.visited_urls and p_url != target_url:
+                    obs_p = Observation(
+                        session_id=state.session_id,
+                        source=ObservationSource.BROWSER,
+                        page_url=p_url,
+                        confidence=ConfidenceLevel.INFERRED,
+                        tags=["discovered_page", "frontier"],
+                    )
+                    observations.append(obs_p)
 
         latency_ms = int((time.perf_counter() - start_time) * 1000)
 

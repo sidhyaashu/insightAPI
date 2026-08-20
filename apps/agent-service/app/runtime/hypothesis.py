@@ -23,6 +23,8 @@ from app.runtime.models import (
     Hypothesis,
     HypothesisStatus,
     Observation,
+    ProofItem,
+    ProofSource,
 )
 from app.runtime.world_model import ApplicationGraph
 from app.core.utils import normalize_route_template
@@ -199,15 +201,42 @@ class HypothesisEngine:
             is_graphql = node.attributes.get("is_graphql", False)
             graphql_op = node.attributes.get("graphql_operation")
 
-            # Determine confidence based on hypotheses and observations
+            # Determine confidence and build multi-source proof chain
             conf = ConfidenceLevel.TESTED
             evidence_ids: List[str] = []
+            proof_chain: List[ProofItem] = []
             auth_req = node.attributes.get("auth_required")
+            source_tag = node.attributes.get("source", "playwright")
 
+            # 1. Source observation proof
+            if source_tag == "javascript_static_analysis":
+                proof_chain.append(
+                    ProofItem(
+                        source=ProofSource.JAVASCRIPT_AST,
+                        description=f"Extracted from client-side JavaScript bundle via static inspection",
+                    )
+                )
+            else:
+                proof_chain.append(
+                    ProofItem(
+                        source=ProofSource.PLAYWRIGHT_RUNTIME,
+                        description=f"Captured during browser execution on page: {node.attributes.get('page_url', 'target app')}",
+                        observed_status=status_code,
+                    )
+                )
+
+            # 2. Hypothesis verification proof
             if endpoint_key in hyp_map:
                 h = hyp_map[endpoint_key]
                 if h.status == HypothesisStatus.VERIFIED:
                     conf = ConfidenceLevel.VERIFIED
+                    proof_chain.append(
+                        ProofItem(
+                            source=ProofSource.HTTPX_REPLAY,
+                            description=f"Hypothesis confirmed: {h.claim} ({h.conclusion or 'Verified'})",
+                            confidence_score=h.confidence_score,
+                        )
+                    )
                 evidence_ids.extend(h.supporting_evidence_ids)
 
             inventory.append(
@@ -220,6 +249,7 @@ class HypothesisEngine:
                     inferred_schema=inferred_schema,
                     confidence=conf,
                     evidence_ids=evidence_ids,
+                    proof_chain=proof_chain,
                     auth_required=auth_req,
                     is_graphql=is_graphql,
                     graphql_operation=graphql_op,

@@ -106,10 +106,27 @@ class PlaywrightBrowserAdapter(BrowserAdapter):
             ],
         )
 
+        default_headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Sec-Ch-Ua": '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+        }
+        if self.auth_headers:
+            default_headers.update(self.auth_headers)
+
         self._context = await self._browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 InsightAPI-Agent/2.0",
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
             viewport=self.viewport,
-            extra_http_headers=self.auth_headers,
+            extra_http_headers=default_headers,
+            locale="en-US",
+            timezone_id="Asia/Kolkata",
         )
 
         # Apply stealth evasions
@@ -154,7 +171,7 @@ class PlaywrightBrowserAdapter(BrowserAdapter):
                 or "application/json" in content_type
                 or "application/xml" in content_type
                 or "text/json" in content_type
-                or any(k in lower_path for k in ("/api/", "/v1/", "/v2/", "/v3/", "/graphql", "/rest/", "/data/", "/services/", "/json/", "/bseindiaapi/"))
+                or any(k in lower_path for k in ("/api/", "/v1/", "/v2/", "/v3/", "/graphql", "/rest/", "/data/", "/services/", "/json/", "/bseindiaapi/", "/posts", "/users", "/comments", "/todos", "/albums", "/photos", "/products", "/items", "/orders", "/articles", "/tags"))
             )
             if not is_api:
                 return
@@ -264,12 +281,22 @@ class PlaywrightBrowserAdapter(BrowserAdapter):
         state_hash = hashlib.md5(raw_hash.encode("utf-8")).hexdigest()[:12]
         self._visited_states.add(state_hash)
 
+        # Detect WAF or Edge bot challenges
+        is_waf = False
+        waf_detail = None
+        lower_title = title.lower().strip()
+        if any(w in lower_title for w in ("access denied", "just a moment...", "security challenge", "attention required", "cloudflare", "blocked")):
+            is_waf = True
+            waf_detail = f"Edge protection challenge detected: '{title}'"
+
         return PageState(
             url=current_url,
             title=title,
-            status_code=200,
+            status_code=403 if is_waf else 200,
             state_hash=state_hash,
             is_spa=True,
+            is_waf_blocked=is_waf,
+            waf_details=waf_detail,
         )
 
     async def get_accessibility_tree(self) -> List[AXNode]:
@@ -323,6 +350,59 @@ class PlaywrightBrowserAdapter(BrowserAdapter):
                 )
             )
         return nodes
+
+    async def get_internal_links(self, base_url: str) -> List[str]:
+        """
+        Extract all same-origin, in-scope internal HTML navigation URLs on the current page.
+        Filters out static assets, fragment-only links, and external third-party domains.
+        """
+        if not self._page:
+            return []
+
+        try:
+            parsed_base = urllib.parse.urlparse(base_url)
+            base_domain = parsed_base.hostname or ""
+
+            raw_hrefs = await self._page.evaluate("""() => {
+                const links = [];
+                document.querySelectorAll('a[href], nav a, header a, aside a, .navbar a, .pagination a, [role="link"]').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
+                        links.push(href);
+                    }
+                });
+                return Array.from(new Set(links));
+            }""")
+
+            internal_urls: Set[str] = set()
+            for href in raw_hrefs:
+                href_clean = href.strip()
+                if not href_clean:
+                    continue
+
+                full_url = urllib.parse.urljoin(base_url, href_clean)
+                parsed = urllib.parse.urlparse(full_url)
+
+                # Must match base scheme and domain (or subdomain)
+                if parsed.scheme not in ("http", "https"):
+                    continue
+                if parsed.hostname != base_domain and not (parsed.hostname or "").endswith(f".{base_domain}"):
+                    continue
+
+                # Filter static assets
+                path_lower = parsed.path.lower()
+                if any(path_lower.endswith(ext) for ext in STATIC_EXTENSIONS):
+                    continue
+
+                # Strip trailing fragments
+                clean_target = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path, "", parsed.query, ""))
+                if clean_target != base_url.rstrip("/"):
+                    internal_urls.add(clean_target)
+
+            return list(internal_urls)
+        except Exception as e:
+            logger.debug(f"Error extracting internal links: {e}")
+            return []
 
     async def click(self, selector_or_ref: str, humanized: bool = True) -> bool:
         """Click element by selector or text with safety guardrails."""

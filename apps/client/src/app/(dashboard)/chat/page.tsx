@@ -103,7 +103,7 @@ function IndustryChatInner() {
   const [quota, setQuota] = useState<ChatQuota | null>(null);
   const [quotaExceededMsg, setQuotaExceededMsg] = useState<string | null>(null);
   const [modelSelection, setModelSelection] = useState<ModelSelection>({
-    model: "gemini-3.7-flash",
+    model: "gpt-4.1-mini",
     effort: "Medium",
   });
 

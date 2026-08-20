@@ -148,56 +148,58 @@ class ReActEngine:
             # ──────────────────────────────────────────────────────────────────────
             # Step 3: Single Direct HTTP Probe (Ad-Hoc Pair-Programming Testing)
             # ──────────────────────────────────────────────────────────────────────
-            urls = _extract_all_urls(user_message)
-            for target_url in urls[:MAX_REACT_STEPS]:  # enforce MAX_REACT_STEPS budget
-                method = "GET"
-                # Check for explicit method mention e.g. "POST https://..." or "DELETE https://..."
-                method_match = re.search(r"\b(POST|PUT|DELETE|PATCH|OPTIONS|HEAD)\s+" + re.escape(target_url), user_message, re.IGNORECASE)
-                if method_match:
-                    method = method_match.group(1).upper()
+            if not curl_cmd:
+                urls = _extract_all_urls(user_message)
+                for target_url in urls[:MAX_REACT_STEPS]:  # enforce MAX_REACT_STEPS budget
+                    method = "GET"
+                    # Check for explicit method mention e.g. "POST https://..." or "DELETE https://..."
+                    method_match = re.search(r"\b(POST|PUT|DELETE|PATCH|OPTIONS|HEAD)\s+" + re.escape(target_url), user_message, re.IGNORECASE)
+                    if method_match:
+                        method = method_match.group(1).upper()
 
-                # Human-in-the-Loop Approval Check for Destructive Actions
-                is_destructive = _is_action_destructive(method, target_url)
-                action_key = f"{method}:{target_url}"
-                if is_destructive and action_key not in approved_set:
-                    approval_id = f"appr-{uuid.uuid4().hex[:8]}"
+                    # Human-in-the-Loop Approval Check for Destructive Actions
+                    is_destructive = _is_action_destructive(method, target_url)
+                    action_key = f"{method}:{target_url}"
+                    if is_destructive and action_key not in approved_set:
+                        approval_id = f"appr-{uuid.uuid4().hex[:8]}"
+                        yield {
+                            "type": "approval_required",
+                            "approval_id": approval_id,
+                            "action": {
+                                "method": method,
+                                "url": target_url,
+                                "description": f"Executing potentially destructive {method} request on live server.",
+                            },
+                        }
+                        # Skip executing this destructive action until approved
+                        continue
+
+                    probe_id = f"tool-{uuid.uuid4().hex[:8]}"
                     yield {
-                        "type": "approval_required",
-                        "approval_id": approval_id,
-                        "action": {
-                            "method": method,
-                            "url": target_url,
-                            "description": f"Executing potentially destructive {method} request on live server.",
-                        },
+                        "type": "tool_start",
+                        "tool_id": probe_id,
+                        "tool": "probe_http_endpoint",
+                        "title": f"Probing {method} {target_url}",
+                        "input": {"url": target_url, "method": method, "authenticated": bool(auth_headers)},
                     }
-                    # Skip executing this destructive action until approved
-                    continue
+                    probe_res = await probe_http_endpoint(
+                        url=target_url,
+                        method=method,
+                        headers=auth_headers,
+                    )
+                    yield {
+                        "type": "tool_result",
+                        "tool_id": probe_id,
+                        "tool": "probe_http_endpoint",
+                        "status": "completed" if probe_res.status == "success" else "failed",
+                        "latency_ms": probe_res.latency_ms,
+                        "output": probe_res.data,
+                        "error": probe_res.error,
+                    }
 
-                probe_id = f"tool-{uuid.uuid4().hex[:8]}"
-                yield {
-                    "type": "tool_start",
-                    "tool_id": probe_id,
-                    "tool": "probe_http_endpoint",
-                    "title": f"Probing {method} {target_url}",
-                    "input": {"url": target_url, "method": method, "authenticated": bool(auth_headers)},
-                }
-                probe_res = await probe_http_endpoint(
-                    url=target_url,
-                    method=method,
-                    headers=auth_headers,
-                )
-                yield {
-                    "type": "tool_result",
-                    "tool_id": probe_id,
-                    "tool": "probe_http_endpoint",
-                    "status": "completed" if probe_res.status == "success" else "failed",
-                    "latency_ms": probe_res.latency_ms,
-                    "output": probe_res.data,
-                    "error": probe_res.error,
-                }
-
-                if probe_res.status == "success":
-                    discovered_endpoints.append({
+                    if probe_res.status == "success":
+                        discovered_endpoints.append({
+                            "method": method,
                         "method": method,
                         "path": probe_res.data.get("url"),
                         "status_code": probe_res.data.get("status_code"),

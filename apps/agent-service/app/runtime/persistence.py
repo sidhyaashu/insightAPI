@@ -54,13 +54,15 @@ class AgentStateStore:
                     metrics_json = session_obj.llm_metrics_json or {}
                     metrics_json["agent_state"] = state_dict
                     session_obj.llm_metrics_json = metrics_json
-                    session_obj.target_url = state.target_url or session_obj.target_url
+                    target_url_val = state.current_url or (state.goal.target_url if state.goal else "https://api.example.com")
+                    session_obj.target_url = target_url_val or session_obj.target_url
                     session_obj.goal = state.goal.description if state.goal else session_obj.goal
                 else:
+                    target_url_val = state.current_url or (state.goal.target_url if state.goal else "https://api.example.com")
                     new_session = CrawlSession(
                         id=state.session_id,
                         user_id="default-user",
-                        target_url=state.target_url or "https://api.example.com",
+                        target_url=target_url_val,
                         goal=state.goal.description if state.goal else None,
                         status="running",
                         llm_metrics_json={"agent_state": state_dict},

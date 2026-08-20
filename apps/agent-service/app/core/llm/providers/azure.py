@@ -56,7 +56,11 @@ class AzureOpenAIProvider(BaseLLMProvider):
         from urllib.parse import urlparse
         from langchain_openai import AzureChatOpenAI
 
-        deployment = model or self.get_default_model(tier)
+        deployment = (
+            self.get_default_model(tier)
+            if (not model or model.lower() in ("azure", "foundry", "azure-foundry", "microsoft", "openai"))
+            else model
+        )
         raw_endpoint = settings.AZURE_OPENAI_ENDPOINT or ""
         parsed = urlparse(raw_endpoint)
         sanitized_endpoint = f"{parsed.scheme}://{parsed.netloc}" if parsed.netloc else raw_endpoint

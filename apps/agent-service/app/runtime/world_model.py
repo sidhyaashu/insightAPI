@@ -96,8 +96,11 @@ class ApplicationGraph(BaseModel):
             page_node = self.nodes[page_id]
             if title:
                 page_node.attributes["title"] = title
+                page_node.label = title
             if state_hash:
                 page_node.attributes["state_hash"] = state_hash
+            if status_code:
+                page_node.attributes["status_code"] = status_code
             return page_id
 
         page_id = f"page-{uuid.uuid4().hex[:8]}"
@@ -156,6 +159,7 @@ class ApplicationGraph(BaseModel):
         graphql_operation: Optional[str] = None,
         auth_required: Optional[bool] = None,
         inferred_schema: Optional[Dict[str, Any]] = None,
+        source: str = "playwright",
     ) -> str:
         """Add or update an API Endpoint node in the graph."""
         endpoint_key = f"{method.upper()} {template_path}"
@@ -168,6 +172,8 @@ class ApplicationGraph(BaseModel):
                 ep_node.attributes["inferred_schema"] = inferred_schema
             if auth_required is not None:
                 ep_node.attributes["auth_required"] = auth_required
+            if source:
+                ep_node.attributes["source"] = source
             return ep_id
 
         ep_id = f"ep-{uuid.uuid4().hex[:8]}"
@@ -184,6 +190,7 @@ class ApplicationGraph(BaseModel):
                 "graphql_operation": graphql_operation,
                 "auth_required": auth_required,
                 "inferred_schema": inferred_schema,
+                "source": source,
                 "confidence": ConfidenceLevel.TESTED.value if status_code else ConfidenceLevel.INFERRED.value,
             },
         )
@@ -281,10 +288,13 @@ class ApplicationGraph(BaseModel):
     def record_observation(self, obs: Observation) -> Optional[str]:
         """
         Integrate an Observation directly into the Application Graph:
+        - Automatically creates Page node if page_url is present.
         - Automatically creates/updates Endpoint node if request data exists.
-        - Automatically links Page -> causes -> Endpoint if page_url is present.
+        - Automatically links Page -> causes -> Endpoint.
         """
         if not obs.request_url and not obs.request_method:
+            if obs.page_url:
+                return self.add_page(obs.page_url, title=obs.page_title or "", status_code=obs.response_status)
             return None
 
         import urllib.parse
@@ -399,3 +409,54 @@ class ApplicationGraph(BaseModel):
                 graph._endpoint_key_to_id[f"{method} {template}"] = node.id
 
         return graph
+
+    def to_networkx(self) -> Any:
+        """
+        Export the ApplicationGraph into a networkx.MultiDiGraph.
+        Enables advanced graph algorithms: shortest paths, centrality, cycle detection.
+        """
+        import networkx as nx
+        G = nx.MultiDiGraph(session_id=self.session_id)
+        for nid, node in self.nodes.items():
+            G.add_node(nid, node_type=node.node_type.value, label=node.label, **node.attributes)
+        for edge in self.edges:
+            G.add_edge(edge.source_id, edge.target_id, key=edge.id, relation=edge.relation.value, **edge.metadata)
+        return G
+
+    def get_untriggered_endpoints(self) -> List[Dict[str, Any]]:
+        """
+        Find endpoints that have no incoming UI triggers/causes edges (potential shadow or static-only endpoints).
+        """
+        G = self.to_networkx()
+        untriggered = []
+        for nid, node in self.nodes.items():
+            if node.node_type == NodeType.ENDPOINT:
+                in_edges = list(G.in_edges(nid, data=True))
+                # Check if triggered by a page or UI action
+                has_ui_trigger = any(d.get("relation") in ("causes", "triggers") for _, _, d in in_edges)
+                if not has_ui_trigger:
+                    untriggered.append({"id": nid, "label": node.label, "attributes": node.attributes})
+        return untriggered
+
+    def get_data_flow_chains(self) -> List[Dict[str, Any]]:
+        """
+        Identify dependency chains where Endpoint A -> returns -> Entity -> feeds/uses -> Endpoint B.
+        """
+        G = self.to_networkx()
+        chains = []
+        for nid, node in self.nodes.items():
+            if node.node_type == NodeType.ENDPOINT:
+                for _, entity_id, d1 in G.out_edges(nid, data=True):
+                    if d1.get("relation") == "returns":
+                        entity_node = self.nodes.get(entity_id)
+                        if entity_node and entity_node.node_type == NodeType.ENTITY:
+                            for _, next_ep_id, d2 in G.out_edges(entity_id, data=True):
+                                next_ep = self.nodes.get(next_ep_id)
+                                if next_ep and next_ep.node_type == NodeType.ENDPOINT:
+                                    chains.append({
+                                        "source_endpoint": node.label,
+                                        "entity": entity_node.label,
+                                        "consumer_endpoint": next_ep.label,
+                                    })
+        return chains
+

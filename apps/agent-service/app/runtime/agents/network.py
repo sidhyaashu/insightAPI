@@ -112,6 +112,32 @@ class NetworkAgent(BaseAgent):
                 status = "failed"
                 error_msg = res.error
 
+        elif action_type == "parse_js_ast":
+            js_source = task.parameters.get("js_source", "")
+            base_url = task.parameters.get("base_url", target_url)
+            from app.tools.js_ast_parser import JsAstParser
+            ast_res = JsAstParser.parse_bundle(js_source, base_url)
+            state.budget.tool_calls_used += 1
+
+            discovered_endpoints = ast_res.get("endpoints", [])
+            for ep in discovered_endpoints:
+                observations.append(
+                    Observation(
+                        session_id=state.session_id,
+                        source=ObservationSource.BROWSER,
+                        request_method=ep.get("method"),
+                        request_url=ep.get("example_url"),
+                        request_template=ep.get("template_path"),
+                        confidence=ConfidenceLevel.INFERRED,
+                        tags=["javascript_ast", "static_extracted"],
+                        metadata={
+                            "ast_call": ep.get("ast_call"),
+                            "inferred_params": ep.get("inferred_params", []),
+                            "source": "javascript_static_analysis",
+                        },
+                    )
+                )
+
         else:  # probe_http default
             method = task.parameters.get("method", "GET").upper()
             auth_headers = task.parameters.get("headers") or state.auth_context.get("headers")

@@ -21,6 +21,8 @@ class PageState(BaseModel):
     content_type: str = ""
     state_hash: str = ""
     is_spa: bool = False
+    is_waf_blocked: bool = False
+    waf_details: Optional[str] = None
 
 
 class AXNode(BaseModel):

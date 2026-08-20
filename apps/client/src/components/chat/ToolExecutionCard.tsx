@@ -17,6 +17,11 @@ import {
   FileCode2Icon,
   ClockIcon,
   SparklesIcon,
+  SearchIcon,
+  CompassIcon,
+  LayersIcon,
+  CpuIcon,
+  FlaskConicalIcon,
 } from "lucide-react";
 
 interface ToolExecutionCardProps {
@@ -32,19 +37,31 @@ export const ToolExecutionCard = memo(({ toolCall, className }: ToolExecutionCar
   const isFailed = toolCall.status === "failed";
   const isSuccess = toolCall.status === "completed";
 
-  // Pick appropriate icon based on tool
+  // Pick appropriate icon based on specialized agent/tool
   const getToolIcon = () => {
     switch (toolCall.tool) {
+      case "reconnaissance":
+      case "recon_website":
+        return <SearchIcon className="size-3.5 text-cyan-500" />;
+      case "supervisor_planning":
+        return <SparklesIcon className="size-3.5 text-amber-500" />;
+      case "navigate":
+      case "browser_explore_app":
+        return <CompassIcon className="size-3.5 text-blue-500" />;
+      case "hypothesis_verifier":
+        return <FlaskConicalIcon className="size-3.5 text-violet-500" />;
       case "probe_http_endpoint":
-        return <GlobeIcon className="size-3.5" />;
+      case "probe_http":
+        return <GlobeIcon className="size-3.5 text-emerald-500" />;
       case "execute_curl":
-        return <TerminalIcon className="size-3.5" />;
+        return <TerminalIcon className="size-3.5 text-amber-400" />;
       case "security_audit_endpoint":
-        return <ShieldCheckIcon className="size-3.5" />;
+      case "security_audit":
+        return <ShieldCheckIcon className="size-3.5 text-rose-500" />;
       case "infer_openapi_schema":
-        return <FileCode2Icon className="size-3.5" />;
+        return <FileCode2Icon className="size-3.5 text-indigo-500" />;
       default:
-        return <ActivityIcon className="size-3.5" />;
+        return <ActivityIcon className="size-3.5 text-primary" />;
     }
   };
 
@@ -187,6 +204,26 @@ export const ToolExecutionCard = memo(({ toolCall, className }: ToolExecutionCar
           {toolCall.error && (
             <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs">
               {toolCall.error}
+            </div>
+          )}
+
+          {/* Tech stack badges if available */}
+          {Array.isArray(toolCall.output?.technologies) && toolCall.output.technologies.length > 0 && (
+            <div className="py-1">
+              <span className="text-muted-foreground block mb-1.5 font-sans font-medium text-[10px] uppercase tracking-wider">
+                Detected Technologies
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {toolCall.output.technologies.map((t: any, idx: number) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[11px] font-sans font-medium"
+                  >
+                    <CpuIcon className="size-3 text-cyan-400" />
+                    {typeof t === "object" ? t.name : t}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 

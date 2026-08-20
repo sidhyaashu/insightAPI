@@ -51,7 +51,7 @@ class GoogleGeminiProvider(BaseLLMProvider):
         streaming: bool = False,
         tier: ModelTier = ModelTier.FAST,
     ) -> BaseChatModel:
-        model_name = model or self.get_default_model(tier)
+        model_name = model if (model and model.lower().startswith("gemini-")) else self.get_default_model(tier)
         return ChatGoogleGenerativeAI(
             model=model_name,
             google_api_key=settings.GEMINI_API_KEY,

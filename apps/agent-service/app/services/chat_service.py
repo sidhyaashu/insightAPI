@@ -73,24 +73,33 @@ async def stream_agentic_chat(
 
     effective_session_id = session_id or f"sess-{uuid.uuid4().hex[:12]}"
     detected_urls = _extract_urls(user_message)
-
+    has_direct_url = bool(detected_urls)
     target_url = detected_urls[0] if detected_urls else None
 
-    # Context Resolution: Fall back to existing active session or crawl context
-    if not target_url and session_id:
+    # Direct cURL commands, HAR dumps, or conceptual queries route to ReActEngine
+    is_curl_command = bool(_extract_curl(user_message))
+    is_har_dump = ('"log"' in user_message and '"entries"' in user_message)
+
+    # Explicit multi-turn crawl continuation keywords (when no URL is provided)
+    has_continuation_intent = any(
+        kw in user_message.lower()
+        for kw in ["continue crawl", "crawl more", "discover more", "keep exploring", "scan again", "explore more"]
+    )
+
+    # Fall back to existing active session URL ONLY if continuation is explicitly requested
+    if not target_url and has_continuation_intent and session_id:
         cached_state = await state_store.load_state(session_id, db=db)
         if cached_state and cached_state.current_url:
             target_url = cached_state.current_url
 
-    if not target_url and crawl_context:
-        ctx_urls = _extract_urls(crawl_context)
-        if ctx_urls:
-            target_url = ctx_urls[0]
-
-    # Intent Detection: Check if user expresses autonomous discovery intent
-    is_investigation_intent = bool(target_url) or any(
-        kw in user_message.lower()
-        for kw in ["discover", "crawl", "explore", "hidden", "undocumented", "map api", "investigate", "endpoints"]
+    # An autonomous investigation is triggered if:
+    # 1. A new target URL is directly provided in the message (and it's not a raw curl execution or HAR payload)
+    # 2. OR user explicitly asks to continue crawling the active session's URL
+    is_investigation_intent = (
+        bool(target_url)
+        and not is_curl_command
+        and not is_har_dump
+        and (has_direct_url or has_continuation_intent)
     )
 
     if is_investigation_intent and target_url:

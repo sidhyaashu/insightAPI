@@ -57,16 +57,25 @@ def _compute_dom_state_hash(url: str, elements: List[str]) -> str:
     return hashlib.md5(raw.encode("utf-8")).hexdigest()[:12]
 
 
+NAV_CLICK_SELECTOR = (
+    "nav a, header a, aside a, .navbar a, .nav-item a, .menu a, .sidebar a, "
+    "button, a[href], [role='button'], [role='tab'], [role='link'], [role='menuitem'], [role='option'], "
+    "select, summary, [aria-expanded], [data-toggle], "
+    ".pagination a, .page-link, [aria-label*='page' i], [aria-label*='next' i], [aria-label*='prev' i]"
+)
+
+
 async def explore_web_app_browser(
     url: str,
     max_clicks: int = 15,
+    max_pages: int = 3,
     timeout_sec: float = 25.0,
     auth_headers: Optional[Dict[str, str]] = None,
 ) -> ToolResult:
     """
     Launch an autonomous stealth headless browser session, navigate the web app,
     pierce Shadow DOMs, execute virtual scrolling, contextually populate and submit forms,
-    and intercept all hidden REST, GraphQL, and AJAX endpoints.
+    and intercept all hidden REST, GraphQL, and AJAX endpoints across multiple pages.
     """
     start_time = time.perf_counter()
     url = url.strip()
@@ -90,67 +99,136 @@ async def explore_web_app_browser(
     intercepted_requests: Dict[str, Dict[str, Any]] = {}
     actions_taken: List[Dict[str, Any]] = []
     visited_states: Set[str] = set()
+    discovered_pages: Set[str] = {url}
+    is_waf_blocked = False
+    waf_details: Optional[str] = None
 
     # ──────────────────────────────────────────────────────────────────────────
-    # Headless Playwright Browser with Stealth Evasions via BrowserAdapter
+    # Headless Playwright Browser with Stealth Evasions & Multi-Page Crawler
     # ──────────────────────────────────────────────────────────────────────────
     try:
         from app.runtime.browser.playwright_adapter import PlaywrightBrowserAdapter
 
         async with PlaywrightBrowserAdapter(auth_headers=auth_headers) as adapter:
-            actions_taken.append({"action": "stealth_navigate", "target": url})
-            page_state = await adapter.navigate(url, timeout_sec=timeout_sec)
-            if page_state.state_hash:
-                visited_states.add(page_state.state_hash)
+            frontier_queue = [url]
+            visited_urls: Set[str] = set()
+            pages_crawled = 0
 
-            # ── 2. Contextual Form Injection ──────────────────────────────────
-            try:
-                if adapter.page:
-                    forms_filled = await fill_page_forms(adapter.page, max_forms=3)
-                    for ff in forms_filled:
-                        actions_taken.append({
-                            "action": "form_fill_and_submit",
-                            "details": ff["fields_populated"],
-                        })
-            except Exception as e:
-                logger.debug(f"Form filler step warning: {e}")
+            while frontier_queue and pages_crawled < max_pages:
+                current_url = frontier_queue.pop(0)
+                if current_url in visited_urls:
+                    continue
+                visited_urls.add(current_url)
+                pages_crawled += 1
 
-            # ── 3. Virtual Scrolling Pass ─────────────────────────────────────
-            await adapter.scroll("down", 400)
-            actions_taken.append({"action": "virtual_scroll_pass", "status": "completed"})
+                actions_taken.append({"action": "stealth_navigate", "target": current_url})
+                page_state = await adapter.navigate(current_url, timeout_sec=timeout_sec)
+                if page_state.state_hash:
+                    visited_states.add(page_state.state_hash)
+                if page_state.is_waf_blocked:
+                    is_waf_blocked = True
+                    waf_details = page_state.waf_details
 
-            # ── 4. Shadow DOM Piercing & Interactive Element Exploration ──────
-            try:
-                ax_nodes = await adapter.get_accessibility_tree()
-                clicks_done = 0
-                if adapter.page:
-                    clickables = await adapter.page.query_selector_all("button, a[href], [role='button'], [role='tab'], select")
-                    for el in clickables[:30]:
-                        if clicks_done >= max_clicks:
-                            break
-                        try:
-                            if not await el.is_visible():
-                                continue
-                            text = (await el.inner_text()).strip()
-                            tag_name = await el.evaluate("el => el.tagName.toLowerCase()")
-                            aria_label = (await el.get_attribute("aria-label")) or ""
-                            el_desc = text or aria_label or tag_name
+                # ── 1. Discover Internal Links on Current Page ──────────────
+                try:
+                    new_links = await adapter.get_internal_links(current_url)
+                    for lk in new_links:
+                        discovered_pages.add(lk)
+                        if lk not in visited_urls and lk not in frontier_queue:
+                            frontier_queue.append(lk)
+                except Exception as e:
+                    logger.debug(f"Internal link extraction warning on {current_url}: {e}")
 
-                            if not _is_safe_element_to_click(el_desc, tag_name):
-                                continue
-
-                            await humanized_click(el)
-                            clicks_done += 1
+                # ── 2. Contextual Form Injection ──────────────────────────────
+                try:
+                    if adapter.page:
+                        forms_filled = await fill_page_forms(adapter.page, max_forms=3)
+                        for ff in forms_filled:
                             actions_taken.append({
-                                "action": "click",
-                                "element": tag_name,
-                                "label": el_desc[:40],
+                                "action": "form_fill_and_submit",
+                                "details": ff["fields_populated"],
                             })
-                            await adapter.wait(600)
-                        except Exception:
-                            continue
-            except Exception as e:
-                logger.debug(f"Click iteration notice: {e}")
+                except Exception as e:
+                    logger.debug(f"Form filler step warning: {e}")
+
+                # ── 3. Virtual Scrolling Pass ─────────────────────────────────
+                await adapter.scroll("down", 400)
+                actions_taken.append({"action": "virtual_scroll_pass", "status": "completed"})
+
+                # ── 4. Shadow DOM Piercing & Navigation Element Exploration ───
+                try:
+                    clicks_done = 0
+                    if adapter.page:
+                        clickables = await adapter.page.query_selector_all(NAV_CLICK_SELECTOR)
+                        for el in clickables[:35]:
+                            if clicks_done >= max_clicks:
+                                break
+                            try:
+                                if not await el.is_visible():
+                                    continue
+                                text = (await el.inner_text()).strip()
+                                tag_name = await el.evaluate("el => el.tagName.toLowerCase()")
+                                aria_label = (await el.get_attribute("aria-label")) or ""
+                                el_desc = text or aria_label or tag_name
+
+                                if not _is_safe_element_to_click(el_desc, tag_name):
+                                    continue
+
+                                await humanized_click(el)
+                                clicks_done += 1
+                                actions_taken.append({
+                                    "action": "click",
+                                    "element": tag_name,
+                                    "label": el_desc[:40],
+                                })
+                                await adapter.wait(500)
+                            except Exception:
+                                continue
+                except Exception as e:
+                    logger.debug(f"Click iteration notice: {e}")
+
+                # ── 5. Script Bundles & Inline Fetch API Regex Extraction ─────
+                try:
+                    if adapter.page:
+                        page_html = await adapter.page.content()
+                        api_patterns = set(re.findall(
+                            r'["\'](/(?:api/v[0-9]+|api|v[0-9]+|graphql|rest|data|services?|bseindiaapi|posts|users|comments|todos|albums|photos|products|items|orders|auth|login|articles|tags)[a-zA-Z0-9_\-\/{}\?\=\&]*)[\'"]',
+                            page_html,
+                            re.IGNORECASE,
+                        ))
+                        # Also extract from fetch(...) and axios(...) calls:
+                        fetch_matches = re.findall(
+                            r'(?:fetch|axios(?:\.get|\.post|\.put|\.delete)?)\s*\(\s*["\']([^"\']+)["\']',
+                            page_html,
+                            re.IGNORECASE,
+                        )
+                        for fm in fetch_matches:
+                            if fm.startswith("/"):
+                                api_patterns.add(fm)
+                            elif fm.startswith("http://") or fm.startswith("https://"):
+                                parsed_fm = urllib.parse.urlparse(fm)
+                                if parsed_fm.hostname == target_hostname or not target_hostname:
+                                    api_patterns.add(parsed_fm.path + (f"?{parsed_fm.query}" if parsed_fm.query else ""))
+
+                        for path in api_patterns:
+                            if any(path.lower().endswith(ext) for ext in STATIC_EXTENSIONS):
+                                continue
+                            clean_path = path.split("?")[0]
+                            template = _normalize_route_template(clean_path)
+                            key = f"GET {template}"
+                            if key not in intercepted_requests:
+                                full_example = f"{url.rstrip('/')}{clean_path}" if clean_path.startswith("/") else clean_path
+                                intercepted_requests[key] = {
+                                    "method": "POST" if "/graphql" in clean_path.lower() else "GET",
+                                    "template_path": template,
+                                    "example_url": full_example,
+                                    "status_code": 200,
+                                    "is_graphql": "/graphql" in clean_path.lower(),
+                                    "sample_response": None,
+                                    "occurrences": 1,
+                                }
+                except Exception as e:
+                    logger.debug(f"DOM API extraction notice: {e}")
 
             # Collect intercepted network events from adapter
             for evt in adapter.get_network_events():
@@ -167,35 +245,6 @@ async def explore_web_app_browser(
                     "sample_response": evt.sample_response,
                     "occurrences": evt.occurrences,
                 }
-
-            # Extract embedded API routes and endpoints from page content and script tags
-            try:
-                if adapter.page:
-                    page_html = await adapter.page.content()
-                    api_patterns = re.findall(
-                        r'["\'](/(?:api|v[0-9]+|graphql|rest|data|services?|bseindiaapi)/[a-zA-Z0-9_\-\/{}\?\=\&]*)[\'"]',
-                        page_html,
-                        re.IGNORECASE,
-                    )
-                    for path in set(api_patterns):
-                        if any(path.lower().endswith(ext) for ext in STATIC_EXTENSIONS):
-                            continue
-                        clean_path = path.split("?")[0]
-                        template = _normalize_route_template(clean_path)
-                        key = f"GET {template}"
-                        if key not in intercepted_requests:
-                            full_example = f"{url.rstrip('/')}{clean_path}" if clean_path.startswith("/") else clean_path
-                            intercepted_requests[key] = {
-                                "method": "POST" if "/graphql" in clean_path.lower() else "GET",
-                                "template_path": template,
-                                "example_url": full_example,
-                                "status_code": 200,
-                                "is_graphql": "/graphql" in clean_path.lower(),
-                                "sample_response": None,
-                                "occurrences": 1,
-                            }
-            except Exception as e:
-                logger.debug(f"DOM API extraction notice: {e}")
 
         latency_ms = int((time.perf_counter() - start_time) * 1000)
         raw_discovered = list(intercepted_requests.values())
@@ -214,6 +263,9 @@ async def explore_web_app_browser(
                 "actions_log": actions_taken,
                 "hidden_endpoints_discovered": len(raw_discovered),
                 "endpoints": raw_discovered,
+                "discovered_pages": list(discovered_pages),
+                "is_waf_blocked": is_waf_blocked,
+                "waf_details": waf_details,
                 "dependency_chain": chained_catalog,
             },
         )
@@ -240,23 +292,99 @@ async def _fallback_static_exploration(
     try:
         async with httpx.AsyncClient(verify=False, timeout=10.0, follow_redirects=True) as client:
             resp = await client.get(url, headers=auth_headers or {})
+            
+            # Case 1: Target URL is directly an active JSON API endpoint
+            content_type = (resp.headers.get("content-type") or "").lower()
+            is_json = "json" in content_type
+            resp_body = None
+            if is_json:
+                try:
+                    resp_body = resp.json()
+                except Exception:
+                    pass
+
+            if is_json and resp_body is not None:
+                parsed_url = urllib.parse.urlparse(url)
+                template = _normalize_route_template(parsed_url.path or "/")
+                schema = None
+                try:
+                    from app.tools.schema_inferencer import infer_openapi_schema
+                    if isinstance(resp_body, (dict, list)):
+                        schema_res = infer_openapi_schema(resp_body)
+                        if schema_res.status == "success":
+                            schema = schema_res.data.get("schema")
+                except Exception:
+                    pass
+
+                discovered_endpoints.append({
+                    "method": "GET",
+                    "template_path": template,
+                    "example_url": url,
+                    "status_code": resp.status_code,
+                    "is_graphql": "/graphql" in (parsed_url.path or "").lower(),
+                    "inferred_schema": schema,
+                    "sample_response": resp_body if isinstance(resp_body, dict) else (resp_body[0] if isinstance(resp_body, list) and resp_body else None),
+                    "occurrences": 1,
+                })
+
             html = resp.text
 
             # Extract embedded API routes and endpoints via regex from JS/HTML
-            api_patterns = re.findall(r'["\'](/api/v[0-9]+/[a-zA-Z0-9_\-\/{}]*|/api/[a-zA-Z0-9_\-\/{}]*|/v[0-9]+/[a-zA-Z0-9_\-\/{}]*|/graphql)[\'"]', html)
-            unique_paths = list(set(api_patterns))
+            api_patterns = set(re.findall(
+                r'["\'](/(?:api/v[0-9]+|api|v[0-9]+|graphql|rest|data|services?|bseindiaapi|posts|users|comments|todos|albums|photos|products|items|orders|auth|login|articles|tags)[a-zA-Z0-9_\-\/{}\?\=\&]*)[\'"]',
+                html,
+                re.IGNORECASE,
+            ))
 
-            for path in unique_paths[:15]:
-                template = _normalize_route_template(path)
-                discovered_endpoints.append({
-                    "method": "GET" if "/graphql" not in path else "POST",
-                    "template_path": template,
-                    "example_url": f"{url.rstrip('/')}{path}",
-                    "status_code": 200,
-                    "is_graphql": "/graphql" in path.lower(),
-                    "sample_response": None,
-                    "occurrences": 1,
-                })
+            # Also scan linked script bundles (SPA main.[hash].js) if HTML contains <script src="...">
+            script_srcs = re.findall(r'<script[^>]+src=["\']([^"\']+\.js[^"\']*)["\']', html, re.IGNORECASE)
+            for s_src in script_srcs[:3]:
+                try:
+                    s_url = s_src if s_src.startswith("http") else urllib.parse.urljoin(url, s_src)
+                    s_resp = await client.get(s_url, headers=auth_headers or {})
+                    if s_resp.status_code == 200:
+                        s_matches = re.findall(
+                            r'["\'](/(?:api/v[0-9]+|api|v[0-9]+|graphql|rest|data|services?|bseindiaapi|posts|users|comments|todos|albums|photos|products|items|orders|auth|login|articles|tags)[a-zA-Z0-9_\-\/{}\?\=\&]*)[\'"]',
+                            s_resp.text,
+                            re.IGNORECASE,
+                        )
+                        for sm in s_matches:
+                            api_patterns.add(sm)
+                except Exception:
+                    pass
+
+            # Also extract from fetch(...) and axios(...) calls:
+            fetch_matches = re.findall(
+                r'(?:fetch|axios(?:\.get|\.post|\.put|\.delete)?)\s*\(\s*["\']([^"\']+)["\']',
+                html,
+                re.IGNORECASE,
+            )
+            for fm in fetch_matches:
+                if fm.startswith("/"):
+                    api_patterns.add(fm)
+                elif fm.startswith("http://") or fm.startswith("https://"):
+                    parsed_fm = urllib.parse.urlparse(fm)
+                    if parsed_fm.hostname == target_hostname or not target_hostname:
+                        api_patterns.add(parsed_fm.path + (f"?{parsed_fm.query}" if parsed_fm.query else ""))
+
+            for path in list(api_patterns)[:25]:
+                if any(path.lower().endswith(ext) for ext in STATIC_EXTENSIONS):
+                    continue
+                clean_path = path.split("?")[0]
+                template = _normalize_route_template(clean_path)
+                full_example = f"{url.rstrip('/')}{clean_path}" if clean_path.startswith("/") else clean_path
+                
+                # Check if already added
+                if not any(ep.get("template_path") == template for ep in discovered_endpoints):
+                    discovered_endpoints.append({
+                        "method": "GET" if "/graphql" not in path.lower() else "POST",
+                        "template_path": template,
+                        "example_url": full_example,
+                        "status_code": 200,
+                        "is_graphql": "/graphql" in path.lower(),
+                        "sample_response": None,
+                        "occurrences": 1,
+                    })
 
         latency_ms = int((time.perf_counter() - start_time) * 1000)
         chained_catalog = chain_api_dependencies(discovered_endpoints)

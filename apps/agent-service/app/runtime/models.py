@@ -62,7 +62,8 @@ class ActionType(str, Enum):
     INSPECT_WEBSOCKET = "inspect_websocket"
     INSPECT_SSE = "inspect_sse"
     PARSE_HAR = "parse_har"
-    # Analysis
+    # Analysis & Recon
+    RECONNAISSANCE = "reconnaissance"
     INSPECT_SCHEMA = "inspect_schema"
     INSPECT_ACCESSIBILITY_TREE = "inspect_accessibility_tree"
     SECURITY_AUDIT = "security_audit"
@@ -312,7 +313,8 @@ class AgentState(BaseModel):
     goal: Goal
     budget: AgentBudget = Field(default_factory=AgentBudget)
 
-    # Navigation state
+    # Navigation & Recon state
+    recon_done: bool = False
     current_url: Optional[str] = None
     current_page_title: Optional[str] = None
     visited_urls: List[str] = Field(default_factory=list)
@@ -432,6 +434,7 @@ class Observation(BaseModel):
     # Metadata
     raw_tool_result: Optional[Dict[str, Any]] = None  # original ToolResult.to_dict()
     tags: List[str] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -585,16 +588,36 @@ class VerificationResult(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# PROOF OBJECT & EVIDENCE CHAIN
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class ProofSource(str, Enum):
+    PLAYWRIGHT_RUNTIME = "playwright_runtime"
+    JAVASCRIPT_AST = "javascript_ast"
+    HTTPX_REPLAY = "httpx_replay"
+    DNS_RECON = "dns_recon"
+    CONTRACT_FUZZ = "contract_fuzz"
+    MANUAL = "manual"
+
+
+class ProofItem(BaseModel):
+    """A cryptographic-grade or behavioral evidence item in an endpoint's proof chain."""
+    id: str = Field(default_factory=lambda: f"proof-{uuid.uuid4().hex[:10]}")
+    source: ProofSource
+    description: str
+    observed_status: Optional[int] = None
+    trigger_action: Optional[str] = None
+    confidence_score: float = 1.0
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # DISCOVERED ENDPOINT
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class DiscoveredEndpoint(BaseModel):
     """
-    Normalized representation of a discovered API endpoint.
-
-    This is the typed version of the raw endpoint dicts currently used
-    throughout the system. Migrate callsites incrementally; both forms
-    remain valid during the transition.
+    Normalized representation of a discovered API endpoint with multi-source proof chain.
     """
     id: str = Field(default_factory=lambda: f"ep-{uuid.uuid4().hex[:12]}")
     session_id: str
@@ -607,6 +630,7 @@ class DiscoveredEndpoint(BaseModel):
     inferred_schema: Optional[Dict[str, Any]] = None
     confidence: ConfidenceLevel = ConfidenceLevel.INFERRED
     evidence_ids: List[str] = Field(default_factory=list)
+    proof_chain: List[ProofItem] = Field(default_factory=list)
     auth_required: Optional[bool] = None
     is_graphql: bool = False
     graphql_operation: Optional[str] = None
@@ -616,6 +640,7 @@ class DiscoveredEndpoint(BaseModel):
     @property
     def endpoint_key(self) -> str:
         return f"{self.method.upper()} {self.template_path}"
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
